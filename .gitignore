@@ -2,3 +2,10 @@
 # Read about how to use .gitignore: https://help.github.com/articles/ignoring-files
 # Useful .gitignore templates: https://github.com/github/gitignore
 
+*.log
+.idea
+.DS_Store
+.htaccess
+.gitattributes
+.editconfig
+config.json
