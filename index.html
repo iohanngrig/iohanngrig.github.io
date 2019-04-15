@@ -12,17 +12,16 @@
     }
 
     gtag('js', new Date());
-
     gtag('config', 'UA-138315127-1');
   </script>
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
-  <meta name="author" content="">
+  <meta name="author" content="HRG">
 
   <title>Home</title>
-  <link rel="shortcut icon" type="image/png" href="img/logo.gif"/>
+  <link rel="shortcut icon" type="image/png" href="img/logo.png"/>
 
   <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -30,54 +29,16 @@
   <!-- Custom styles for this template -->
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/modern-business.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
 <!--[if IE]>
-<p class="browserupgrade">You are using an <strong>outdated</strong> browser.
-  Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please
+<a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
 <![endif]-->
 
-<!-- Navigation -->
-<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">QMachine</a>
-    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
-            data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
-            aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarResponsive">
-      <ul class="navbar-nav ml-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="about.html">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="services.html">Services</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="contact.html">Contact</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="portfolio.html">Portfolio</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownBlog" data-toggle="dropdown"
-             aria-haspopup="true" aria-expanded="false">
-            Other Pages
-          </a>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownBlog">
-            <a class="dropdown-item" href="sidebar.html">Sidebar Page</a>
-            <a class="dropdown-item" href="404.html">404</a>
-            <a class="dropdown-item" href="pricing.html">Pricing Table</a>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<div class="mynavbar"></div>
 
 <header>
   <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
@@ -125,7 +86,7 @@
 
   <h1 class="my-4">Welcome to QuantMachine</h1>
 
-  <!-- Marketing Icons Section -->
+  <!-- Sections -->
   <div class="row">
     <div class="col-lg-4 mb-4">
       <div class="card h-100">
@@ -168,80 +129,7 @@
   <h2>Projects</h2>
 
   <div class="row">
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Statistical Mechanics</a>
-          </h4>
-          <p class="card-text">This project contains series of notebooks, where we demonstrate some of the well known
-            statistical mechanics algorithms implemented in Python. We closely follow the book by W. Krauth, et al.,
-            "Statistical Mechanics: Algorithms and Computations", as well as some of his public lectures. Most of the
-          algorithms are borrowed from this reference. Any errors are fully my responsibility.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Portfolio Optimization</a>
-          </h4>
-          <p class="card-text">This is a collection of notebooks discussing various portfolio optimization algorithms.
-            We discuss, analytic and numerical methods, with various realistic constraints.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Time Series Forecast</a>
-          </h4>
-          <p class="card-text">This project contains series of notebooks with recipes for time series forecasting.
-          We discuss simple ARIMA/GARCH models, hidden markov models, and extend it to models with recurrent neural networks (RNN/LSTM).</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Reinforcement Learning</a>
-          </h4>
-          <p class="card-text">In this project we present various applications of reinforcement learning techniques,
-            as well as basic strategies often used in this area. We show an example of a simple trading machine that makes
-            trading decisions based on the current state of the market.
-          </p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Quasinormal Modes</a>
-          </h4>
-          <p class="card-text">Here we examine some of the known algorithms to calculate quasinormal modes of various black holes.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4 col-sm-6 portfolio-item">
-      <div class="card h-100">
-        <a href="#"><img class="card-img-top" src="https://placehold.it/700x400" alt=""></a>
-        <div class="card-body">
-          <h4 class="card-title">
-            <a href="#">Sturm–Liouville Problems</a>
-          </h4>
-          <p class="card-text">Various numerical methods to find the eigenvalues/eigenstates corresponding to SL problem.</p>
-        </div>
-      </div>
-    </div>
+    <div class="row" id="myData"></div>
   </div>
   <!-- /.row -->
 
@@ -280,6 +168,20 @@
 <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.3.1.min.js"><\/script>')</script>
 <script src="js/plugins.js"></script>
 <script src="js/main.js"></script>
+
+<script>
+  fetch('data/projects.json')
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      appendData(data);
+    })
+    .catch(function (err) {
+      console.log('error: ' + err);
+    });
+</script>
+
 </body>
 
 </html>
