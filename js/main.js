@@ -43,3 +43,24 @@ function appendData2(data) {
     }
 }
 
+function appendData3(data) {
+    let mainContainer = document.getElementById("myData3");
+    for (let i = 0; i < data.length; i++) {
+        let div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML =  "<div class='col-md-7'>"
+                        +  "<a href=" + data[i].url + "><img alt=' ' class='img-fluid rounded mb-3 mb-md-0' "
+                        +                                   "src=" + data[i].media + " width='700' height='300'></a>"
+                        +"</div>"
+                        +"<div class='col-md-5'>"
+                        +   "<h3>" + data[i].title + "</h3>"
+                        +   "<p>" + data[i].description + "</p>"
+                        +   "<a class='btn btn-primary' href=" + data[i].url + ">View Project"
+                        +     "<span class='glyphicon glyphicon-chevron-right'></span>"
+                        +   "</a>"
+                        +"</div>"
+                        +"<hr>";
+        mainContainer.appendChild(div);
+        mainContainer.append(document.createElement("hr"))
+    }
+}

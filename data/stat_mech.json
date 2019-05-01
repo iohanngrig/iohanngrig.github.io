@@ -1,0 +1,14 @@
+[
+  {
+    "title": "P1: Basic Monte-Carlo Methods",
+    "description": "The defining character of Monte Carlo algorithms is the use of random numbers. These algorithms provide solutions by performing statistical sampling. We start by describing a simple method for estimating the value of  π  using direct sampling. Afterwards, we employ the Markov-chain approach to the same problem, and analyze the convergence of errors. Finally, we remark on the nature of produced distribution, and attempt to generalize it.",
+    "url": "P1_Basic_Monte_Carlo_Methods.html",
+    "media": "img/buffon.png"
+  },
+  {
+    "title": "P2: Markov-Chain Toy Model",
+    "description": "Toy model is considered, where circle is randomly moving on a  3×3  grid. We verify that after sufficiently many random steps, all cells in a grid have equal chances to be visited. We analyze the same model using transfer matrix, and relate eigenvalues to the asymptotic behavior and convergence of probabilities. We outline the primary conditions that Markov algorithms should satisfy, and discuss various cases where reducibility and recurrence can be cured by the addition of an infinitesimal parameter. We conclude by showing the detailed balance conditions that our algorithm needs to maintain.",
+    "url": "P2_Markov_Chain_Toy_Model.html",
+    "media": "data/pebble_dual_movie_epsilon_t.gif"
+  }
+]

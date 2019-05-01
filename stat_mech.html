@@ -20,7 +20,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>Portfolio</title>
+  <title>Statistical Mechanics</title>
   <link rel="shortcut icon" type="image/png" href="img/logo.png"/>
 
   <!-- Bootstrap core CSS -->
@@ -38,23 +38,17 @@
 <div class="container">
 
   <!-- Page Heading/Breadcrumbs -->
-  <h1 class="mt-4 mb-3">Portfolio</h1>
+  <h1 class="mt-4 mb-3">Statistical Mechanics</h1>
 
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
-      <a href="index.html">Home</a>
+      <a href="portfolio.html">Portfolio</a>
     </li>
-    <li class="breadcrumb-item active">Portfolio</li>
+    <li class="breadcrumb-item active">Statistical Mechanics</li>
   </ol>
 
   <!-- Project One -->
-  <div id="myData2"></div>
-
-  <div>
-    <a href="P1_Basic_Monte_Carlo_Methods.html">P1_Basic_Monte_Carlo_Methods</a>
-  </div>
-
-
+  <div id="myData3"></div>
 
   <!-- Pagination -->
   <ul class="pagination justify-content-center">
@@ -97,12 +91,12 @@
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="js/main.js"></script>
 <script>
-  fetch('data/projects.json')
+  fetch('data/stat_mech.json')
     .then(function (response) {
       return response.json();
     })
     .then(function (data) {
-      appendData2(data);
+      appendData3(data);
     })
     .catch(function (err) {
       console.log('error: ' + err);
