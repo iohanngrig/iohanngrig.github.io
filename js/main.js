@@ -50,7 +50,7 @@ function appendData3(data) {
         div.className = "row";
         div.innerHTML =  "<div class='col-md-7'>"
                         +  "<a href=" + data[i].url + "><img alt=' ' class='img-fluid rounded mb-3 mb-md-0' "
-                        +                                   "src=" + data[i].media + " width='700' height='300'></a>"
+                        +                                   "src=" + data[i].media + "></a>"
                         +"</div>"
                         +"<div class='col-md-5'>"
                         +   "<h3>" + data[i].title + "</h3>"

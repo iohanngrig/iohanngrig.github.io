@@ -1,13 +1,13 @@
 [
   {
     "title": "P1: Basic Monte-Carlo Methods",
-    "description": "The defining character of Monte Carlo algorithms is the use of random numbers. These algorithms provide solutions by performing statistical sampling. We start by describing a simple method for estimating the value of  π  using direct sampling. Afterwards, we employ the Markov-chain approach to the same problem, and analyze the convergence of errors. Finally, we remark on the nature of produced distribution, and attempt to generalize it.",
+    "description": "The defining character of Monte Carlo algorithms is the use of random numbers. These algorithms provide solutions by performing statistical sampling. We start by describing a simple method for estimating the value of π using direct sampling. Afterwards, we employ the Markov-chain approach to the same problem, and analyze the convergence of errors. One of the main pitfalls of these methods is the violation of ergodicity, that is the possibility that a Markov chain never visits all possible configurations. Finally, we remark on the nature of produced distribution, and attempt to generalize it.",
     "url": "P1_Basic_Monte_Carlo_Methods.html",
-    "media": "img/buffon.png"
+    "media": "data/buffon.png"
   },
   {
     "title": "P2: Markov-Chain Toy Model",
-    "description": "Toy model is considered, where circle is randomly moving on a  3×3  grid. We verify that after sufficiently many random steps, all cells in a grid have equal chances to be visited. We analyze the same model using transfer matrix, and relate eigenvalues to the asymptotic behavior and convergence of probabilities. We outline the primary conditions that Markov algorithms should satisfy, and discuss various cases where reducibility and recurrence can be cured by the addition of an infinitesimal parameter. We conclude by showing the detailed balance conditions that our algorithm needs to maintain.",
+    "description": "Toy model is considered, where circle is randomly moving on a  3×3 grid. We verify that our algorithm after sufficiently many random steps sweeps out all accessible configurations evenly. We confirm the relation of eigenvalues of transfer matrix to asymptotic behavior and convergence of probabilities. We outline the detailed balance condition, and other primary conditions that Markov-chain algorithms should satisfy. We also discuss cases where broken reducibility or recurrence can be cured by the addition of an infinitesimal parameter. In conclusion, we extend our toy model to a non homogeneous case, and discuss Metropolis-Hastings algorithm.",
     "url": "P2_Markov_Chain_Toy_Model.html",
     "media": "data/pebble_dual_movie_epsilon_t.gif"
   }
