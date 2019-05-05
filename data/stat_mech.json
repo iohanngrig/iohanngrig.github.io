@@ -10,5 +10,20 @@
     "description": "Toy model is considered, where circle is randomly moving on a  3×3 grid. We verify that our algorithm after sufficiently many random steps sweeps out all accessible configurations evenly. We confirm the relation of eigenvalues of transfer matrix to asymptotic behavior and convergence of probabilities. We outline the detailed balance condition, and other primary conditions that Markov-chain algorithms should satisfy. We also discuss cases where broken reducibility or recurrence can be cured by the addition of an infinitesimal parameter. In conclusion, we extend our toy model to a non homogeneous case, and discuss Metropolis-Hastings algorithm.",
     "url": "P2_Markov_Chain_Toy_Model.html",
     "media": "data/pebble_dual_movie_epsilon_t.gif"
+  },
+
+    {
+    "title": "P3: Sampling and Integration",
+    "description": "Calculation of some observables can be done either through sampling or through integration. In many instances, the Monte Carlo sampling is superior to integration, especially in higher dimensions. In this part, we start by trivial example on how to sample points from the gaussian distribution, by transforming the variables inside the gaussian integral, in such a way that these new variables are uniformly distributed. Then we show how to sample points uniformly on a sphere and on a ball either using direct sampling or using Markov-chain algorithm. The latter algorithm allows to implement a random walk on a sphere or on a circle. We discuss how Metropolis acceptance probability in Markov-chain method can be used to sample points from an arbitrary distribution, and other competing algorithms using direct sampling. We also discuss rejection free tower sampling and Walker algorithms. We consider an example of inverse square root distribution, discuss problems associated with it, and how to solve them. We conclude by calculating volume and area of the d-dimensional hypersphere using Monte Carlo methods.",
+    "url": "P3_Sampling_and_Integration.html",
+    "media": "data/random_walk_sphere_t.gif"
+  },
+
+    {
+    "title": "P4: Generating Multicovariate Gaussian Distribution from Uniform",
+    "description": "Using universality of uniform, we obtain standard normal distribution from the uniform distribution. We also show how to generate multicovariate gaussian distribution from standard normal distribution using Cholesky decomposition of covariance matrix. We check our results, and show how to calculate marginal and conditional distributions. The latter is proven to be useful in many instances.",
+    "url": "P4_Generating_Distribution_from_Uniform_Using_Cholesky_Decomposition.html",
+    "media": "data/conditional_distr.png"
   }
+
 ]

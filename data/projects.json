@@ -1,7 +1,7 @@
 [
   {
     "title": "Statistical Mechanics",
-    "description": "This project contains series of notebooks, where we demonstrate some of the well known statistical mechanics algorithms implemented in Python. We closely follow the book by W. Krauth, et al., 'Statistical Mechanics: Algorithms and Computations', as well as some of his public lectures. Most of the algorithms are borrowed from this reference. Any errors are fully my responsibility.",
+    "description": "This project contains series of notebooks, where we demonstrate some of the well known statistical mechanics algorithms implemented in Python.",
     "url": "stat_mech.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
