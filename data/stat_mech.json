@@ -14,7 +14,7 @@
 
     {
     "title": "P3: Sampling and Integration",
-    "description": "Calculation of some observables can be done either through sampling or through integration. In many instances, the Monte Carlo sampling is superior to integration, especially in higher dimensions. In this part, we start by trivial example on how to sample points from the gaussian distribution, by transforming the variables inside the gaussian integral, in such a way that these new variables are uniformly distributed. Then we show how to sample points uniformly on a sphere and on a ball either using direct sampling or using Markov-chain algorithm. The latter algorithm allows to implement a random walk on a sphere or on a circle. We discuss how Metropolis acceptance probability in Markov-chain method can be used to sample points from an arbitrary distribution, and other competing algorithms using direct sampling. We also discuss rejection free tower sampling and Walker algorithms. We consider an example of inverse square root distribution, discuss problems associated with it, and how to solve them. We conclude by calculating volume and area of the d-dimensional hypersphere using Monte Carlo methods.",
+    "description": "We start by showing one of the ways one can sample gaussian distribution from uniform distribution. Then we show how to sample points uniformly on a sphere and on a ball, using either direct sampling or Markov-chain sampling. The latter algorithm allows to implement something like a random walk on a sphere. We discuss how Metropolis acceptance probability in Markov-chain method can be used to sample points from an arbitrary distribution, and other competing algorithms using direct sampling. We also discuss rejection free tower sampling and Walker algorithms. We consider an example of inverse square root distribution, and discuss how to solve problems associated with it. We conclude by calculating volume and area of the d-dimensional hypersphere using Monte Carlo methods.",
     "url": "P3_Sampling_and_Integration.html",
     "media": "data/random_walk_sphere_t.gif"
   },
@@ -24,6 +24,14 @@
     "description": "Using universality of uniform, we obtain standard normal distribution from the uniform distribution. We also show how to generate multicovariate gaussian distribution from standard normal distribution using Cholesky decomposition of covariance matrix. We check our results, and show how to calculate marginal and conditional distributions. The latter is proven to be useful in many instances.",
     "url": "P4_Generating_Distribution_from_Uniform_Using_Cholesky_Decomposition.html",
     "media": "data/conditional_distr.png"
+  },
+
+    {
+    "title": "P5: From Classical Mechanics to Statistical Mechanics",
+    "description": "We describe the idea behind the event-driven molecular dynamics algorithm. We use this algorithm to create a simulation with hard disks, and study how the velocity distribution of one the disks approach Maxwell's distribution. Then we discuss statistical ensembles, and how to sample legitimate configurations using Monte Carlo sampling for hard-wall boxes, as well as boxes with periodic boundary conditions. We also describe the Markov-chain Monte Carlo algorithm to generate valid configurations. At the end we discuss the 'derivation' of Maxwell/Boltzmann distribution using equiprobability, and basic geometric considerations.",
+    "url": "P5_From_Classical_to_Statistical_Mechanics.html",
+    "media": "data/md_simulation_t.gif"
   }
 
 ]
+
