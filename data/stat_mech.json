@@ -28,9 +28,9 @@
 
     {
     "title": "P5: From Classical Mechanics to Statistical Mechanics",
-    "description": "We describe the idea behind the event-driven molecular dynamics algorithm. We use this algorithm to create a simulation with hard disks, and study how the velocity distribution of one the disks approach Maxwell's distribution. Then we discuss statistical ensembles, and how to sample legitimate configurations using Monte Carlo sampling for hard-wall boxes, as well as boxes with periodic boundary conditions. We also describe the Markov-chain Monte Carlo algorithm to generate valid configurations. At the end we discuss the 'derivation' of Maxwell/Boltzmann distribution using equiprobability, and basic geometric considerations.",
+    "description": "We implement event-driven molecular dynamics algorithm to simulate system of hard disks in a box. We verify that the velocity distribution of one of the disks approaches Maxwell's distribution. We also demonstrate the onset of chaos with three disks. In addition, we observe a non uniform distribution of particle positions in a box, which is sometimes associated with the so called entropic interaction or \"the fifth force\". Furthermore, we discuss statistical ensembles, and how to sample legitimate configurations using either direct or Markov-chain Monte Carlo sampling for boxes with and without periodic boundary conditions. In all these cases, we test the equiprobability hypothesis, and the manifestation of the \"fifth force\". At the end we discuss virial expansion, and the \"geometric\" intuition behind Maxwell/Boltzmann distributions.",
     "url": "P5_From_Classical_to_Statistical_Mechanics.html",
-    "media": "data/md_simulation_t.gif"
+    "media": "data/md_simulation_t.mp4"
   }
 
 ]
