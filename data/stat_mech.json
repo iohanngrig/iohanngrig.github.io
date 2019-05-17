@@ -31,7 +31,15 @@
     "description": "We implement event-driven molecular dynamics algorithm to simulate system of hard disks in a box. We verify that the velocity distribution of one of the disks approaches Maxwell's distribution. We also demonstrate the onset of chaos with three disks. In addition, we observe a non uniform distribution of particle positions in a box, which is sometimes associated with the so called entropic interaction or \"the fifth force\". Furthermore, we discuss statistical ensembles, and how to sample legitimate configurations using either direct or Markov-chain Monte Carlo sampling for boxes with and without periodic boundary conditions. In all these cases, we test the equiprobability hypothesis, and the manifestation of the \"fifth force\". At the end we discuss virial expansion, and the \"geometric\" intuition behind Maxwell/Boltzmann distributions.",
     "url": "P5_From_Classical_to_Statistical_Mechanics.html",
     "media": "data/md_simulation_t.mp4"
+  },
+
+  {
+    "title": "P6: Entropic Interactions Phase Transitions",
+    "description": "We study the emergence of entropic interactions in a 1d model of pins placed on a line. We observe that pins are strongly attracted to boundaries, and weakly attracted among themselves. The attraction is due to the 'halo effect' (pin centers should be at least one pin width away from each other, and half width away from the walls). When particles are near the walls or touch each other, the available configuration space for the rest of the particles is larger. Therefore, to increase the entropy, pins will tend to attract each other and walls. We consider the 1d model with and without periodic boundary conditions. In the latter case, the wall attraction disappears, while the pair interaction decays away. Although, there is an emergent attraction in this model, 1d models can not have phase transitions. This is why we consider a 2d model of hard disks in a box, and study an unexpected phase transition from liquid to solid, with increasing density.",
+    "url": "P6_Entropic_Interactions_Phase_Transitions.html",
+    "media": "data/disk_config_256.gif"
   }
+
 
 ]
 

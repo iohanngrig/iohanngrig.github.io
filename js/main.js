@@ -65,7 +65,7 @@ function addMedia(url, filename) {
   let lastChar = filename.charAt(filename.length - 1);
   let output = "";
   if (lastChar === '4') {
-      output = "<video width='630' height='315' controls='controls'>"
+      output = "<video width='630' height='315' controls='controls' style='margin-top:30px;'>"
               +  "<source src=" + filename + " type='video/mp4'>"
               +"</video>";
   }
