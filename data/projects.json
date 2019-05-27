@@ -10,7 +10,7 @@
   {
     "title": "Portfolio Optimization",
     "description": "This is a collection of notebooks discussing various portfolio optimization algorithms. We discuss, analytic and numerical methods, with various realistic constraints.",
-    "url": "#",
+    "url": "port_opt.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   },
@@ -18,7 +18,7 @@
   {
     "title": "Time Series Forecast",
     "description": "This project contains series of notebooks with recipes for time series forecasting. We discuss simple ARIMA/GARCH models, hidden markov models, and extend it to models with recurrent neural networks (RNN/LSTM).",
-    "url": "#",
+    "url": "ts_forecast.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   },
@@ -26,7 +26,7 @@
   {
     "title": "Reinforcement Learning",
     "description": "In this project we present various applications of reinforcement learning techniques, as well as basic strategies often used in this area. We show an example of a simple trading machine that makes trading decisions based on the current state of the market.",
-    "url": "#",
+    "url": "r_learn.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   },
@@ -34,7 +34,7 @@
     {
     "title": "Quasinormal Modes",
     "description": "Here we examine some of the known algorithms to calculate quasinormal modes of various black holes.",
-    "url": "#",
+    "url": "qnm.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   },
@@ -42,7 +42,7 @@
     {
     "title": "Sturm–Liouville Problems",
     "description": "Various numerical methods to find the eigenvalues/eigenstates corresponding to SL problem.",
-    "url": "#",
+    "url": "sl_problems.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   }

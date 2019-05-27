@@ -1,0 +1,10 @@
+[
+  {
+    "title": "TS1: Kalman Filter",
+    "description": "We describe the theory and the algorithm behind the linear Kalman filter, and write a simple implementation for it. We also implement adaptive Kalman filter that modifies observation covariance matrix based on recent measurements, and asynchronous Kalman filter that processes observations at different rates. We demonstrate applications of Kalman filter for 1D and 2D projectile motions, GPS signal filtering, stock return prediction. Finally, we describe how Kalman filter can be used to perform dynamic linear regression.",
+    "url": "TS1_Kalman_Filter.html",
+    "media": "data/kalmans.png"
+  }
+
+]
+
