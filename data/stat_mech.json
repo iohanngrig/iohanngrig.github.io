@@ -38,7 +38,15 @@
     "description": "We study the emergence of entropic interactions in a 1d model of pins placed on a line. We observe that pins are strongly attracted to boundaries, and weakly attracted among themselves. The attraction is due to the 'halo effect' (pin centers should be at least one pin width away from each other, and half width away from the walls). When particles are near the walls or touch each other, the available configuration space for the rest of the particles is larger. Therefore, to increase the entropy, pins will tend to attract each other and walls. We consider the 1d model with and without periodic boundary conditions. In the latter case, the wall attraction disappears, while the pair interaction decays away. Although, there is an emergent attraction in this model, 1d models can not have phase transitions. This is why we consider a 2d model of hard disks in a box, and study an unexpected phase transition from liquid to solid, with increasing density.",
     "url": "P6_Entropic_Interactions_Phase_Transitions.html",
     "media": "data/disk_config_256.gif"
+  },
+
+    {
+    "title": "P7: Density Matrices and Path Integrals",
+    "description": "We start by recalling basic facts about the quantum harmonic oscillator to establish some notations. Then we consider important properties of density function, such as convolution and Trotter decomposition. We discuss path integral Monte Carlo algorithm that allows to sample quantum paths in a thermal ensemble. We also use this to simulate unitary quantum evolution of a wave function in different potentials. Finally we study anharmonic quantum oscillator beyond perturbative regime.",
+    "url": "P7_Density_Matrices_and_Path_Integrals.html",
+    "media": "data/dw_wf_evolution_t.gif"
   }
+
 
 
 ]
