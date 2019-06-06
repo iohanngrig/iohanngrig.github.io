@@ -40,13 +40,27 @@
     "media": "data/disk_config_256.gif"
   },
 
-    {
+  {
     "title": "P7: Density Matrices and Path Integrals",
-    "description": "We start by recalling basic facts about the quantum harmonic oscillator to establish some notations. Then we consider important properties of density function, such as convolution and Trotter decomposition. We discuss path integral Monte Carlo algorithm that allows to sample quantum paths in a thermal ensemble. We also use this to simulate unitary quantum evolution of a wave function in different potentials. Finally we study anharmonic quantum oscillator beyond perturbative regime.",
+    "description": "We start by recalling basic facts about the quantum harmonic oscillator to establish some notations. Then we consider important properties of density matrix, such as convolution and Trotter decomposition. We discuss path integral Monte Carlo algorithm that allows to sample quantum paths in a thermal ensemble. We also use this to simulate unitary quantum evolution of a wave function in different potentials. Finally we study anharmonic quantum oscillator beyond perturbative regime.",
     "url": "P7_Density_Matrices_and_Path_Integrals.html",
     "media": "data/dw_wf_evolution_t.gif"
-  }
+  },
 
+
+  {
+    "title": "P8: Lévy Sampling of Quantum Paths",
+    "description": "We describe the Levy's rejection free sampling algorithm that sequentially constructs the quantum path in the imaginary time direction. We apply this method to a free particle in a box, with and without periodic boundary conditions. We also show how the random walk can be scaled to achieve the same result. Next, we use various modifications of Levy's sampling for harmonic oscillator, and extend it to higher dimensions. Finally, using the developed tools, we study the behavior of anharmonic oscillator.",
+    "url": "P8_Levy_Sampling_of_Quantum_Paths.html",
+    "media": "data/harmonic_path_step_t.gif"
+  },
+
+  {
+    "title": "P9: Bose-Einstein Statistics",
+    "description": "Pending.",
+    "url": "  P9_Bose_Einstein_Statistics.html",
+    "media": "data/None.gif"
+  }
 
 
 ]
