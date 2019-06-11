@@ -57,9 +57,9 @@
 
   {
     "title": "P9: Bose-Einstein Statistics",
-    "description": "Pending.",
+    "description": "We study those features of Bose-Einstein statistics that lead to condensation, even in the absence of interaction between bosons. We start by finding all possible single particle states of a 3D harmonic trap bounded by the energy cutoff, and discuss various ways to count the degeneracy for each energy level. We also discuss the difference between partition functions of classical and quantum particles. We study the example of five bosons bounded in a harmonic trap, and find the dependence of condensate fraction on temperature by directly passing through all the states. We extend this to arbitrary number of trapped bosons, using canonical, and grand-canonical formalisms.",
     "url": "  P9_Bose_Einstein_Statistics.html",
-    "media": "data/None.gif"
+    "media": "data/part_fun_complex.png"
   }
 
 
