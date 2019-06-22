@@ -60,8 +60,14 @@
     "description": "We study those features of Bose-Einstein statistics that lead to condensation, even in the absence of interaction between bosons. We start by finding all possible single particle states of a 3D harmonic trap bounded by the energy cutoff, and discuss various ways to count the degeneracy for each energy level. We also discuss the difference between partition functions of classical and quantum particles. We study the example of five bosons bounded in a harmonic trap, and find the dependence of condensate fraction on temperature by directly passing through all the states. We extend this to arbitrary number of trapped bosons, using canonical, and grand-canonical formalisms.",
     "url": "  P9_Bose_Einstein_Statistics.html",
     "media": "data/part_fun_complex.png"
-  }
+  },
 
+    {
+    "title": "P10: Bose-Einstein Condensation",
+    "description": "We start with basic algorithms for sampling permutations and positions, relevant to bosonic density matrix. We employ Markov-chain Monte Carlo algorithm to study boson condensation in a harmonic trap. We further discuss properties of permutations and cycles in bosonic systems, and use these to derive recurrence relation for the bosonic partition function. We use distribution of cycles and Levy's quantum path sampling to generate a rejection free direct sampling algorithm that describes boson condensation. We also study the position distribution of bosons in (an)isotropic harmonic trap, and other interesting properties of bosonic systems.",
+    "url": "  P10_Bose_Einstein_Condensation.html",
+    "media": "data/boson_distribution_T.gif"
+  }
 
 ]
 
