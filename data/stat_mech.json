@@ -67,6 +67,13 @@
     "description": "We start with basic algorithms for sampling permutations and positions, relevant to bosonic density matrix. We employ Markov-chain Monte Carlo algorithm to study boson condensation in a harmonic trap. We further discuss properties of permutations and cycles in bosonic systems, and use these to derive recurrence relation for the bosonic partition function. We use distribution of cycles and Levy's quantum path sampling to generate a rejection free direct sampling algorithm that describes boson condensation. We also study the position distribution of bosons in (an)isotropic harmonic trap, and other interesting properties of bosonic systems.",
     "url": "  P10_Bose_Einstein_Condensation.html",
     "media": "data/boson_distribution_T.gif"
+  },
+
+    {
+    "title": "P11: Ising Model - Enumerations and Monte Carlo Algorithms",
+    "description": "We start with Gray algorithm that lists all possible spin configurations, and use these to calculate density of states, and thermodynamic quantities such as mean energy and specific heat capacity per particle. To be able to extend calculations to large sizes, we consider local Monte Carlo sampling algorithms. We use Metropolis Monte-Carlo method to study phase transition between paramagnet and ferromagnet. Next, we discuss heat bath algorithm, and demonstrate the phenomenon of coupling. Finally, we consider cluster algorithm, which solves the critical slowing down problem near the critical temperature present in Metropolis Monte Carlo method.",
+    "url": "  P11_Ising_Model.html",
+    "media": "data/snap.mp4"
   }
 
 ]
