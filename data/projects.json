@@ -3,24 +3,24 @@
     "title": "Statistical Mechanics",
     "description": "This project contains series of notebooks, where we demonstrate some of the well known statistical mechanics algorithms implemented in Python.",
     "url": "stat_mech.html",
-    "media": "https://placehold.it/700x400",
-    "media2": "https://placehold.it/700x300"
+    "media": "data/part_fun_complex.png",
+    "media2": "data/part_fun_complex.png"
   },
 
   {
     "title": "Portfolio Optimization",
     "description": "This is a collection of notebooks discussing various portfolio optimization algorithms. We discuss, analytic and numerical methods, with various realistic constraints.",
     "url": "port_opt.html",
-    "media": "https://placehold.it/700x400",
-    "media2": "https://placehold.it/700x300"
+    "media": "data/portopt.png",
+    "media2": "data/portopt.png"
   },
 
   {
     "title": "Time Series Forecast",
     "description": "This project contains series of notebooks with recipes for time series forecasting. We discuss simple ARIMA/GARCH models, hidden markov models, and extend it to models with recurrent neural networks (RNN/LSTM).",
     "url": "ts_forecast.html",
-    "media": "https://placehold.it/700x400",
-    "media2": "https://placehold.it/700x300"
+    "media": "data/bokeh_plot.png",
+    "media2": "data/bokeh_plot.png"
   },
 
   {
