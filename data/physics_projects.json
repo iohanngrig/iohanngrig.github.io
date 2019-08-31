@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Statistical Mechanics",
+    "description": "This project contains series of notebooks, where we demonstrate some of the well known statistical mechanics algorithms implemented in Python.",
+    "url": "stat_mech.html",
+    "media": "data/part_fun_complex.png",
+    "media2": "data/part_fun_complex.png"
+  },
+
+    {
+    "title": "Quasinormal Modes",
+    "description": "Here we examine some of the known algorithms to calculate quasinormal modes of various black holes.",
+    "url": "qnm.html",
+    "media": "https://placehold.it/700x400",
+    "media2": "https://placehold.it/700x300"
+  },
+
+    {
+    "title": "Sturm–Liouville Problems",
+    "description": "Various numerical methods to find the eigenvalues/eigenstates corresponding to SL problem.",
+    "url": "sl_problems.html",
+    "media": "https://placehold.it/700x400",
+    "media2": "https://placehold.it/700x300"
+  }
+
+]
