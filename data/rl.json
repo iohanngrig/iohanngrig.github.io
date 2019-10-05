@@ -1,0 +1,16 @@
+[
+  {
+    "title": "RL1: Markov Decision Processes",
+    "description": "The .",
+    "url": "RL1_Markov_Decision_Processes.html",
+    "media": "data/lake_opt.gif"
+  },
+
+  {
+    "title": "RL2: Markov Decision Processes",
+    "description": "The .",
+    "url": "RL2_Markov_Decision_Processes.html",
+    "media": "data/lake_opt.gif"
+  }
+
+]

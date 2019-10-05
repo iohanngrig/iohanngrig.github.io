@@ -26,7 +26,7 @@
   {
     "title": "Reinforcement Learning",
     "description": "In this project we present various applications of reinforcement learning techniques, as well as basic strategies often used in this area. We show an example of a simple trading machine that makes trading decisions based on the current state of the market.",
-    "url": "r_learn.html",
+    "url": "rl.html",
     "media": "https://placehold.it/700x400",
     "media2": "https://placehold.it/700x300"
   },
