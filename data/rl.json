@@ -1,16 +1,16 @@
 [
   {
     "title": "RL1: Markov Decision Processes",
-    "description": "The .",
+    "description": "We discuss reinforcement learning in the context of fully observable Markov decision processes, where the information about the world is fully known, and the agent's goal is to find an optimal policy that maximizes the value function. We outline and implement policy and value iteration algorithms that find such an optimal policy and corresponding value function. We use these algorithms on the examples of \"FrozenLake\" and \"Taxi\" OpenAI Gym environments.",
     "url": "RL1_Markov_Decision_Processes.html",
     "media": "data/lake_opt.gif"
   },
 
   {
-    "title": "RL2: Markov Decision Processes",
-    "description": "The .",
-    "url": "RL2_Markov_Decision_Processes.html",
-    "media": "data/lake_opt.gif"
+    "title": "RL2: Model-Free Policy Evaluation",
+    "description": "Abstract.",
+    "url": "RL2_Model_Free_Policy_Evaluation.html",
+    "media": "https://placehold.it/700x300"
   }
 
 ]
