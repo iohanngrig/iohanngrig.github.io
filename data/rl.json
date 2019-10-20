@@ -7,9 +7,16 @@
   },
 
   {
-    "title": "RL2: Model-Free Policy Evaluation",
+    "title": "RL2: Model-Free Policy Evaluation and Control",
+    "description": "We discuss policy evaluation and control in situations where the dynamics and reward models of the world are unknown. We start with Monte Carlo methods that learn directly from sampling completed episodes of experience. Next, we outline Temporal Difference methods that can learn from incomplete episodes of experience. In the context of model-free control, we study Q-learning, SARSA, and expected SARSA models. We use various gym environments to explore the properties and efficiency of these methods.",
+    "url": "RL2_Model_Free_Policy_Evaluation_and_Control.html",
+    "media": "data/cartpole.gif"
+  },
+
+  {
+    "title": "RL3: Value Function Approximation",
     "description": "Abstract.",
-    "url": "RL2_Model_Free_Policy_Evaluation.html",
+    "url": "RL3_Value_Function_Approximation.html",
     "media": "https://placehold.it/700x300"
   }
 

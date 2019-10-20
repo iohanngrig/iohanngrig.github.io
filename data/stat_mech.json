@@ -11,78 +11,65 @@
     "url": "P2_Markov_Chain_Toy_Model.html",
     "media": "data/pebble_dual_movie_epsilon_t.gif"
   },
-
-    {
+  {
     "title": "P3: Sampling and Integration",
     "description": "We start by showing one of the ways one can sample gaussian distribution from uniform distribution. Then we show how to sample points uniformly on a sphere and on a ball, using either direct sampling or Markov-chain sampling. The latter algorithm allows to implement something like a random walk on a sphere. We discuss how Metropolis acceptance probability in Markov-chain method can be used to sample points from an arbitrary distribution, and other competing algorithms using direct sampling. We also discuss rejection free tower sampling and Walker algorithms. We consider an example of inverse square root distribution, and discuss how to solve problems associated with it. We conclude by calculating volume and area of the d-dimensional hypersphere using Monte Carlo methods.",
     "url": "P3_Sampling_and_Integration.html",
     "media": "data/random_walk_sphere_t.gif"
   },
-
-    {
+  {
     "title": "P4: Generating Multicovariate Gaussian Distribution from Uniform",
     "description": "Using universality of uniform, we obtain standard normal distribution from the uniform distribution. We also show how to generate multicovariate gaussian distribution from standard normal distribution using Cholesky decomposition of covariance matrix. We check our results, and show how to calculate marginal and conditional distributions. The latter is proven to be useful in many instances.",
     "url": "P4_Generating_Distribution_from_Uniform_Using_Cholesky_Decomposition.html",
     "media": "data/conditional_distr.png"
   },
-
-    {
+  {
     "title": "P5: From Classical Mechanics to Statistical Mechanics",
     "description": "We implement event-driven molecular dynamics algorithm to simulate system of hard disks in a box. We verify that the velocity distribution of one of the disks approaches Maxwell's distribution. We also demonstrate the onset of chaos with three disks. In addition, we observe a non uniform distribution of particle positions in a box, which is sometimes associated with the so called entropic interaction or \"the fifth force\". Furthermore, we discuss statistical ensembles, and how to sample legitimate configurations using either direct or Markov-chain Monte Carlo sampling for boxes with and without periodic boundary conditions. In all these cases, we test the equiprobability hypothesis, and the manifestation of the \"fifth force\". At the end we discuss virial expansion, and the \"geometric\" intuition behind Maxwell/Boltzmann distributions.",
     "url": "P5_From_Classical_to_Statistical_Mechanics.html",
     "media": "data/md_simulation_t.mp4"
   },
-
   {
     "title": "P6: Entropic Interactions Phase Transitions",
     "description": "We study the emergence of entropic interactions in a 1d model of pins placed on a line. We observe that pins are strongly attracted to boundaries, and weakly attracted among themselves. The attraction is due to the 'halo effect' (pin centers should be at least one pin width away from each other, and half width away from the walls). When particles are near the walls or touch each other, the available configuration space for the rest of the particles is larger. Therefore, to increase the entropy, pins will tend to attract each other and walls. We consider the 1d model with and without periodic boundary conditions. In the latter case, the wall attraction disappears, while the pair interaction decays away. Although, there is an emergent attraction in this model, 1d models can not have phase transitions. This is why we consider a 2d model of hard disks in a box, and study an unexpected phase transition from liquid to solid, with increasing density.",
     "url": "P6_Entropic_Interactions_Phase_Transitions.html",
     "media": "data/disk_config_256.gif"
   },
-
   {
     "title": "P7: Density Matrices and Path Integrals",
     "description": "We start by recalling basic facts about the quantum harmonic oscillator to establish some notations. Then we consider important properties of density matrix, such as convolution and Trotter decomposition. We discuss path integral Monte Carlo algorithm that allows to sample quantum paths in a thermal ensemble. We also use this to simulate unitary quantum evolution of a wave function in different potentials. Finally we study anharmonic quantum oscillator beyond perturbative regime.",
     "url": "P7_Density_Matrices_and_Path_Integrals.html",
     "media": "data/dw_wf_evolution_t.gif"
   },
-
-
   {
     "title": "P8: Lévy Sampling of Quantum Paths",
     "description": "We describe the Levy's rejection free sampling algorithm that sequentially constructs the quantum path in the imaginary time direction. We apply this method to a free particle in a box, with and without periodic boundary conditions. We also show how the random walk can be scaled to achieve the same result. Next, we use various modifications of Levy's sampling for harmonic oscillator, and extend it to higher dimensions. Finally, using the developed tools, we study the behavior of anharmonic oscillator.",
     "url": "P8_Levy_Sampling_of_Quantum_Paths.html",
     "media": "data/harmonic_path_step_t.gif"
   },
-
   {
     "title": "P9: Bose-Einstein Statistics",
     "description": "We study those features of Bose-Einstein statistics that lead to condensation, even in the absence of interaction between bosons. We start by finding all possible single particle states of a 3D harmonic trap bounded by the energy cutoff, and discuss various ways to count the degeneracy for each energy level. We also discuss the difference between partition functions of classical and quantum particles. We study the example of five bosons bounded in a harmonic trap, and find the dependence of condensate fraction on temperature by directly passing through all the states. We extend this to arbitrary number of trapped bosons, using canonical, and grand-canonical formalisms.",
     "url": "  P9_Bose_Einstein_Statistics.html",
     "media": "data/part_fun_complex.png"
   },
-
-    {
+  {
     "title": "P10: Bose-Einstein Condensation",
     "description": "We start with basic algorithms for sampling permutations and positions, relevant to bosonic density matrix. We employ Markov-chain Monte Carlo algorithm to study boson condensation in a harmonic trap. We further discuss properties of permutations and cycles in bosonic systems, and use these to derive recurrence relation for the bosonic partition function. We use distribution of cycles and Levy's quantum path sampling to generate a rejection free direct sampling algorithm that describes boson condensation. We also study the position distribution of bosons in (an)isotropic harmonic trap, and other interesting properties of bosonic systems.",
     "url": "  P10_Bose_Einstein_Condensation.html",
     "media": "data/boson_distribution_T.gif"
   },
-
-    {
+  {
     "title": "P11: Ising Model - Enumerations and Monte Carlo Algorithms",
     "description": "We start with Gray algorithm that lists all possible spin configurations, and use these to calculate density of states, and thermodynamic quantities such as mean energy and specific heat capacity per particle. To be able to extend calculations to large sizes, we consider local Monte Carlo sampling algorithms. We use Metropolis Monte-Carlo method to study phase transition between paramagnet and ferromagnet. Next, we discuss heat bath algorithm, and demonstrate the phenomenon of coupling. Finally, we consider cluster algorithm, which solves the critical slowing down problem near the critical temperature present in Metropolis Monte Carlo method.",
     "url": "P11_Ising_Model.html",
     "media": "data/snap.mp4"
   },
-
-    {
+  {
     "title": "P12: Dynamical Monte Carlo Algorithms",
     "description": "Here we are concerned with time dependent phenomena and optimization. We outline the essence of faster than the clock algorithm, and apply it to Ising model. We discuss how one can solve optimization problems using Monte Carlo methods. In particular, we apply simulated annealing method to 13-sphere problem, as well as to other optimization problems. We conclude with the traveling salesman problem.",
     "url": "P12_Dynamical_Monte_Carlo_Algorithms.html",
     "media": "data/balls.mp4"
   }
-
-
 ]
 
