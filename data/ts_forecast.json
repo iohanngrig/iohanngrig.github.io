@@ -4,7 +4,25 @@
     "description": "We describe the theory and the algorithm behind the linear Kalman filter, and write a simple implementation for it. We also implement adaptive Kalman filter that modifies observation covariance matrix based on recent measurements, and asynchronous Kalman filter that processes observations at different rates. We demonstrate applications of Kalman filter for 1D and 2D projectile motions, GPS signal filtering, stock return prediction. Finally, we describe how Kalman filter can be used to perform dynamic linear regression.",
     "url": "TS1_Kalman_Filter.html",
     "media": "data/kalmans.png"
+  },
+
+  {
+    "title": "TS2: Introduction to Gaussian Processes",
+    "description": "Gaussian processes (GP) are used for non-parametric regression and classification, and are extended from the theory behind Gaussian distributions and Gaussian mixture models (GMM), with some ties to kernels and neural networks. While GMM are used to represent a distribution over values, GP are a distribution over functions.",
+    "url": "TS2_Introduction_to_Gaussian_Processes.html",
+    "media": "data/gp_intro.png"
+  },
+
+
+  {
+    "title": "TS4: Capturing Regime Change with Hidden Markov Model",
+    "description": "Abstract Pending (written in R)",
+    "url": "https://view.datalore.io/notebook/RQS1504lufZkd5cdgaxO41",
+    "media": "data/hmm_r.png"
   }
+
+
+
 
 ]
 

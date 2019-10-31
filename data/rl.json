@@ -14,10 +14,17 @@
   },
 
   {
-    "title": "RL3: Value Function Approximation",
-    "description": "Abstract.",
-    "url": "RL3_Value_Function_Approximation.html",
-    "media": "https://placehold.it/700x300"
+    "title": "RL3: Value Function Approximation and DQN",
+    "description": "The essence of value function approximation is to represent a (state-action/state) value function with a parameterized function instead of a table. If the true value function is unknown, we define loss as the discrepancy between the predicted and the target value functions. Using differentiable loss function, we find the value function parameters using stochastic gradient descent. This idea is implemented on the example of approximate Q-learning with deep neural networks (DQN), which we apply to various gym-atari games.",
+    "url": "RL3_Value_Function_Approximation_and_DQN.html",
+    "media": "data/breakout_dqn.gif"
+  },
+
+  {
+    "title": "RL4: Some Applications of DQN",
+    "description": "We consider various implementations of DQN, and apply these to gym-atari games, such as CartPole, and MsPacman.",
+    "url": "RL4_Some_Applications_of_DQN.html",
+    "media": "data/pacman_dqn.mp4"
   }
 
 ]
