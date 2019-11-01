@@ -1,10 +1,16 @@
 [
   {
     "title": "PO1: Markowitz Portfolio",
-    "description": "Abstract.",
+    "description": "Abstract Pending.",
     "url": "PO1_Markowitz_Portfolio.html",
     "media": "data/portopt.png"
-  }
+  },
 
+  {
+    "title": "PO2: Portfolio Optimization",
+    "description": "Abstract Pending.",
+    "url": "PO2_Portfolio_Optimization.html",
+    "media": "data/skew_kurt.png"
+  }
 ]
 
