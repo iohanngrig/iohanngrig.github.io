@@ -25,9 +25,14 @@
     "description": "Abstract Pending (written in R)",
     "url": "https://view.datalore.io/notebook/RQS1504lufZkd5cdgaxO41",
     "media": "data/hmm_r.png"
+  },
+
+  {
+    "title": "TS5: Deep Neural Networks for Time Series",
+    "description": "We perform time series forecasting using deep neural networks with RNNs and CNNs. While RNNs only account for the past data, CNNs also looks ahead, and can find local patterns. In CNN each filter learns a rule that applies to the different portions of the time series data (like piecewise linear regression). In addition, CNNs are computationally more efficient, since there are fewer sequential calculations.",
+    "url": "TS5_Deep_Neural_Networks_for_Time_Series.html",
+    "media": "data/dnn_forecast.png"
   }
-
-
 
 
 ]
