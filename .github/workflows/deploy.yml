@@ -1,0 +1,69 @@
+name: Deploy Quartz site to GitHub Pages
+
+on:
+  push:
+    branches: [v4]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between
+# the run in-progress and latest queued.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Python (for privacy_check.py)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Privacy check (must pass)
+        run: python3 scripts/privacy_check.py --strict
+
+      - name: Build site (Quartz + legacy reposition)
+        run: npm run build
+
+      - name: Verify legacy archive landed at /legacy/
+        run: |
+          test -f public/legacy/index.html || (echo "Legacy archive missing!" && exit 1)
+          test -f public/index.html || (echo "Main index missing!" && exit 1)
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
