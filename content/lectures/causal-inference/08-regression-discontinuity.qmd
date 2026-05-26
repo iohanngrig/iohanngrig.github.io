@@ -1,0 +1,170 @@
+---
+title: "Regression discontinuity"
+author: "Hovhannes Grigoryan"
+date: "2026-04-12"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Distinguish** sharp from fuzzy regression-discontinuity designs and state the identifying assumptions for each.
+2. **Estimate** the treatment effect at the cutoff using local linear regression with triangular kernel weights.
+3. **Apply** the Calonico-Cattaneo-Titiunik (CCT) bias-corrected confidence intervals.
+4. **Test** the validity of RD via McCrary's density discontinuity test and covariate smoothness checks.
+5. **Interpret** the RD estimand as a local average treatment effect at the cutoff.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures.
+
+**Lecture 1.** Setup, sharp RD, identification at the cutoff, local linear estimator (75 min).
+**Lecture 2.** Bandwidth selection, CCT bias correction, fuzzy RD and 2SLS at the cutoff (90 min).
+**Lecture 3.** Validity diagnostics: McCrary density test, placebo cutoffs, covariate smoothness. Hands-on with `rdrobust` (75 min).
+:::
+
+## The setup {#sec-rd-setup}
+
+A **regression-discontinuity** design exploits a rule that assigns treatment based on whether a continuous *running variable* $X$ crosses a threshold $c$. Receiving a scholarship iff a test score exceeds 85. Legal drinking iff age exceeds 21. Enrollment in Medicare iff age exceeds 65.
+
+In the **sharp RD** case, treatment is a deterministic function of the running variable:
+
+$$
+D_i = \mathbf{1}\{X_i \geq c\}.
+$$
+
+In the **fuzzy RD** case, crossing the threshold changes the probability of treatment but does not deterministically assign it.
+
+## Sharp RD {#sec-sharp-rd}
+
+### Identification at the cutoff
+
+Assume the conditional expectation functions $\mu_d(x) = \mathbb{E}[Y(d) \mid X = x]$ are continuous at $x = c$. Define the sharp RD estimand:
+
+$$
+\tau_{\text{RD}} := \mathbb{E}[Y(1) - Y(0) \mid X = c] = \lim_{x \downarrow c} \mathbb{E}[Y \mid X = x] - \lim_{x \uparrow c} \mathbb{E}[Y \mid X = x].
+$$ {#eq-rd-estimand}
+
+Continuity of $\mu_d$ ensures that any discontinuity in $\mathbb{E}[Y \mid X]$ at $c$ is attributable to the treatment, not to a jump in potential outcomes. This is the identifying assumption.
+
+### Local linear regression
+
+Estimate $\mu_d$ on each side of the cutoff using **local linear regression** with a kernel. For bandwidth $h$, fit
+
+$$
+\hat\mu_1(c) = \arg\min_{\alpha_1, \beta_1} \sum_{i: X_i \geq c} K\left(\frac{X_i - c}{h}\right) (Y_i - \alpha_1 - \beta_1 (X_i - c))^2,
+$$
+
+and similarly for $\hat\mu_0(c)$. The RD estimator is $\hat\tau_{\text{RD}} = \hat\mu_1(c) - \hat\mu_0(c)$.
+
+Typical kernel is triangular: $K(u) = (1 - |u|) \mathbf{1}\{|u| \leq 1\}$. The local linear specification is preferred over local constant because it has smaller bias at the boundary (Fan-Gijbels 1996).
+
+## Bandwidth selection and CCT bias correction {#sec-cct}
+
+Choosing $h$ involves a bias-variance tradeoff: small $h$ means less bias but higher variance. Imbens and Kalyanaraman (2012) [@imbens2012optimal] proposed an MSE-optimal bandwidth. Calonico, Cattaneo, and Titiunik (2014) [@calonico2014robust] refined the approach with **robust bias-corrected** confidence intervals.
+
+::: {.callout-important title="Theorem 8.1 — CCT bias-corrected RD"}
+Under smoothness of $\mu_0, \mu_1$ at the cutoff and with an MSE-optimal bandwidth $h_{\text{MSE}}$, the conventional RD estimator has asymptotic bias of order $h^2$. CCT construct a bias-estimate $\hat B$ from a second derivative of $\mu$ and form the bias-corrected estimator $\hat\tau^{\text{BC}} = \hat\tau_{\text{RD}} - \hat B$, with robust standard errors.
+:::
+
+In applied work, use `rdrobust` (R or Python). It handles bandwidth selection, bias correction, and robust inference automatically.
+
+## Fuzzy RD {#sec-fuzzy-rd}
+
+In fuzzy RD, crossing $c$ shifts treatment probability by less than 1. The ratio of the outcome jump to the treatment jump gives the fuzzy RD estimand:
+
+$$
+\tau_{\text{fuzzy}} = \frac{\lim_{x \downarrow c} \mathbb{E}[Y \mid X=x] - \lim_{x \uparrow c} \mathbb{E}[Y \mid X=x]}{\lim_{x \downarrow c} \mathbb{E}[D \mid X=x] - \lim_{x \uparrow c} \mathbb{E}[D \mid X=x]}.
+$$
+
+This is a 2SLS at the cutoff with the threshold indicator $\mathbf{1}\{X \geq c\}$ as an instrument for $D$. Under the LATE assumptions from Chapter 6, $\tau_{\text{fuzzy}}$ is the LATE for compliers at the cutoff.
+
+## Validity diagnostics {#sec-rd-validity}
+
+### McCrary density test
+
+If units can manipulate $X$, e.g., to score just above a threshold for a scholarship, the identifying assumption of continuity fails. McCrary (2008) [@mccrary2008manipulation] proposed a test for discontinuity in the density of the running variable at the cutoff. Significant discontinuity suggests manipulation and invalidates RD.
+
+### Covariate smoothness
+
+Predetermined covariates should be continuous at the cutoff. A discontinuity in baseline covariates indicates a confounded assignment and undermines the identifying assumption. Re-run the RD with each covariate as an outcome; large effects are diagnostic.
+
+### Placebo cutoffs
+
+Apply the RD procedure at fake cutoffs $c' \neq c$. Effects there should be near zero.
+
+## Synthetic example {#sec-rd-example}
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(0)
+N = 2000
+X = rng.uniform(-1, 1, N)
+c = 0.0
+D = (X >= c).astype(int)
+# True treatment effect at cutoff = 1.0
+Y0 = 0.5 * X + X ** 2 + rng.normal(0, 0.3, N)
+Y1 = Y0 + 1.0 + 0.3 * X                   # heterogeneous around cutoff
+Y = D * Y1 + (1 - D) * Y0
+
+# Local linear on each side with bandwidth h = 0.3
+h = 0.3
+def local_linear(X, Y, x0, h):
+    mask = np.abs(X - x0) <= h
+    w = 1 - np.abs(X[mask] - x0) / h
+    Xw = np.column_stack([np.ones(mask.sum()), X[mask] - x0])
+    W = np.diag(w)
+    beta = np.linalg.inv(Xw.T @ W @ Xw) @ Xw.T @ W @ Y[mask]
+    return beta[0]
+
+mu0 = local_linear(X[X < c], Y[X < c], c - 1e-6, h)
+mu1 = local_linear(X[X >= c], Y[X >= c], c + 1e-6, h)
+print(f"Estimated RD effect: {mu1 - mu0:.3f}   (true = 1.0)")
+```
+
+## Bibliographic notes {#sec-rd-bib}
+
+Thistlethwaite and Campbell (1960) invented the RD design in an educational scholarship study. Hahn, Todd, and van der Klaauw (2001) [@hahn2001identification] formalized the modern identification theory. Imbens and Lemieux (2008), "Regression Discontinuity Designs: A Guide to Practice," *Journal of Econometrics* 142, is the standard applied reference.
+
+## Exercises
+
+**Exercise 8.1** ($\star\star$). Prove that the local linear estimator has smaller boundary bias than the local constant estimator at the cutoff.
+
+**Exercise 8.2** ($\star\star$). Derive the MSE-optimal bandwidth for local linear regression at a boundary.
+
+**Exercise 8.3** ($\star$). Replicate the synthetic example with manipulation: some units just below the cutoff shift themselves to just above. Demonstrate the failure of RD.
+
+**Exercise 8.4** ($\star\star\star$). Using `rdrobust`, apply RD to a published study's dataset (suggestions: Angrist-Lavy 1999 maimonides-rule, Lee 2008 House election RDD). Compare hand-coded local linear to CCT's bias-corrected CI.
+
+---
+
+## References
+
+Calonico, S., Cattaneo, M. D., and Titiunik, R. (2014). "Robust Nonparametric Confidence Intervals for Regression-Discontinuity Designs." *Econometrica* 82(6), 2295–2326.
+
+Fan, J., and Gijbels, I. (1996). *Local Polynomial Modelling and Its Applications*. Chapman and Hall.
+
+Hahn, J., Todd, P., and van der Klaauw, W. (2001). "Identification and Estimation of Treatment Effects with a Regression-Discontinuity Design." *Econometrica* 69(1), 201–209.
+
+Imbens, G. W., and Kalyanaraman, K. (2012). "Optimal Bandwidth Choice for the Regression Discontinuity Estimator." *Review of Economic Studies* 79(3), 933–959.
+
+Imbens, G. W., and Lemieux, T. (2008). "Regression Discontinuity Designs: A Guide to Practice." *Journal of Econometrics* 142(2), 615–635.
+
+McCrary, J. (2008). "Manipulation of the Running Variable in the Regression Discontinuity Design: A Density Test." *Journal of Econometrics* 142(2), 698–714.
+
+Thistlethwaite, D. L., and Campbell, D. T. (1960). "Regression-Discontinuity Analysis: An Alternative to the Ex Post Facto Experiment." *Journal of Educational Psychology* 51(6), 309–317.

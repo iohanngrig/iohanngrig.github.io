@@ -1,0 +1,167 @@
+# Amazon confidentiality patterns — block these in public site content.
+# Format: one pattern per line, case-insensitive. Lines starting with # are comments.
+# This file is read by scripts/privacy_check.py and enforced as a pre-deploy gate.
+
+# === Project names (Amazon internal) ===
+MARS
+BDAgentV2
+BD Agent V2
+CCOA
+CreatorCompensationOptimizerAgent
+CCF
+CreatorCompensationFramework
+CreatorCompensationCAREMaestro
+DRAM
+DynamicRateAssignmentModel
+CreSTBot
+CreSTBotHgrig
+APTVideos
+AestheticQualityAssessmentModel
+CompBurnerModel
+IOHMM
+PAP
+Programmatic Agent Partner
+MIP
+Managed Influencer Program
+CRBS
+Creator Revenue-Backed Securities
+BDRateOptimizationAgent
+CADETAnalyticsAssistant
+CADET
+VBO
+PVE
+SCUPED-internal
+S-CUPED
+
+# === Internal terminology ===
+GCCP
+SOPS
+OPS
+iE%GCCP
+iEpctGCCP
+NetGCCP
+gccp_sops_ratio
+gccp_rate
+NetGCCP
+Creator Rewards program
+Creator Rewards bonuses
+gl_tier
+rate_card
+tier_target
+compshop
+CompShop
+tier_bonus
+
+# === Amazon business partners / integrations (context-revealing) ===
+Meta Co-Bidding
+Co-Bidding
+Perplexity integration
+PA-API creator
+Super-Creators framework
+
+# === People (Amazon-internal references) ===
+tessacd
+Tessa Childers-Day
+cmbeau
+royprati
+sparshwa
+Yassmin
+
+# === Amazon team names ===
+creator-economics-care
+CreatorScienceTeam
+creator-compensation
+associates-science
+Amazon Creators
+Creators Org
+CreST
+
+# === Amazon internal URLs ===
+amazon.com/bin/view
+w.amazon.com
+quip-amazon.com
+code.amazon.com
+phonetool.amazon.com
+broadcast.amazon.com
+pipelines.amazon.dev
+t.corp.amazon.com
+sim.amazon.com
+issues.amazon.com
+bindles.amazon.com
+sage.amazon.dev
+amzn-creator
+@amzn
+.corp.amazon
+.a2z.com
+.aws.dev
+.amazon.dev
+amazon-internal
+
+# === Amazon confidentiality markers ===
+Amazon confidential
+Amazon Confidential
+AMZN Confidential
+Tessa:
+
+# === Specific Amazon ticket / CR / doc IDs ===
+CR-2
+CR-26
+P37
+P35
+P31
+CSA-8
+COCO-
+SPO-4
+
+# === Creator-count / store-count patterns that could identify Amazon data ===
+145,820
+145,000 creators
+122,709 stores
+558K creators
+344,508 creators
+25.1M records
+41,000 store-month
+1,516 stores
+175 deals
+31K creators
+31K unmanaged
+$2.07B DRAM
+$45.2M
+$20.27M
+$29M swing
+$11.5M loss
+$17.5M gain
+$61.5M
+$50.0M
+$750M projected
+$750M+
+$480M
+$102MM NetGCCP
+
+# === Local filesystem / bytecode leakage ===
+# Python bytecode embeds full /Users/ paths; macOS local paths;
+# any reference to developer's machine or repository structure.
+__pycache__
+\.pyc$
+/Users/
+/tmp/
+\.DS_Store
+# Internal repo structure references (should not appear in public prose)
+content/research-notes/figures/
+content/applications/scripts/
+
+# === SCUPED paper details that are AMLC-only (not public yet) ===
+AMLC 2026
+AMLC
+# Note: "Synthetic CUPED" is OK once paper is open-source (T006). Until then, block the term
+# paired with AMLC venue or Amazon data. Treat the method name alone as public-safe.
+
+# === Internal marketplace codes in an Amazon context ===
+marketplace_id=1
+marketplace_id 2
+EU5 marketplaces
+MENA marketplaces
+
+# === Physics: these are ALLOWED (public domain) and should NOT match ===
+# - all physics journal names, arXiv, theoretical physics terminology
+# - university names

@@ -1,0 +1,255 @@
+---
+title: "Difference-in-differences"
+author: "Hovhannes Grigoryan"
+date: "2026-04-11"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Derive** the two-period two-group difference-in-differences (DiD) estimator and state the parallel-trends assumption formally.
+2. **Explain** why the standard two-way fixed-effects (TWFE) estimator is biased when treatment effects are heterogeneous and treatment timing is staggered.
+3. **Apply** the Goodman-Bacon decomposition to a staggered-adoption dataset and interpret the resulting 2×2 contrasts.
+4. **Use** the Callaway-Sant'Anna estimator to construct group-time average treatment effects that do not rely on TWFE.
+5. **Evaluate** parallel-trends plausibility using event-study plots and placebo tests.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three lectures of 75–90 minutes.
+
+**Lecture 1, The classical two-period DiD.**
+
+- Setup and identification (15 min)
+- Parallel-trends assumption (15 min)
+- OLS derivation of DiD (20 min)
+- Event-study plots (15 min)
+- Hands-on: Card-Krueger minimum-wage example (20 min)
+
+**Lecture 2, The staggered-adoption problem.**
+
+- Many groups, many periods (15 min)
+- TWFE with heterogeneous effects: what goes wrong (25 min)
+- Goodman-Bacon decomposition (20 min)
+- Negative weights and the forbidden comparisons (15 min)
+- Hands-on: reproduce a sign flip on simulated data (10 min)
+
+**Lecture 3, The modern estimators.**
+
+- Callaway-Sant'Anna (20 min)
+- Sun-Abraham interaction-weighted estimator (15 min)
+- de Chaisemartin-D'Haultfœuille DID$_\ell$ (15 min)
+- Choosing among them (15 min)
+- Hands-on: apply `did` and `csdid` packages (25 min)
+:::
+
+## The setup {#sec-did-setup}
+
+Suppose we observe units across two time periods $t = 0, 1$ and a treatment that switches on between periods for some units but not others. Let $D_i \in \{0, 1\}$ denote treatment status in period 1 (all units are untreated in period 0). The identification challenge: we cannot compare post-treatment outcomes of treated vs. untreated directly because the two groups may differ in ways we do not observe.
+
+DiD exploits the panel structure. The *change* in outcome within the treated group is compared to the *change* within the control group:
+
+$$
+\hat\tau^{\text{DiD}} = (\bar Y_{1, \text{treat}} - \bar Y_{0, \text{treat}}) - (\bar Y_{1, \text{ctrl}} - \bar Y_{0, \text{ctrl}}).
+$$ {#eq-did}
+
+Subtracting within-unit baselines removes time-invariant confounders. Subtracting the control-group trend removes shared time trends.
+
+## Parallel trends {#sec-parallel-trends}
+
+The identifying assumption is parallel trends:
+
+::: {.callout-important title="Assumption 7.1 — Parallel trends"}
+In the absence of treatment, the average outcomes of treated and control units would have followed the same trend:
+
+$$
+\mathbb{E}[Y(0)_{1} - Y(0)_{0} \mid D = 1] = \mathbb{E}[Y(0)_{1} - Y(0)_{0} \mid D = 0].
+$$ {#eq-parallel-trends}
+:::
+
+This is a counterfactual statement: it compares what *would have happened* to the treated group with what *actually happened* to the control group. Parallel trends is untestable directly, we cannot observe $Y(0)_{1}$ for treated units. We can only test falsifiability via pre-treatment trends.
+
+::: {.callout-note title="Theorem 7.1 — DiD identifies the ATT under parallel trends"}
+Under parallel trends and the consistency condition $Y_i = D_i Y_i(1) + (1 - D_i) Y_i(0)$,
+
+$$
+\hat\tau^{\text{DiD}} \xrightarrow{p} \tau_{\text{ATT}} = \mathbb{E}[Y(1) - Y(0) \mid D = 1, t = 1].
+$$
+:::
+
+::: {.callout-tip title="Proof"}
+Start from the observed difference-in-differences:
+
+$$
+\mathbb{E}[Y_1 - Y_0 \mid D = 1] - \mathbb{E}[Y_1 - Y_0 \mid D = 0].
+$$
+
+In the treated group, $Y_0 = Y(0)_0$ (untreated in period 0), $Y_1 = Y(1)_1$. In the control group, $Y_t = Y(0)_t$ for both periods. So the above equals
+
+$$
+\mathbb{E}[Y(1)_1 - Y(0)_0 \mid D = 1] - \mathbb{E}[Y(0)_1 - Y(0)_0 \mid D = 0].
+$$
+
+Add and subtract $\mathbb{E}[Y(0)_1 \mid D = 1]$ inside the first term:
+
+$$
+= \mathbb{E}[Y(1)_1 - Y(0)_1 \mid D = 1] + \underbrace{\mathbb{E}[Y(0)_1 - Y(0)_0 \mid D = 1] - \mathbb{E}[Y(0)_1 - Y(0)_0 \mid D = 0]}_{= 0 \text{ by parallel trends}} = \tau_{\text{ATT}}. \square
+$$
+:::
+
+## Two-way fixed effects {#sec-twfe}
+
+In panel data with many groups and time periods, the canonical estimator is **two-way fixed effects** (TWFE):
+
+$$
+Y_{i, t} = \alpha_i + \lambda_t + \tau D_{i, t} + \epsilon_{i, t}.
+$$ {#eq-twfe}
+
+Unit fixed effects $\alpha_i$ absorb time-invariant heterogeneity; time fixed effects $\lambda_t$ absorb shared trends. For 30 years, TWFE was the default empirical DiD.
+
+### The problem with TWFE + staggered adoption
+
+Between 2018 and 2021, four independent groups, Goodman-Bacon [@goodmanbacon2021difference], Callaway-Sant'Anna [@callaway2021difference], Sun-Abraham [@sun2021estimating], de Chaisemartin-D'Haultfœuille [@dechaisemartin2020twoway], showed that TWFE estimates a *weighted average* of 2×2 comparisons where the weights can be **negative**. With heterogeneous treatment effects and staggered timing, some of the "comparisons" use already-treated units as the control group, contaminating the estimate.
+
+::: {.callout-important title="Theorem 7.2 — The Bacon decomposition"}
+The TWFE estimator @eq-twfe decomposes into a weighted sum of 2×2 DiD estimates between pairs of timing groups, where the weights depend on group sizes and treatment-timing variance. In staggered-adoption settings with heterogeneous treatment effects, some weights are negative, and the TWFE estimate need not equal any convex combination of group-specific ATTs, it can even have the opposite sign.
+:::
+
+The core intuition: if unit A is treated at $t = 2$ and unit B at $t = 5$, then in the window $[2, 5]$, unit A is "already treated" and unit B is "not yet treated." A TWFE regression uses unit A (already treated, with effect) as a *control* for unit B during this window, which is a comparison structure that violates the assumption of parallel trends in untreated outcomes.
+
+## The Callaway-Sant'Anna estimator {#sec-cs}
+
+Callaway and Sant'Anna [@callaway2021difference] propose estimating group-time average treatment effects directly:
+
+$$
+\text{ATT}(g, t) := \mathbb{E}[Y_t(1) - Y_t(0) \mid G = g],
+$$
+
+where $G$ is the period of first treatment and $t \geq g$ is any post-treatment period. The estimator is
+
+$$
+\widehat{\text{ATT}}(g, t) = \mathbb{E}[Y_t - Y_{g-1} \mid G = g] - \mathbb{E}[Y_t - Y_{g-1} \mid \text{control}],
+$$
+
+where the control is either never-treated units or not-yet-treated units. The key is that the control group is *never "already treated"*, so the forbidden comparisons that plague TWFE are avoided.
+
+Aggregated summaries (overall ATT, dynamic effect, cohort-specific effect) are weighted combinations of $\widehat{\text{ATT}}(g, t)$ with positive weights. Callaway-Sant'Anna's `did` package in R and `differences` in Python implement the estimator.
+
+## Event-study plots and placebo tests {#sec-eventstudy}
+
+The strongest piece of evidence for parallel trends is that they *held* before treatment. An **event-study** plot shows the estimated effect at each lead and lag relative to treatment:
+
+- Before treatment: estimates should be near zero (no effect pre-treatment).
+- After treatment: estimates describe the dynamic treatment-effect path.
+
+A clear pre-treatment trend in the event-study plot is a red flag for parallel-trends failure.
+
+**Placebo tests** apply the DiD estimator to a "fake" treatment that was not actually administered (e.g., shift treatment by 2 years forward and re-estimate). A significant placebo effect indicates non-parallel trends.
+
+## Synthetic example {#sec-did-example}
+
+```python
+import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+
+rng = np.random.default_rng(42)
+N, T = 200, 6  # 200 units, 6 periods
+# Staggered treatment: units 1-50 treated at t=3, units 51-100 treated at t=4
+# Units 101-200 never treated
+unit = np.arange(N)
+group = np.where(unit < 50, 3, np.where(unit < 100, 4, 0))  # 0 = never treated
+
+rows = []
+for i in range(N):
+    alpha_i = rng.normal(0, 1)          # unit FE
+    for t in range(T):
+        lambda_t = 0.2 * t              # trend
+        # True heterogeneous effect: later cohort gets stronger effect
+        if group[i] > 0 and t >= group[i]:
+            tau_it = 1.5 + 0.3 * (group[i] - 3)
+        else:
+            tau_it = 0
+        y = alpha_i + lambda_t + tau_it + rng.normal(0, 0.5)
+        rows.append({'unit': i, 't': t, 'group': group[i], 'Y': y, 'D': int(tau_it > 0)})
+df = pd.DataFrame(rows)
+
+# TWFE estimate (biased)
+twfe = smf.ols('Y ~ D + C(unit) + C(t)', df).fit()
+twfe_coef = twfe.params['D']
+
+# True overall ATT: average of 1.5 (group 3) and 1.8 (group 4) across post-periods
+true_att = (1.5 * (100 - 50) * 3 + 1.8 * 50 * 2) / (50 * 3 + 50 * 2)
+
+print(f"True overall ATT:  {true_att:.3f}")
+print(f"TWFE estimate:     {twfe_coef:.3f}  (bias = {twfe_coef - true_att:+.3f})")
+```
+
+The TWFE coefficient deviates from the true ATT because of the forbidden comparisons. Callaway-Sant'Anna's estimator recovers the correct value. The details of the estimator, aggregating $\widehat{\text{ATT}}(g, t)$ across $(g, t)$ pairs, require more machinery than we develop here; for applied use, the `did` R package or `differences` Python implementation is the recommended path.
+
+## Evaluation metrics {#sec-did-metrics}
+
+1. **Pre-treatment event-study estimates**, should hover near zero. Report them.
+2. **Parallel-trends placebo $p$-value**, test for nonzero pre-treatment trend.
+3. **Honest Goodman-Bacon decomposition**, for TWFE applications, report what fraction of weight comes from forbidden comparisons.
+4. **Sensitivity to control-group choice**, Callaway-Sant'Anna allows never-treated vs not-yet-treated controls; results should be similar.
+5. **Dynamic effects**, report the event-study coefficients at each lead/lag, not just the average.
+
+## Bibliographic notes
+
+The classic DiD reference is Card and Krueger (1994), "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania," *American Economic Review* 84, 772–793.
+
+Goodman-Bacon (2021), "Difference-in-Differences with Variation in Treatment Timing," *Journal of Econometrics* 225, 254–277, introduces the decomposition bearing his name.
+
+Callaway and Sant'Anna (2021), "Difference-in-Differences with Multiple Time Periods," *Journal of Econometrics* 225, 200–230, is the most-cited of the modern estimators.
+
+Sun and Abraham (2021), "Estimating Dynamic Treatment Effects in Event Studies with Heterogeneous Treatment Effects," *Journal of Econometrics* 225, 175–199, proposes the interaction-weighted estimator.
+
+de Chaisemartin and D'Haultfœuille (2020), "Two-Way Fixed Effects Estimators with Heterogeneous Treatment Effects," *American Economic Review* 110, 2964–96, provides the fleshest analysis of TWFE's decomposition.
+
+Roth, Sant'Anna, Bilinski, and Poe (2023), "What's Trending in Difference-in-Differences? A Synthesis of the Recent Econometrics Literature," *Journal of Econometrics* 235, 2218–2244, is the survey to read.
+
+## Exercises
+
+**Exercise 7.1** ($\star$). Show that @eq-did equals the OLS coefficient on $D \cdot \text{Post}$ in the regression $Y = \alpha + \beta_1 D + \beta_2 \text{Post} + \tau (D \cdot \text{Post}) + \epsilon$.
+
+**Exercise 7.2** ($\star\star$). Prove Theorem 7.1 without the consistency assumption stated explicitly. Where does it enter implicitly?
+
+**Exercise 7.3** ($\star\star$). Replicate a sign flip: construct a DGP with two cohorts and heterogeneous effects in which TWFE gives a negative estimate while the true ATT is positive.
+
+**Exercise 7.4** ($\star\star\star$). Prove that under *homogeneous* treatment effects, TWFE is unbiased regardless of staggered timing. What features of the heterogeneity interact with the staggering to produce the bias?
+
+**Exercise 7.5** ($\star$). Apply Callaway-Sant'Anna to a public dataset (e.g., U.S. state-level minimum wage changes). Compare to TWFE.
+
+**Exercise 7.6** ($\star\star$). Implement the Goodman-Bacon decomposition in Python starting from the raw panel. Report the weights on each 2×2 comparison.
+
+**Exercise 7.7**. A DiD study finds the treatment reduced the outcome by 5% (p = 0.04). The pre-treatment event-study shows a clear downward trend in the treated group. Evaluate the robustness of the conclusion.
+
+---
+
+## References
+
+Callaway, B., and Sant'Anna, P. H. C. (2021). "Difference-in-Differences with Multiple Time Periods." *Journal of Econometrics* 225(2), 200–230.
+
+Card, D., and Krueger, A. B. (1994). "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania." *American Economic Review* 84(4), 772–793.
+
+de Chaisemartin, C., and D'Haultfœuille, X. (2020). "Two-Way Fixed Effects Estimators with Heterogeneous Treatment Effects." *American Economic Review* 110(9), 2964–2996.
+
+Goodman-Bacon, A. (2021). "Difference-in-Differences with Variation in Treatment Timing." *Journal of Econometrics* 225(2), 254–277.
+
+Roth, J., Sant'Anna, P. H. C., Bilinski, A., and Poe, J. (2023). "What's Trending in Difference-in-Differences? A Synthesis of the Recent Econometrics Literature." *Journal of Econometrics* 235(2), 2218–2244.
+
+Sun, L., and Abraham, S. (2021). "Estimating Dynamic Treatment Effects in Event Studies with Heterogeneous Treatment Effects." *Journal of Econometrics* 225(2), 175–199.

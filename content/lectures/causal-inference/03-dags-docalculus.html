@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-03-28">
+
+<title>DAGs and the do-calculus</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="03-dags-docalculus_files/libs/clipboard/clipboard.min.js"></script>
+<script src="03-dags-docalculus_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="03-dags-docalculus_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="03-dags-docalculus_files/libs/quarto-html/popper.min.js"></script>
+<script src="03-dags-docalculus_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="03-dags-docalculus_files/libs/quarto-html/anchor.min.js"></script>
+<link href="03-dags-docalculus_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="03-dags-docalculus_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="03-dags-docalculus_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="03-dags-docalculus_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="03-dags-docalculus_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-why-dags" id="toc-sec-why-dags" class="nav-link active" data-scroll-target="#sec-why-dags"><span class="header-section-number">1</span> Why another formalism?</a></li>
+  <li><a href="#sec-dags" id="toc-sec-dags" class="nav-link" data-scroll-target="#sec-dags"><span class="header-section-number">2</span> DAGs as causal models</a>
+  <ul class="collapse">
+  <li><a href="#definitions" id="toc-definitions" class="nav-link" data-scroll-target="#definitions"><span class="header-section-number">2.1</span> Definitions</a></li>
+  <li><a href="#three-elementary-structures" id="toc-three-elementary-structures" class="nav-link" data-scroll-target="#three-elementary-structures"><span class="header-section-number">2.2</span> Three elementary structures</a></li>
+  <li><a href="#the-d-separation-theorem" id="toc-the-d-separation-theorem" class="nav-link" data-scroll-target="#the-d-separation-theorem"><span class="header-section-number">2.3</span> The d-separation theorem</a></li>
+  </ul></li>
+  <li><a href="#sec-pgmpy-example" id="toc-sec-pgmpy-example" class="nav-link" data-scroll-target="#sec-pgmpy-example"><span class="header-section-number">3</span> A synthetic example with <code>pgmpy</code></a></li>
+  <li><a href="#sec-backdoor" id="toc-sec-backdoor" class="nav-link" data-scroll-target="#sec-backdoor"><span class="header-section-number">4</span> The backdoor criterion</a>
+  <ul class="collapse">
+  <li><a href="#worked-example" id="toc-worked-example" class="nav-link" data-scroll-target="#worked-example"><span class="header-section-number">4.1</span> Worked example</a></li>
+  </ul></li>
+  <li><a href="#sec-frontdoor" id="toc-sec-frontdoor" class="nav-link" data-scroll-target="#sec-frontdoor"><span class="header-section-number">5</span> The frontdoor criterion</a></li>
+  <li><a href="#sec-do-calculus" id="toc-sec-do-calculus" class="nav-link" data-scroll-target="#sec-do-calculus"><span class="header-section-number">6</span> The do-calculus</a></li>
+  <li><a href="#sec-bridge-to-po" id="toc-sec-bridge-to-po" class="nav-link" data-scroll-target="#sec-bridge-to-po"><span class="header-section-number">7</span> When backdoor equals unconfoundedness</a></li>
+  <li><a href="#sec-dowhy-workflow" id="toc-sec-dowhy-workflow" class="nav-link" data-scroll-target="#sec-dowhy-workflow"><span class="header-section-number">8</span> A full workflow with <code>dowhy</code></a></li>
+  <li><a href="#sec-dag-metrics" id="toc-sec-dag-metrics" class="nav-link" data-scroll-target="#sec-dag-metrics"><span class="header-section-number">9</span> Evaluation metrics specific to DAG-based analysis</a></li>
+  <li><a href="#sec-dag-bib" id="toc-sec-dag-bib" class="nav-link" data-scroll-target="#sec-dag-bib"><span class="header-section-number">10</span> Bibliographic notes</a>
+  <ul class="collapse">
+  <li><a href="#primary-sources" id="toc-primary-sources" class="nav-link" data-scroll-target="#primary-sources"><span class="header-section-number">10.1</span> Primary sources</a></li>
+  <li><a href="#completeness-and-algorithms" id="toc-completeness-and-algorithms" class="nav-link" data-scroll-target="#completeness-and-algorithms"><span class="header-section-number">10.2</span> Completeness and algorithms</a></li>
+  <li><a href="#applied-and-accessible" id="toc-applied-and-accessible" class="nav-link" data-scroll-target="#applied-and-accessible"><span class="header-section-number">10.3</span> Applied and accessible</a></li>
+  <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software"><span class="header-section-number">10.4</span> Software</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">11</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#theoretical-exercises" id="toc-theoretical-exercises" class="nav-link" data-scroll-target="#theoretical-exercises"><span class="header-section-number">11.1</span> Theoretical exercises</a></li>
+  <li><a href="#computational-exercises" id="toc-computational-exercises" class="nav-link" data-scroll-target="#computational-exercises"><span class="header-section-number">11.2</span> Computational exercises</a></li>
+  <li><a href="#discussion-exercises" id="toc-discussion-exercises" class="nav-link" data-scroll-target="#discussion-exercises"><span class="header-section-number">11.3</span> Discussion exercises</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">12</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">DAGs and the do-calculus</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 28, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Represent</strong> a substantive causal story as a directed acyclic graph (DAG), distinguishing causal direction from statistical dependence.</li>
+<li><strong>Apply</strong> the d-separation criterion to read off conditional independence statements from a DAG.</li>
+<li><strong>State and use</strong> the backdoor and frontdoor criteria to decide which covariates to condition on when estimating a causal effect.</li>
+<li><strong>Execute</strong> Pearl’s three rules of the do-calculus to transform interventional queries into observational ones.</li>
+<li><strong>Explain</strong> the Shpitser-Pearl identification algorithm and diagnose whether a given causal effect is identifiable from observational data.</li>
+<li><strong>Implement</strong> DAG manipulation and identification queries in Python using <code>pgmpy</code> and <code>dowhy</code>.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three lectures of 75–90 minutes.</p>
+<p><strong>Lecture 1, DAGs and d-separation.</strong></p>
+<ul>
+<li>Motivating: why we need a second formalism beyond potential outcomes (10 min)</li>
+<li>Directed acyclic graphs: nodes, edges, paths (15 min)</li>
+<li>Chains, forks, colliders (20 min)</li>
+<li>The d-separation theorem (25 min)</li>
+<li>Hands-on: build a DAG in <code>pgmpy</code> and query conditional independencies (15 min)</li>
+</ul>
+<p><strong>Lecture 2, Backdoor, frontdoor, and the do-calculus.</strong></p>
+<ul>
+<li>The intervention <span class="math inline">\(do(X = x)\)</span> formally (10 min)</li>
+<li>Backdoor criterion and when it applies (25 min)</li>
+<li>Frontdoor criterion for the mediator case (25 min)</li>
+<li>Pearl’s three rules (20 min)</li>
+<li>Hands-on: apply the backdoor criterion via <code>dowhy</code> (15 min)</li>
+</ul>
+<p><strong>Lecture 3, Identification algorithm and bridge to potential outcomes.</strong></p>
+<ul>
+<li>The identification problem in full generality (15 min)</li>
+<li>Shpitser-Pearl algorithm (20 min)</li>
+<li>When does the backdoor criterion equal unconfoundedness? (20 min)</li>
+<li>The DAG → g-formula mapping (20 min)</li>
+<li>Reading group: a paper using a DAG to defend an identifying assumption (20 min)</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Notation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Notation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A directed acyclic graph <span class="math inline">\(\mathcal{G} = (V, E)\)</span> has vertex set <span class="math inline">\(V\)</span> (variables) and edge set <span class="math inline">\(E \subseteq V \times V\)</span> (directed arcs). The notation <span class="math inline">\(A \to B\)</span> means an arc from <span class="math inline">\(A\)</span> to <span class="math inline">\(B\)</span>. We write <span class="math inline">\(\text{pa}(V)\)</span> for parents of <span class="math inline">\(V\)</span> in <span class="math inline">\(\mathcal{G}\)</span>, <span class="math inline">\(\text{de}(V)\)</span> for descendants, and <span class="math inline">\(\text{an}(V)\)</span> for ancestors. Conditional independence is <span class="math inline">\(A \perp\!\!\!\perp B \mid C\)</span>. The do-operator <span class="math inline">\(do(X = x)\)</span> denotes intervention that sets <span class="math inline">\(X\)</span> to <span class="math inline">\(x\)</span>, distinct from observational conditioning <span class="math inline">\(\mid X = x\)</span>.</p>
+</div>
+</div>
+<section id="sec-why-dags" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-why-dags"><span class="header-section-number">1</span> Why another formalism?</h2>
+<p>Chapter 1 gave us potential outcomes. Chapter 2 gave us identification under unconfoundedness. Why add DAGs?</p>
+<p>Because <em>which variables to put in <span class="math inline">\(X\)</span></em> is the hardest question in applied causal inference, and the potential-outcomes framework does not answer it. Unconfoundedness says <span class="math inline">\((Y(0), Y(1)) \perp\!\!\!\perp D \mid X\)</span>, condition on the right variables and you are fine. But which variables are the right ones? Adding every variable you have access to is a common beginner mistake that can make the bias worse, not better, through a phenomenon called collider bias.</p>
+<p>DAGs provide the graphical language in which these questions have clean algorithmic answers. The machinery originated with Wright’s path analysis (1920s), was formalized by Spirtes, Glymour, and Scheines (1993), and reached its modern form in Judea Pearl’s structural causal models <span class="citation" data-cites="pearl1995causal pearl2009causality">[@pearl1995causal; @pearl2009causality]</span>. In 2011 Pearl received the Turing Award largely for this line of work.</p>
+<p>For the applied researcher, DAGs serve three purposes:</p>
+<ol type="1">
+<li><strong>Communication.</strong> A DAG makes the researcher’s causal assumptions explicit and reviewable.</li>
+<li><strong>Identification.</strong> Graph-theoretic algorithms determine what is and is not identifiable.</li>
+<li><strong>Debugging.</strong> DAGs help diagnose which variables cause bias when conditioned on.</li>
+</ol>
+<p>This chapter is a working introduction, not a comprehensive treatment. For the complete algebra, see Pearl (2009) <span class="citation" data-cites="pearl2009causality">[@pearl2009causality]</span> or the more accessible Pearl, Glymour, and Jewell (2016) <span class="citation" data-cites="pearl2016primer">[@pearl2016primer]</span>.</p>
+</section>
+<section id="sec-dags" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-dags"><span class="header-section-number">2</span> DAGs as causal models</h2>
+<section id="definitions" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="definitions"><span class="header-section-number">2.1</span> Definitions</h3>
+<p>A <strong>directed acyclic graph</strong> consists of a finite set of variables <span class="math inline">\(V\)</span> and a set of directed arcs between them, with the constraint that no variable is its own ancestor (no cycles). The interpretation is:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Causal interpretation of a DAG">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Causal interpretation of a DAG
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>An arc <span class="math inline">\(A \to B\)</span> means that <span class="math inline">\(A\)</span> is a <strong>direct cause</strong> of <span class="math inline">\(B\)</span>, intervening on <span class="math inline">\(A\)</span> changes <span class="math inline">\(B\)</span>, holding fixed all other direct causes of <span class="math inline">\(B\)</span>.</p>
+</div>
+</div>
+<p>The absence of an arc encodes the stronger claim that the two variables have no direct causal link (given the rest of the model). Absent arcs are often more important than present ones: they are where the identifying assumptions live.</p>
+<p>A <strong>path</strong> between two variables is a sequence of variables connected by arcs, regardless of direction. A <strong>directed path</strong> follows arc directions throughout.</p>
+</section>
+<section id="three-elementary-structures" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="three-elementary-structures"><span class="header-section-number">2.2</span> Three elementary structures</h3>
+<p>Almost every DAG reasoning reduces to identifying and handling three elementary structures.</p>
+<p><strong>Chain.</strong> <span class="math inline">\(A \to M \to B\)</span>. Information flows from <span class="math inline">\(A\)</span> to <span class="math inline">\(B\)</span> via <span class="math inline">\(M\)</span>. Conditioning on <span class="math inline">\(M\)</span> blocks this flow: <span class="math inline">\(A \perp\!\!\!\perp B \mid M\)</span>.</p>
+<p><strong>Fork.</strong> <span class="math inline">\(A \leftarrow C \to B\)</span>. Common cause <span class="math inline">\(C\)</span> induces statistical dependence between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>. Conditioning on <span class="math inline">\(C\)</span> removes this dependence: <span class="math inline">\(A \perp\!\!\!\perp B \mid C\)</span>. This is the classical confounding structure.</p>
+<p><strong>Collider.</strong> <span class="math inline">\(A \to C \leftarrow B\)</span>. Variable <span class="math inline">\(C\)</span> is a <strong>collider</strong> between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>. Unlike chains and forks, a collider <em>blocks</em> a path by default. Conditioning on a collider (or one of its descendants) <em>opens</em> the path, inducing spurious dependence between its parents.</p>
+<p>The collider structure is the reason “add every covariate to your regression” is wrong. If the outcome <span class="math inline">\(Y\)</span> and treatment <span class="math inline">\(D\)</span> are both caused by a variable <span class="math inline">\(X\)</span>, then <span class="math inline">\(X\)</span> is <em>not</em> a collider and conditioning on it is the right move. But if <span class="math inline">\(X\)</span> is a descendant of both <span class="math inline">\(D\)</span> and <span class="math inline">\(Y\)</span>, then <span class="math inline">\(X\)</span> is a collider and conditioning on it injects bias.</p>
+</section>
+<section id="the-d-separation-theorem" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="the-d-separation-theorem"><span class="header-section-number">2.3</span> The d-separation theorem</h3>
+<p>The three elementary structures combine into a general criterion for reading off conditional independence from a DAG.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: d-separation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: d-separation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A path between variables <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> is <strong>blocked</strong> by a set <span class="math inline">\(Z\)</span> if either:</p>
+<ul>
+<li>The path contains a <strong>chain</strong> <span class="math inline">\(\cdots \to M \to \cdots\)</span> or <strong>fork</strong> <span class="math inline">\(\cdots \leftarrow M \to \cdots\)</span> such that <span class="math inline">\(M \in Z\)</span>, or</li>
+<li>The path contains a <strong>collider</strong> <span class="math inline">\(\cdots \to C \leftarrow \cdots\)</span> such that <span class="math inline">\(C \notin Z\)</span> and no descendant of <span class="math inline">\(C\)</span> is in <span class="math inline">\(Z\)</span>.</li>
+</ul>
+<p><span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are <strong>d-separated</strong> by <span class="math inline">\(Z\)</span> if every path between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> is blocked by <span class="math inline">\(Z\)</span>. Write <span class="math inline">\(A \perp\!\!\!\perp_d B \mid Z\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 3.1 — d-separation implies conditional independence">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 3.1 — d-separation implies conditional independence
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If the DAG <span class="math inline">\(\mathcal{G}\)</span> is a correct causal diagram for the joint distribution <span class="math inline">\(P\)</span>, and <span class="math inline">\(A \perp\!\!\!\perp_d B \mid Z\)</span> in <span class="math inline">\(\mathcal{G}\)</span>, then <span class="math inline">\(A \perp\!\!\!\perp B \mid Z\)</span> in <span class="math inline">\(P\)</span>.</p>
+</div>
+</div>
+<p>The converse also holds for what are called <em>faithful</em> distributions, those in which no additional independencies exist beyond those implied by the DAG. Faithfulness fails in degenerate cases (exact numerical cancellation) and is assumed in most applied work.</p>
+</section>
+</section>
+<section id="sec-pgmpy-example" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-pgmpy-example"><span class="header-section-number">3</span> A synthetic example with <code>pgmpy</code></h2>
+<p>Consider a toy DGP: we want the causal effect of <code>Education</code> on <code>Earnings</code>, with <code>Ability</code> as an unmeasured common cause and <code>Experience</code> as a mediator.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pgmpy.models <span class="im">import</span> DiscreteBayesianNetwork</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pgmpy.inference <span class="im">import</span> VariableElimination</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the DAG</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>dag <span class="op">=</span> DiscreteBayesianNetwork([</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'Ability'</span>, <span class="st">'Education'</span>),     <span class="co"># Higher ability → more education</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'Ability'</span>, <span class="st">'Earnings'</span>),       <span class="co"># and higher earnings (confounding)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'Education'</span>, <span class="st">'Experience'</span>),   <span class="co"># Education → early-career experience</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'Experience'</span>, <span class="st">'Earnings'</span>),    <span class="co"># Experience → earnings</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'Education'</span>, <span class="st">'Earnings'</span>),     <span class="co"># Direct return to schooling</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Check d-separation: is Education ⊥ Earnings | Ability?</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># NO, there are two open paths: Education → Earnings directly,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># and Education → Experience → Earnings.</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># But we can query the software</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dag.is_dconnected(<span class="st">'Education'</span>, <span class="st">'Earnings'</span>))  <span class="co"># True</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dag.is_dconnected(<span class="st">'Education'</span>, <span class="st">'Earnings'</span>, observed<span class="op">=</span>[<span class="st">'Ability'</span>]))  <span class="co"># True</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Is Ability ⊥ Experience | Education?</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dag.is_dconnected(<span class="st">'Ability'</span>, <span class="st">'Experience'</span>))           <span class="co"># True (via Education)</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dag.is_dconnected(<span class="st">'Ability'</span>, <span class="st">'Experience'</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                         observed<span class="op">=</span>[<span class="st">'Education'</span>]))           <span class="co"># False (Education blocks)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The first query confirms that <code>Education</code> and <code>Earnings</code> are marginally d-connected (both via the direct arc and via the path through <code>Experience</code>). The second confirms that conditioning on <code>Ability</code> alone does not d-separate them, we still have the <code>Education → Experience → Earnings</code> path. The third confirms that conditioning on <code>Education</code> d-separates <code>Ability</code> from <code>Experience</code>.</p>
+<p>D-separation is the mechanical engine underneath. The next step is to use it for identification.</p>
+</section>
+<section id="sec-backdoor" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-backdoor"><span class="header-section-number">4</span> The backdoor criterion</h2>
+<p>Given a DAG and a target effect <span class="math inline">\(D \to Y\)</span>, the central practical question is: <em>what set <span class="math inline">\(Z\)</span> of variables should I condition on to get an unbiased causal estimate?</em></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: Backdoor path">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: Backdoor path
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A <strong>backdoor path</strong> from <span class="math inline">\(D\)</span> to <span class="math inline">\(Y\)</span> is a path that begins with an arc <strong>into</strong> <span class="math inline">\(D\)</span> (i.e., <span class="math inline">\(D \leftarrow \cdots\)</span>) and ends at <span class="math inline">\(Y\)</span>. These are the paths through which confounding can flow.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 3.2 — Backdoor criterion (Pearl 1995)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 3.2 — Backdoor criterion (Pearl 1995)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A set <span class="math inline">\(Z\)</span> satisfies the <strong>backdoor criterion</strong> relative to the pair <span class="math inline">\((D, Y)\)</span> in a DAG <span class="math inline">\(\mathcal{G}\)</span> if:</p>
+<ol type="1">
+<li>No node in <span class="math inline">\(Z\)</span> is a descendant of <span class="math inline">\(D\)</span>.</li>
+<li><span class="math inline">\(Z\)</span> blocks every backdoor path from <span class="math inline">\(D\)</span> to <span class="math inline">\(Y\)</span>.</li>
+</ol>
+<p>If <span class="math inline">\(Z\)</span> satisfies the backdoor criterion, then the causal effect of <span class="math inline">\(D\)</span> on <span class="math inline">\(Y\)</span> is identifiable from observational data:</p>
+<p><span id="eq-backdoor-formula"><span class="math display">\[
+P(Y = y \mid do(D = d)) = \sum_z P(Y = y \mid D = d, Z = z) P(Z = z).
+\tag{1}\]</span></span></p>
+</div>
+</div>
+<p>The right-hand side of <a href="#eq-backdoor-formula" class="quarto-xref">Equation&nbsp;1</a> is the g-formula from Chapter 2, the identification of the ATE reduces to a sum over the conditioning set. The backdoor criterion tells us <em>which</em> <span class="math inline">\(Z\)</span> to use.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof sketch">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof sketch
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Condition 1 rules out conditioning on descendants of <span class="math inline">\(D\)</span>, doing so would introduce bias by conditioning on colliders or by blocking the intended causal path. Condition 2 ensures that all confounding (backdoor) paths are blocked. The DAG factorization <span class="math inline">\(P(V) = \prod_i P(V_i \mid \text{pa}(V_i))\)</span> plus these two conditions give the result via an algebraic manipulation (Pearl 1995, Theorem 3.2.2).</p>
+</div>
+</div>
+<p>In the <code>Ability → Education → Earnings</code> example, the backdoor path is <code>Education ← Ability → Earnings</code>. Conditioning on <code>Ability</code> blocks this path. If <code>Ability</code> is observable, we can estimate the causal effect of <code>Education</code> on <code>Earnings</code> using the g-formula. If <code>Ability</code> is unobservable, which is usually the case, the backdoor criterion fails for any set <span class="math inline">\(Z\)</span> that excludes it, and we cannot identify the effect by conditioning alone.</p>
+<section id="worked-example" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="worked-example"><span class="header-section-number">4.1</span> Worked example</h3>
+<p>Consider a DAG with:</p>
+<ul>
+<li><span class="math inline">\(U\)</span> (unobserved confounder) → <span class="math inline">\(D, Y\)</span></li>
+<li><span class="math inline">\(X_1\)</span> → <span class="math inline">\(D, Y\)</span> (observed confounder)</li>
+<li><span class="math inline">\(X_2\)</span> → <span class="math inline">\(D, Y\)</span> (another observed confounder)</li>
+<li><span class="math inline">\(M\)</span> mediator: <span class="math inline">\(D \to M \to Y\)</span></li>
+<li><span class="math inline">\(Z\)</span> (bad control): <span class="math inline">\(D \to Z \leftarrow Y\)</span> (collider)</li>
+</ul>
+<p>The backdoor paths from <span class="math inline">\(D\)</span> to <span class="math inline">\(Y\)</span> are <span class="math inline">\(D \leftarrow X_1 \to Y\)</span>, <span class="math inline">\(D \leftarrow X_2 \to Y\)</span>, and <span class="math inline">\(D \leftarrow U \to Y\)</span>. Since <span class="math inline">\(U\)</span> is unobserved, the backdoor criterion fails. No choice of observed <span class="math inline">\(Z\)</span> can block the <span class="math inline">\(U\)</span>-path. This DAG yields a non-identifiable effect under strong ignorability.</p>
+<p>If <span class="math inline">\(U\)</span> is absent from the true DGP, the set <span class="math inline">\(Z = \{X_1, X_2\}\)</span> satisfies the backdoor criterion. Note that we <strong>should not</strong> condition on <span class="math inline">\(M\)</span> (a mediator, would absorb part of the effect) or <span class="math inline">\(Z\)</span> (a collider, would open the path <span class="math inline">\(D \to Z \leftarrow Y\)</span> and inject bias).</p>
+</section>
+</section>
+<section id="sec-frontdoor" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-frontdoor"><span class="header-section-number">5</span> The frontdoor criterion</h2>
+<p>Pearl’s second major identification result gives a way to identify the effect of <span class="math inline">\(D\)</span> on <span class="math inline">\(Y\)</span> when the backdoor criterion fails, provided a mediator is available with specific properties.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 3.3 — Frontdoor criterion (Pearl 1995)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 3.3 — Frontdoor criterion (Pearl 1995)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A set <span class="math inline">\(M\)</span> satisfies the <strong>frontdoor criterion</strong> with respect to <span class="math inline">\((D, Y)\)</span> if:</p>
+<ol type="1">
+<li><span class="math inline">\(M\)</span> intercepts all directed paths from <span class="math inline">\(D\)</span> to <span class="math inline">\(Y\)</span>.</li>
+<li>There is no backdoor path from <span class="math inline">\(D\)</span> to <span class="math inline">\(M\)</span>.</li>
+<li>All backdoor paths from <span class="math inline">\(M\)</span> to <span class="math inline">\(Y\)</span> are blocked by <span class="math inline">\(D\)</span>.</li>
+</ol>
+<p>If <span class="math inline">\(M\)</span> satisfies the frontdoor criterion, then</p>
+<p><span id="eq-frontdoor-formula"><span class="math display">\[
+P(Y = y \mid do(D = d)) = \sum_m P(M = m \mid D = d) \sum_{d'} P(Y = y \mid M = m, D = d') P(D = d').
+\tag{2}\]</span></span></p>
+</div>
+</div>
+<p>The frontdoor formula can identify effects even in the presence of unobserved confounders between <span class="math inline">\(D\)</span> and <span class="math inline">\(Y\)</span>, provided the mediator is itself unconfounded from the treatment in a very specific sense. Pearl’s canonical example: the effect of smoking on lung cancer, where genes are an unmeasured confounder but tar deposits in the lungs play the role of <span class="math inline">\(M\)</span>.</p>
+<p>Frontdoor applications are rarer than backdoor ones because finding a mediator <span class="math inline">\(M\)</span> satisfying all three conditions is unusual. But when it applies, it is powerful, it identifies effects that no amount of ordinary covariate adjustment can.</p>
+</section>
+<section id="sec-do-calculus" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-do-calculus"><span class="header-section-number">6</span> The do-calculus</h2>
+<p>The backdoor and frontdoor formulas are special cases of a more general calculus. Pearl’s <strong>do-calculus</strong> consists of three rules that allow one to transform expressions involving <span class="math inline">\(do\)</span> into expressions that do not.</p>
+<p>Let <span class="math inline">\(\mathcal{G}_{\overline{X}}\)</span> denote the graph obtained from <span class="math inline">\(\mathcal{G}\)</span> by deleting all arcs into <span class="math inline">\(X\)</span>, and <span class="math inline">\(\mathcal{G}_{\underline{X}}\)</span> the graph obtained by deleting all arcs out of <span class="math inline">\(X\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Pearl's three rules">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Pearl’s three rules
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Rule 1 (insertion/deletion of observations).</strong> If <span class="math inline">\((Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X}}}\)</span>, then <span class="math display">\[P(Y \mid do(X), Z, W) = P(Y \mid do(X), W).\]</span></p>
+<p><strong>Rule 2 (action/observation exchange).</strong> If <span class="math inline">\((Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X} \underline{Z}}}\)</span>, then <span class="math display">\[P(Y \mid do(X), do(Z), W) = P(Y \mid do(X), Z, W).\]</span></p>
+<p><strong>Rule 3 (insertion/deletion of actions).</strong> If <span class="math inline">\((Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X} \overline{Z(W)}}}\)</span>, then <span class="math display">\[P(Y \mid do(X), do(Z), W) = P(Y \mid do(X), W),\]</span></p>
+<p>where <span class="math inline">\(Z(W)\)</span> are nodes in <span class="math inline">\(Z\)</span> that are not ancestors of any node in <span class="math inline">\(W\)</span> in <span class="math inline">\(\mathcal{G}_{\overline{X}}\)</span>.</p>
+</div>
+</div>
+<p>The rules are all consequences of d-separation in modified graphs. Rule 1 says observations unrelated to <span class="math inline">\(Y\)</span> given the intervention can be dropped. Rule 2 says actions can be exchanged for observations when the distinguishing paths are blocked. Rule 3 says irrelevant actions can be dropped.</p>
+<p>Applied in sequence, these three rules can derive the backdoor formula, the frontdoor formula, and every other identification result in the literature. A key result:</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 3.4 — Completeness of the do-calculus (Shpitser-Pearl 2006)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 3.4 — Completeness of the do-calculus (Shpitser-Pearl 2006)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If a causal effect <span class="math inline">\(P(Y \mid do(X))\)</span> is identifiable from observational data under a given DAG <span class="math inline">\(\mathcal{G}\)</span>, then the do-calculus can produce an identifying expression. Conversely, if the do-calculus cannot produce such an expression after exhaustive application of the three rules, the effect is not identifiable from observational data.</p>
+</div>
+</div>
+<p>The algorithmic version (the <strong>ID algorithm</strong> <span class="citation" data-cites="shpitser2006identification">[@shpitser2006identification]</span>) is implemented in software and decides identifiability in time polynomial in the number of variables. Both <code>dowhy</code> (Python) and <code>causaleffect</code> (R) provide implementations.</p>
+</section>
+<section id="sec-bridge-to-po" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-bridge-to-po"><span class="header-section-number">7</span> When backdoor equals unconfoundedness</h2>
+<p>How do DAGs connect to the Chapter 2 potential-outcomes machinery?</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 3.5 — DAG-Potential-Outcomes bridge">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 3.5 — DAG-Potential-Outcomes bridge
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If a DAG <span class="math inline">\(\mathcal{G}\)</span> correctly encodes the data-generating process and <span class="math inline">\(Z\)</span> satisfies the backdoor criterion for <span class="math inline">\((D, Y)\)</span> in <span class="math inline">\(\mathcal{G}\)</span>, then <span class="math inline">\(Z\)</span> satisfies the unconfoundedness assumption: <span class="math inline">\((Y(0), Y(1)) \perp\!\!\!\perp D \mid Z\)</span>. Consequently,</p>
+<p><span class="math display">\[
+\tau = \mathbb{E}_Z\left[\mathbb{E}[Y \mid D=1, Z] - \mathbb{E}[Y \mid D=0, Z]\right].
+\]</span></p>
+</div>
+</div>
+<p>In other words: the backdoor criterion is the DAG-level <em>sufficient condition</em> for the potential-outcome-level unconfoundedness assumption. They are different ways of stating the same substantive requirement.</p>
+<p>The DAG perspective is more machine-checkable. Given a proposed DAG, software can determine whether a given <span class="math inline">\(Z\)</span> satisfies the backdoor criterion. The potential-outcomes perspective is more philosophically direct but harder to verify.</p>
+<p>A modern applied causal workflow often uses both:</p>
+<ol type="1">
+<li>Draw the DAG based on substantive knowledge of the DGP.</li>
+<li>Use <code>dowhy</code> or manual reasoning to identify an adjustment set <span class="math inline">\(Z\)</span>.</li>
+<li>Verify that <span class="math inline">\(Z\)</span> is observable and that positivity holds for it.</li>
+<li>Estimate the causal effect using regression, IPW, or DML with <span class="math inline">\(Z\)</span> as the adjustment covariates.</li>
+</ol>
+<p>Every step depends on the DAG being correct. DAGs are themselves untestable assumptions about the world, but they make those assumptions visible and reviewable in a way that an unstructured “control for the right things” approach does not.</p>
+</section>
+<section id="sec-dowhy-workflow" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-dowhy-workflow"><span class="header-section-number">8</span> A full workflow with <code>dowhy</code></h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dowhy <span class="im">import</span> CausalModel</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate a confounded DGP</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">2000</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>U <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)                              <span class="co"># unobserved confounder</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>X1 <span class="op">=</span> <span class="fl">0.5</span> <span class="op">*</span> U <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)                   <span class="co"># observed covariate</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>X2 <span class="op">=</span> rng.binomial(<span class="dv">1</span>, <span class="fl">0.5</span>, N)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (<span class="fl">0.7</span> <span class="op">*</span> X1 <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> X2 <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> U <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="fl">0.5</span>, N) <span class="op">&gt;</span> <span class="dv">0</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> D <span class="op">+</span> <span class="fl">1.5</span> <span class="op">*</span> X1 <span class="op">+</span> <span class="fl">0.8</span> <span class="op">*</span> X2 <span class="op">+</span> <span class="fl">0.6</span> <span class="op">*</span> U <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame({<span class="st">'D'</span>: D, <span class="st">'Y'</span>: Y, <span class="st">'X1'</span>: X1, <span class="st">'X2'</span>: X2})</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: U is not in the dataframe, it is unobserved</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># The causal graph in gml format, omitting U because it's unobserved</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>causal_graph <span class="op">=</span> <span class="st">"""</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="st">graph [</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="st">    directed 1</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="st">    node [id "D" label "D"]</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="st">    node [id "Y" label "Y"]</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="st">    node [id "X1" label "X1"]</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="st">    node [id "X2" label "X2"]</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="st">    edge [source "X1" target "D"]</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">    edge [source "X2" target "D"]</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">    edge [source "X1" target "Y"]</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="st">    edge [source "X2" target "Y"]</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="st">    edge [source "D" target "Y"]</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="st">]</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="st">"""</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CausalModel(data<span class="op">=</span>df, treatment<span class="op">=</span><span class="st">'D'</span>, outcome<span class="op">=</span><span class="st">'Y'</span>, graph<span class="op">=</span>causal_graph)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Identification step: let dowhy find the adjustment set</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>identified_estimand <span class="op">=</span> model.identify_effect()</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(identified_estimand)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimation step: linear regression with adjustment</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>estimate <span class="op">=</span> model.estimate_effect(identified_estimand,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                                   method_name<span class="op">=</span><span class="st">'backdoor.linear_regression'</span>)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DoWhy estimated effect: </span><span class="sc">{</span>estimate<span class="sc">.</span>value<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co"># Refutation: test robustness to unobserved confounders via sensitivity</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>refute <span class="op">=</span> model.refute_estimate(identified_estimand, estimate,</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>                                method_name<span class="op">=</span><span class="st">'add_unobserved_common_cause'</span>,</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>                                confounders_effect_on_treatment<span class="op">=</span><span class="st">'linear'</span>,</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                                confounders_effect_on_outcome<span class="op">=</span><span class="st">'linear'</span>)</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(refute)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The identification step reports which adjustment set <code>dowhy</code> selects (here, <span class="math inline">\(\{X_1, X_2\}\)</span> via the backdoor criterion). The estimation step applies linear regression with that adjustment. Because the true DGP has an unobserved confounder <span class="math inline">\(U\)</span>, the estimated effect is biased, this is a feature of the example, not a software bug. The refutation step injects synthetic unobserved confounders and asks how much the estimate would move; it is the automated version of sensitivity analysis from Chapter 2.</p>
+</section>
+<section id="sec-dag-metrics" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="sec-dag-metrics"><span class="header-section-number">9</span> Evaluation metrics specific to DAG-based analysis</h2>
+<ol type="1">
+<li><strong>DAG provenance.</strong> Does the DAG come from substantive knowledge (domain experts, published literature) or from data (constraint-based discovery, e.g., PC algorithm)? Data-derived DAGs are under-identified in general, multiple DAGs are compatible with the same conditional independences.</li>
+<li><strong>Identifiability report.</strong> Report whether the causal effect was identifiable under the DAG and which adjustment set was chosen.</li>
+<li><strong>Sensitivity to DAG mis-specification.</strong> If you suspect an additional arc might exist, re-identify under the perturbed DAG. Large swings in the identified adjustment set are a red flag.</li>
+<li><strong>Positivity on the adjustment set.</strong> Once an adjustment set is chosen, standard positivity diagnostics apply.</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled" title="DAGs do not substitute for substantive thought">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>DAGs do not substitute for substantive thought
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Two different researchers can draw different DAGs for the same problem, and no dataset can tell us which is correct. The DAG is a formalization of substantive causal knowledge; it is not a substitute for that knowledge. The quality of causal inference is ultimately bounded by the quality of the researcher’s domain understanding.</p>
+</div>
+</div>
+</section>
+<section id="sec-dag-bib" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="sec-dag-bib"><span class="header-section-number">10</span> Bibliographic notes</h2>
+<section id="primary-sources" class="level3" data-number="10.1">
+<h3 data-number="10.1" class="anchored" data-anchor-id="primary-sources"><span class="header-section-number">10.1</span> Primary sources</h3>
+<p>Pearl (1995), “Causal Diagrams for Empirical Research,” <em>Biometrika</em> 82(4), 669–688, is the foundational modern paper. The target article plus discussions and rejoinder give a full perspective.</p>
+<p>Pearl (2009), <em>Causality: Models, Reasoning, and Inference</em> (2nd ed.), Cambridge University Press, is the definitive 400-page treatment. Chapter 3 covers d-separation and identification in detail.</p>
+<p>Spirtes, Glymour, and Scheines (2000), <em>Causation, Prediction, and Search</em> (2nd ed.), MIT Press, gives an alternative (more algorithmic) view emphasizing causal discovery from data.</p>
+</section>
+<section id="completeness-and-algorithms" class="level3" data-number="10.2">
+<h3 data-number="10.2" class="anchored" data-anchor-id="completeness-and-algorithms"><span class="header-section-number">10.2</span> Completeness and algorithms</h3>
+<p>Shpitser and Pearl (2006), “Identification of Joint Interventional Distributions in Recursive Semi-Markovian Causal Models,” AAAI. Tian and Pearl’s earlier ID algorithm is the foundation; Shpitser-Pearl extended it to conditional effects and proved completeness.</p>
+<p>Bareinboim and Pearl (2016), “Causal Inference and the Data-Fusion Problem,” <em>PNAS</em> 113(27), 7345–7352. Extends identification theory to combining experimental and observational data.</p>
+</section>
+<section id="applied-and-accessible" class="level3" data-number="10.3">
+<h3 data-number="10.3" class="anchored" data-anchor-id="applied-and-accessible"><span class="header-section-number">10.3</span> Applied and accessible</h3>
+<p>Pearl, Glymour, and Jewell (2016), <em>Causal Inference in Statistics: A Primer</em>, Wiley, is the accessible intro. 150 pages, designed for upper-undergraduate / early-graduate.</p>
+<p>Cunningham (2021), <em>Causal Inference: The Mixtape</em>, Yale University Press, is freely available and mixes DAGs with potential outcomes in the context of econometric applications.</p>
+</section>
+<section id="software" class="level3" data-number="10.4">
+<h3 data-number="10.4" class="anchored" data-anchor-id="software"><span class="header-section-number">10.4</span> Software</h3>
+<p><code>pgmpy</code> (Python), DAG representation, d-separation queries, basic inference. <code>dowhy</code> (Microsoft, 2018+), end-to-end identification / estimation / refutation. <code>causaleffect</code> (R), faithful implementation of the Shpitser-Pearl ID algorithm. <code>DAGitty</code>, interactive DAG builder with automatic backdoor-adjustment-set suggestion (browser-based at dagitty.net).</p>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="exercises"><span class="header-section-number">11</span> Exercises</h2>
+<section id="theoretical-exercises" class="level3" data-number="11.1">
+<h3 data-number="11.1" class="anchored" data-anchor-id="theoretical-exercises"><span class="header-section-number">11.1</span> Theoretical exercises</h3>
+<p><strong>Exercise 3.1</strong> (<span class="math inline">\(\star\)</span>). In a DAG with variables <span class="math inline">\(\{A, B, C, D, E\}\)</span> and arcs <span class="math inline">\(A \to B, A \to C, B \to D, C \to D, D \to E\)</span>, list all paths between <span class="math inline">\(A\)</span> and <span class="math inline">\(E\)</span>. For each, identify whether it is blocked by conditioning on <span class="math inline">\(\{D\}\)</span>, on <span class="math inline">\(\{B\}\)</span>, or on <span class="math inline">\(\{B, C\}\)</span>.</p>
+<p><strong>Exercise 3.2</strong> (<span class="math inline">\(\star\star\)</span>). Prove the backdoor criterion by reducing it to d-separation plus an algebraic manipulation. You may cite the factorization <span class="math inline">\(P(V) = \prod_i P(V_i \mid \text{pa}(V_i))\)</span> without proof.</p>
+<p><strong>Exercise 3.3</strong> (<span class="math inline">\(\star\star\)</span>). Construct a DAG in which the causal effect of <span class="math inline">\(D\)</span> on <span class="math inline">\(Y\)</span> is identifiable via the frontdoor criterion but not via the backdoor criterion. Show the frontdoor formula in full.</p>
+<p><strong>Exercise 3.4</strong> (<span class="math inline">\(\star\star\star\)</span>). Trace through the ID algorithm on a given DAG. Take the graph with <span class="math inline">\(D, M_1, M_2, Y\)</span> and unmeasured <span class="math inline">\(U \to D, Y\)</span> plus <span class="math inline">\(D \to M_1 \to M_2 \to Y\)</span>. Is the effect of <span class="math inline">\(D\)</span> on <span class="math inline">\(Y\)</span> identifiable? If so, derive the identifying expression using Pearl’s three rules.</p>
+</section>
+<section id="computational-exercises" class="level3" data-number="11.2">
+<h3 data-number="11.2" class="anchored" data-anchor-id="computational-exercises"><span class="header-section-number">11.2</span> Computational exercises</h3>
+<p><strong>Exercise 3.5</strong> (<span class="math inline">\(\star\)</span>). Using <code>pgmpy</code>, construct the <code>Ability / Education / Experience / Earnings</code> DAG from §<a href="#sec-pgmpy-example" class="quarto-xref">Section&nbsp;3</a>. Enumerate every pair of variables and report whether each pair is d-separated under four conditioning sets: <span class="math inline">\(\emptyset\)</span>, <span class="math inline">\(\{Ability\}\)</span>, <span class="math inline">\(\{Experience\}\)</span>, <span class="math inline">\(\{Ability, Experience\}\)</span>.</p>
+<p><strong>Exercise 3.6</strong> (<span class="math inline">\(\star\star\)</span>). Using <code>dowhy</code>, encode a DAG for the synthetic DGP in Chapter 2 and verify that the automatically-selected adjustment set matches the one you derived manually.</p>
+<p><strong>Exercise 3.7</strong> (<span class="math inline">\(\star\star\)</span>). Implement a simple d-separation checker from scratch in Python. Your function should take a graph adjacency matrix, a set of conditioning nodes, and a query pair, and return whether the pair is d-separated given the conditioning set. Test against <code>pgmpy</code> on a small DAG.</p>
+<p><strong>Exercise 3.8</strong> (<span class="math inline">\(\star\star\star\)</span>). Implement the backdoor-adjustment-set enumeration: given a DAG and a treatment-outcome pair, enumerate all minimal sets <span class="math inline">\(Z\)</span> satisfying the backdoor criterion. Compare your implementation against <code>dagitty</code>’s browser-based tool on three test DAGs.</p>
+</section>
+<section id="discussion-exercises" class="level3" data-number="11.3">
+<h3 data-number="11.3" class="anchored" data-anchor-id="discussion-exercises"><span class="header-section-number">11.3</span> Discussion exercises</h3>
+<p><strong>Exercise 3.9</strong>. In a study of the effect of minimum-wage increases on employment, draw a DAG including the following variables: labor market conditions, state characteristics, minimum wage, employment. Where would unmeasured confounding most plausibly enter? How would you diagnose it if the DAG were even approximately correct?</p>
+<p><strong>Exercise 3.10</strong>. DAGs formalize assumptions but do not verify them. Suppose two researchers draw substantively different DAGs for the same problem and derive different identifying adjustment sets. How should a third-party reader evaluate the difference? What does this tell you about the epistemic status of DAGs as tools for causal inference?</p>
+<hr>
+</section>
+</section>
+<section id="references" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="references"><span class="header-section-number">12</span> References</h2>
+<p>Bareinboim, E., and Pearl, J. (2016). “Causal Inference and the Data-Fusion Problem.” <em>Proceedings of the National Academy of Sciences</em> 113(27), 7345–7352.</p>
+<p>Cunningham, S. (2021). <em>Causal Inference: The Mixtape</em>. Yale University Press.</p>
+<p>Pearl, J. (1995). “Causal Diagrams for Empirical Research.” <em>Biometrika</em> 82(4), 669–688.</p>
+<p>Pearl, J. (2009). <em>Causality: Models, Reasoning, and Inference</em> (2nd ed.). Cambridge University Press.</p>
+<p>Pearl, J., Glymour, M., and Jewell, N. P. (2016). <em>Causal Inference in Statistics: A Primer</em>. Wiley.</p>
+<p>Shpitser, I., and Pearl, J. (2006). “Identification of Joint Interventional Distributions in Recursive Semi-Markovian Causal Models.” <em>Proceedings of the 21st AAAI Conference on Artificial Intelligence</em>, 1219–1226.</p>
+<p>Spirtes, P., Glymour, C., and Scheines, R. (2000). <em>Causation, Prediction, and Search</em> (2nd ed.). MIT Press.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

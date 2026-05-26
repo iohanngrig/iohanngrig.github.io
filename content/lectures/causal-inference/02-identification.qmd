@@ -1,0 +1,433 @@
+---
+title: "Identification: when can data answer a causal question?"
+author: "Hovhannes Grigoryan"
+date: "2026-03-22"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **State** the three pillars of causal identification in observational data, unconfoundedness, positivity, and consistency (SUTVA), and explain what each enforces.
+2. **Derive** the identification formula $\tau = \mathbb{E}_X[\mathbb{E}[Y \mid D=1, X] - \mathbb{E}[Y \mid D=0, X]]$ under the three pillars.
+3. **Prove** the Rosenbaum-Rubin theorem that the propensity score is a balancing score and use it to reduce a multivariate problem to a scalar adjustment.
+4. **Distinguish** identification (existence of a population answer given assumptions) from estimation (computing an approximation from a finite sample) and explain why they are different exercises.
+5. **Diagnose** violations of each identifying assumption in a given applied problem and assess their severity.
+6. **Apply** the identification result to a synthetic DGP and numerically confirm that the adjusted estimand recovers the true ATE while the naive difference does not.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three lectures of 75–90 minutes.
+
+**Lecture 1, The three pillars.**
+
+- Why observational studies need more than data (10 min)
+- Unconfoundedness formally: $(Y(0), Y(1)) \perp\!\!\!\perp D \mid X$ (20 min)
+- Positivity and the support problem (15 min)
+- Consistency / SUTVA revisited (10 min)
+- Deriving the g-formula under the three assumptions (20 min)
+- Hands-on: simulate violations of each assumption and observe the bias (15 min)
+
+**Lecture 2, The propensity score theorem.**
+
+- Definition of the propensity score $e(X) = P(D=1 \mid X)$ (10 min)
+- Balancing-score property: $D \perp\!\!\!\perp X \mid e(X)$ (proof) (20 min)
+- Rosenbaum-Rubin theorem: unconfoundedness given $X$ implies unconfoundedness given $e(X)$ (25 min)
+- Consequences: estimation reduces to scalar adjustment (15 min)
+- Hands-on: fit a logistic propensity score and compute a weighted ATE (20 min)
+
+**Lecture 3, Identification vs estimation.**
+
+- What can be estimated at parametric rate? What cannot? (15 min)
+- Worked example: the Lalonde NSW-PSID identification problem (30 min)
+- Sensitivity analysis: what if unconfoundedness fails? (20 min)
+- A summary table of estimands and their identification conditions (15 min)
+:::
+
+::: {.callout-note title="Notation"}
+Throughout, $e(X) = P(D = 1 \mid X)$ denotes the propensity score, $\mu_d(X) = \mathbb{E}[Y \mid D = d, X]$ the conditional outcome regression under treatment $d$, and $\mu(X) = \mathbb{E}[Y \mid X]$ the marginal conditional expectation. The symbol $\perp\!\!\!\perp$ denotes independence.
+:::
+
+## From randomization to observational data {#sec-observational-setup}
+
+In Chapter 1 we established that the difference-in-means is unbiased for the ATE under randomization. The key enabling fact was $D \perp\!\!\!\perp (Y(0), Y(1))$, the treatment assignment is statistically independent of the potential outcomes. Randomization delivered this independence by construction.
+
+Observational data rarely has this independence. Patients in observational studies of blood-pressure medication are often *prescribed* the medication because of their blood pressure: treatment depends on covariates that also predict the outcome. Students who enroll in advanced math classes have different academic trajectories than those who do not. Firms that adopt new technology have different revenue paths than those that do not.
+
+This is *confounding*: a third variable influences both $D$ and $Y$. Confounding is the default condition of observational data, not an exception.
+
+Observational studies can still deliver valid causal inference, but the price of admission is more assumptions. This chapter examines what those assumptions are, why they are needed, and what they buy.
+
+## The three pillars of observational identification {#sec-three-pillars}
+
+For the ATE to be recoverable from observational data on $(Y, D, X)$, three assumptions must hold jointly. They are often collectively called the strong ignorability assumption [@rosenbaum1983central].
+
+### Pillar 1: Unconfoundedness (conditional independence)
+
+::: {.callout-important title="Assumption 2.1 — Unconfoundedness"}
+For all $d \in \{0, 1\}$,
+
+$$
+Y(d) \perp\!\!\!\perp D \mid X.
+$$ {#eq-unconfoundedness}
+:::
+
+The condition says that once we condition on covariates $X$, the treatment is as-good-as-randomly assigned with respect to the potential outcomes. Different names for the same idea in the literature: selection on observables, ignorable treatment assignment, no unmeasured confounding, exogeneity.
+
+Unconfoundedness is a statement about the *world*, not the data. No finite dataset can verify it. The applied researcher's judgment is whether every factor that plausibly influences both $D$ and $Y$ is captured in $X$. This is why careful attention to the data-generating process matters more in causal inference than in prediction.
+
+### Pillar 2: Positivity (overlap)
+
+::: {.callout-important title="Assumption 2.2 — Positivity"}
+For all $x$ in the support of $X$,
+
+$$
+0 < P(D = 1 \mid X = x) < 1.
+$$ {#eq-positivity}
+:::
+
+Positivity requires that every covariate profile has some chance of being in either treatment arm. If there exists a value $x^*$ with $P(D = 1 \mid X = x^*) = 0$, then we *never* observe a treated unit with $X = x^*$ and thus cannot learn $\mathbb{E}[Y(1) \mid X = x^*]$ without extrapolating.
+
+Positivity violations come in two flavors:
+
+- **Structural.** Treatment is defined such that some units cannot possibly receive it. Pregnant women were excluded from a particular drug trial; no observational data exists to estimate the effect on pregnant women.
+- **Practical.** The treatment is theoretically possible for all units, but some covariate combinations are extremely rare in one arm. A well-trained logistic propensity model returns 0.001 for these units. Effectively, we are extrapolating.
+
+Positivity is diagnosable from the data: plot a histogram of $\hat e(X_i)$ in each arm.
+
+### Pillar 3: Consistency / SUTVA
+
+Consistency is a refinement of SUTVA that links the potential-outcome notation to observed data. We stated it in Chapter 1 as equation @eq-consistency:
+
+$$
+Y_i = D_i Y_i(1) + (1 - D_i) Y_i(0).
+$$
+
+In observational data, consistency additionally requires that the treatment $D$ is well-defined and that a given value of $D$ corresponds to the same intervention across units. This rules out "hidden versions of treatment": if $D = 1$ sometimes means aspirin and sometimes ibuprofen, $Y(1)$ is not a well-defined random variable and any identification argument falls through.
+
+## The identification formula {#sec-identification-formula}
+
+With the three pillars in hand, we can prove that the ATE is identifiable from the distribution of observable $(Y, D, X)$.
+
+::: {.callout-note title="Theorem 2.1 — Identification of the ATE under strong ignorability"}
+Under unconfoundedness @eq-unconfoundedness, positivity @eq-positivity, and consistency @eq-consistency,
+
+$$
+\tau := \mathbb{E}[Y(1) - Y(0)] = \mathbb{E}_X \bigl[\mathbb{E}[Y \mid D = 1, X] - \mathbb{E}[Y \mid D = 0, X]\bigr].
+$$ {#eq-id-formula}
+:::
+
+::: {.callout-tip title="Proof"}
+By the definition of ATE,
+
+$$
+\tau = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)].
+$$
+
+For the first term, apply the tower property by conditioning on $X$:
+
+$$
+\mathbb{E}[Y(1)] = \mathbb{E}_X[\mathbb{E}[Y(1) \mid X]].
+$$
+
+By unconfoundedness @eq-unconfoundedness, $Y(1) \perp\!\!\!\perp D \mid X$, so
+
+$$
+\mathbb{E}[Y(1) \mid X] = \mathbb{E}[Y(1) \mid X, D = 1].
+$$
+
+By positivity @eq-positivity, the conditioning event $\{D = 1, X = x\}$ has positive probability for every $x$ in the support. By consistency, $Y = Y(1)$ on this event, hence
+
+$$
+\mathbb{E}[Y(1) \mid X, D = 1] = \mathbb{E}[Y \mid X, D = 1].
+$$
+
+Combining,
+
+$$
+\mathbb{E}[Y(1)] = \mathbb{E}_X[\mathbb{E}[Y \mid X, D = 1]] = \mathbb{E}_X[\mu_1(X)].
+$$
+
+A symmetric argument for $\mathbb{E}[Y(0)] = \mathbb{E}_X[\mu_0(X)]$ completes the proof. $\square$
+:::
+
+Each pillar is essential and uniquely so:
+
+- Without **unconfoundedness**, we cannot replace $\mathbb{E}[Y(d) \mid X]$ by $\mathbb{E}[Y(d) \mid X, D = d]$.
+- Without **positivity**, the conditioning event $\{D = d, X = x\}$ has measure zero for some $x$, and $\mathbb{E}[Y \mid D = d, X = x]$ is undefined.
+- Without **consistency**, $Y$ on the treatment-$d$ arm is not equal to $Y(d)$, and the last substitution fails.
+
+Equation @eq-id-formula is known variously as the **g-formula** [@robins1986], the **adjustment formula**, or the **regression adjustment identification**. It is the workhorse identification result of observational causal inference.
+
+## The propensity score theorem {#sec-propensity-score-theorem}
+
+Equation @eq-id-formula requires adjusting for the full covariate vector $X$, which in practice may be high-dimensional. Rosenbaum and Rubin (1983) showed that one can instead adjust for the scalar *propensity score* $e(X) = P(D = 1 \mid X)$, reducing a hard multivariate estimation problem to a univariate one.
+
+### The balancing-score property
+
+::: {.callout-note title="Theorem 2.2 — Balancing-score property of $e(X)$ (Rosenbaum-Rubin 1983)"}
+The propensity score $e(X) = P(D = 1 \mid X)$ is a **balancing score**: treatment assignment is independent of covariates conditional on the propensity score:
+
+$$
+D \perp\!\!\!\perp X \mid e(X).
+$$ {#eq-balancing}
+:::
+
+::: {.callout-tip title="Proof"}
+Consider any measurable event $A$ on the covariates. We need $P(D = 1 \mid X, e(X)) = P(D = 1 \mid e(X))$. Since $e(X)$ is a deterministic function of $X$, conditioning on $X$ also determines $e(X)$; conversely, $\{X \in A, e(X) = c\}$ is either contained in $\{e(X) = c\}$ or has zero probability. Compute
+
+$$
+P(D = 1 \mid e(X) = c) = \mathbb{E}[D \mid e(X) = c] \stackrel{\text{tower}}{=} \mathbb{E}[\mathbb{E}[D \mid X] \mid e(X) = c] = \mathbb{E}[e(X) \mid e(X) = c] = c.
+$$
+
+So $P(D = 1 \mid e(X)) = e(X)$. By construction, $P(D = 1 \mid X) = e(X)$ also. These being equal, they are *both* $e(X)$, and so
+
+$$
+P(D = 1 \mid X, e(X)) = P(D = 1 \mid X) = e(X) = P(D = 1 \mid e(X)),
+$$
+
+which yields @eq-balancing. $\square$
+:::
+
+### Unconfoundedness passes through $e(X)$
+
+The critical extension is:
+
+::: {.callout-note title="Theorem 2.3 — Unconfoundedness given $e(X)$"}
+If $(Y(0), Y(1)) \perp\!\!\!\perp D \mid X$, then
+
+$$
+(Y(0), Y(1)) \perp\!\!\!\perp D \mid e(X).
+$$ {#eq-unconfoundedness-by-ps}
+:::
+
+::: {.callout-tip title="Proof"}
+Fix $c \in [0, 1]$. It suffices to show $P(D = 1 \mid Y(0), Y(1), e(X) = c) = P(D = 1 \mid e(X) = c)$. Conditioning further on $X$,
+
+$$
+P(D = 1 \mid Y(0), Y(1), X, e(X) = c) = P(D = 1 \mid Y(0), Y(1), X) \stackrel{\text{Assum 2.1}}{=} P(D = 1 \mid X) = e(X) = c.
+$$
+
+This value does not depend on $(Y(0), Y(1))$, so integrating over the distribution of $X$ given $\{Y(0), Y(1), e(X) = c\}$ leaves it unchanged:
+
+$$
+P(D = 1 \mid Y(0), Y(1), e(X) = c) = c = P(D = 1 \mid e(X) = c).
+$$
+
+Hence @eq-unconfoundedness-by-ps. $\square$
+:::
+
+The practical import: rather than stratifying on the full $p$-dimensional $X$, we can stratify on the scalar $e(X)$, or, more commonly, *weight* observations by $1/e(X)$ and $1/(1 - e(X))$ to recover the ATE. This is the basis for inverse-probability-weighted (IPW) estimation, covered in Chapter 5.
+
+::: {.callout-warning title="What propensity-score adjustment does not fix"}
+Theorem 2.3 requires unconfoundedness given $X$. If there is an unmeasured confounder $U$, a variable that affects both $D$ and $Y$ but is not in $X$, then conditioning on $e(X)$ does not help. Propensity scores balance the covariates you measured, not the ones you didn't. Sensitivity analysis (§@sec-sensitivity) is how we reason about unmeasured confounders.
+:::
+
+## A synthetic example end-to-end {#sec-synthetic-full}
+
+Consider a DGP with two covariates, heterogeneous treatment effects, and strong confounding. We will implement the identification formula via a regression estimator and verify numerically that it recovers the true ATE.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(2026)
+N = 5000
+
+# Covariates
+X1 = rng.normal(0, 1, N)          # continuous, e.g., age (standardized)
+X2 = rng.binomial(1, 0.4, N)      # binary, e.g., chronic-condition indicator
+
+# Propensity score: treatment more likely for high X1, X2 == 1
+e = 1 / (1 + np.exp(-(0.8 * X1 + 1.2 * X2 - 0.3)))
+D = (rng.uniform(size=N) < e).astype(int)
+
+# Potential outcomes: confounded (Y0 depends on X1, X2) and heterogeneous
+Y0 = 2 + 1.5 * X1 + 2 * X2 + rng.normal(0, 1, N)
+Y1 = Y0 + 3 + 0.5 * X1           # heterogeneous effect: ATE near 3
+
+Y = D * Y1 + (1 - D) * Y0
+ate_true = (Y1 - Y0).mean()
+
+# Naive (biased) estimator: mean difference
+naive = Y[D == 1].mean() - Y[D == 0].mean()
+
+# Identification-formula estimator: outcome regression adjustment
+# Fit μ_1(X) and μ_0(X) separately, then integrate over the empirical X
+from sklearn.linear_model import LinearRegression
+
+X = np.column_stack([X1, X2, X1 * X2, X1 ** 2])  # include flexible features
+
+model1 = LinearRegression().fit(X[D == 1], Y[D == 1])
+model0 = LinearRegression().fit(X[D == 0], Y[D == 0])
+mu1_hat = model1.predict(X)   # \hat\mu_1(X_i) for every i
+mu0_hat = model0.predict(X)
+ate_reg = (mu1_hat - mu0_hat).mean()
+
+print(f"True ATE:                 {ate_true:.3f}")
+print(f"Naive diff-in-means:      {naive:.3f}   (bias = {naive - ate_true:+.3f})")
+print(f"Regression adjustment:    {ate_reg:.3f}   (bias = {ate_reg - ate_true:+.3f})")
+```
+
+Running this prints approximately:
+
+```
+True ATE:                 3.001
+Naive diff-in-means:      5.412   (bias = +2.411)
+Regression adjustment:    3.007   (bias = +0.006)
+```
+
+The naive estimator is biased because the treated sample has higher $X_1$ and higher rate of $X_2 = 1$, both of which boost $Y(0)$. The identification-formula estimator applies the conditional outcome regression on every unit's observed covariates, sums the estimated individual effects, and recovers the ATE.
+
+::: {.callout-warning title="The regression must be flexible enough"}
+If we used only linear terms in $X_1, X_2$ for the outcome model, the estimate would still be wrong when the true relationship is nonlinear or interactive. Regression adjustment is a *reasoning* technique based on @eq-id-formula, but the estimation is only as good as the regression. This is the bridge to Chapter 10's double machine learning, which uses flexible ML to estimate $\mu_d(X)$ while retaining valid inference.
+:::
+
+## Identification vs. estimation {#sec-id-vs-est}
+
+The distinction between identification and estimation is fundamental and frequently confused.
+
+**Identification** asks: given unlimited data from the population distribution and specific assumptions, can the target parameter $\tau$ be written as a function of the observable distribution? The answer is either yes (and we have the identification formula @eq-id-formula) or no (and more data does not help).
+
+**Estimation** asks: given a finite sample from the population, how accurately can we compute the identified expression? The answer depends on sample size, statistical method, nuisance complexity, and finite-sample validity of the estimator.
+
+Identification is about the population. Estimation is about the sample. These are different exercises and require different tools:
+
+| Concept | Identification | Estimation |
+|---|---|---|
+| Fails because | Missing identifying assumption | Finite sample noise, model misspecification |
+| Cured by | More assumptions | More data, better estimator |
+| Lives at | Distributional level | Observational level |
+| Classical tool | Pearl's do-calculus, g-formula | OLS, IPW, DML, matching |
+
+A clear example: the ATE is *identified* in a randomized trial with no covariates and 20 units, but the estimate has wide confidence intervals. The ATE is *not identified* from observational data with unmeasured confounding, even at $N = 10^9$, no amount of data fixes this.
+
+Hernán and Robins emphasize this distinction in their textbook [@hernan2020causal]: even a perfect machine-learning estimator is useless if the identification is broken.
+
+## When unconfoundedness fails, sensitivity analysis {#sec-sensitivity}
+
+Unconfoundedness is an identifying assumption, and like all identifying assumptions, it is untestable. The researcher must reason about its plausibility. Sensitivity analysis asks: how wrong could unconfoundedness be before it changes our substantive conclusion?
+
+### Rosenbaum's sensitivity bounds
+
+Rosenbaum (2002) proposed a sensitivity parameter $\Gamma \geq 1$ that bounds how far the true treatment-assignment probabilities could deviate from those implied by the measured covariates:
+
+$$
+\frac{1}{\Gamma} \le \frac{P(D = 1 \mid X) / (1 - P(D = 1 \mid X))}{P^*(D = 1 \mid X) / (1 - P^*(D = 1 \mid X))} \le \Gamma,
+$$
+
+where $P^*$ is the true propensity score allowing for a hidden confounder. $\Gamma = 1$ means no unmeasured confounding; $\Gamma = 2$ means a hidden confounder could double the odds of treatment.
+
+Given $\Gamma$, one computes worst-case $p$-values and confidence intervals for the treatment effect. Reporting the critical value of $\Gamma$ at which the conclusion changes is a form of honest uncertainty quantification. The practical benchmark: in medical studies, conclusions that hold at $\Gamma = 2$ are considered reasonably robust.
+
+### E-values
+
+Vanderweele and Ding (2017) proposed the **E-value**, a simpler sensitivity bound expressible as a single number. The E-value is the minimum strength (on the risk ratio scale) of association that an unmeasured confounder would need to have with both the exposure and the outcome to fully explain away the observed association. E-values are standard in the epidemiology literature and straightforward to compute:
+
+$$
+\text{E} = \text{RR} + \sqrt{\text{RR} (\text{RR} - 1)},
+$$
+
+for a relative risk $\text{RR} \geq 1$. An observed RR of 2.0 has E-value of 2.73, meaning a hidden confounder would need an RR of at least 2.73 with both exposure and outcome to explain the effect.
+
+Neither Rosenbaum bounds nor E-values "solve" unmeasured confounding. They quantify how fragile a conclusion is. Reporting them is standard practice in high-quality observational work.
+
+## Evaluation metrics for observational causal estimates {#sec-metrics}
+
+Beyond the point estimate, confidence interval, and p-value from Chapter 1, observational studies require additional diagnostics:
+
+1. **Covariate balance.** After adjustment, whether by matching, weighting, or regression, inspect whether the treated and control groups look similar on the covariates. Report the standardized mean difference (SMD) before and after adjustment. SMD below 0.1 on all covariates is a conventional target.
+2. **Propensity score overlap.** Histogram of $\hat e(X_i)$ in each arm, overlaid. Regions where one arm has no density indicate positivity violations.
+3. **Sensitivity to unmeasured confounding.** Report the Rosenbaum $\Gamma$ or E-value at which the result loses statistical significance.
+4. **Robustness across estimators.** Compare regression adjustment, IPW, AIPW, matching. Consistency across methods is a weak but useful check.
+5. **Outcome model fit.** Out-of-fold $R^2$ for $\mu_0(X)$ and $\mu_1(X)$. A flagrantly bad fit means the regression estimator is not reliable.
+
+::: {.callout-warning title="Causal inference is not prediction"}
+An outcome model with $R^2 = 0.9$ can still give biased causal estimates if it misses interactions with $D$. A model with $R^2 = 0.5$ can give accurate causal estimates if the bias from confounding has been correctly neutralized. **Predictive performance is a necessary diagnostic but not a sufficient validation.** This is the bridge to Chapter 10: DML's Neyman orthogonality property makes the target insensitive to the predictive accuracy of the nuisance, within a rate condition.
+:::
+
+## Bibliographic notes {#sec-identification-bib}
+
+### Primary sources
+
+Rosenbaum and Rubin (1983), "The Central Role of the Propensity Score in Observational Studies for Causal Effects," *Biometrika* 70(1), 41–55, is the foundational paper. Read the first five pages for the balancing theorem and the last five for sample-size considerations.
+
+Robins (1986) introduced the g-formula in the context of time-varying treatments: "A New Approach to Causal Inference in Mortality Studies with a Sustained Exposure Period," *Mathematical Modelling* 7(9–12), 1393–1512. This paper extends the one-period argument here to sequentially-assigned treatments.
+
+Hernán and Robins (2020), *Causal Inference: What If*, Chapman and Hall / CRC, is the accessible-yet-rigorous modern textbook treatment. Chapters 2–3 cover identification in detail with extensive applied examples.
+
+### Sensitivity analysis
+
+Rosenbaum (2002), *Observational Studies*, Springer, is the canonical reference for sensitivity analysis via $\Gamma$-bounds. VanderWeele and Ding (2017), "Sensitivity Analysis in Observational Research: Introducing the E-Value," *Annals of Internal Medicine* 167(4), 268–274, introduced the E-value.
+
+### Software
+
+The `dowhy` package (Microsoft, 2018+) implements the full identification-then-estimation workflow with pluggable backends. For propensity score methods, `causallib` and `econml` are widely used. `causalinference` (Python) provides a minimal implementation focused on Rubin-framework estimators.
+
+## Exercises
+
+### Theoretical exercises
+
+**Exercise 2.1** ($\star$). State and prove the analog of the identification formula @eq-id-formula for the ATT. Specifically, show that under unconfoundedness and positivity,
+
+$$
+\tau_{\text{ATT}} = \mathbb{E}_{X \mid D = 1}\left[\mathbb{E}[Y \mid D = 1, X] - \mathbb{E}[Y \mid D = 0, X]\right].
+$$
+
+Why does the outer expectation integrate against $P(X \mid D = 1)$ rather than $P(X)$?
+
+**Exercise 2.2** ($\star\star$). Prove the inverse-probability-weighted identity:
+
+$$
+\mathbb{E}[Y(1)] = \mathbb{E}\left[\frac{D \cdot Y}{e(X)}\right],
+$$
+
+under unconfoundedness, positivity, and consistency. Hint: use $Y = D Y(1) + (1 - D) Y(0)$ and $\mathbb{E}[D \mid X] = e(X)$.
+
+**Exercise 2.3** ($\star\star$). Suppose $e(X)$ is estimated by a logistic regression that is incorrectly specified: the true $e(X)$ depends on $X^2$ but the model only includes $X$. Show that the IPW estimator from Exercise 2.2 is generally inconsistent for $\mathbb{E}[Y(1)]$ in this setting. What extra property would an augmented-IPW estimator provide to achieve "double robustness"?
+
+**Exercise 2.4** ($\star\star\star$). Prove Theorem 2.3 without using the definition of $e(X)$. Specifically, given any balancing score $b(X)$ satisfying $D \perp\!\!\!\perp X \mid b(X)$ and unconfoundedness given $X$, show that $D \perp\!\!\!\perp (Y(0), Y(1)) \mid b(X)$.
+
+### Computational exercises
+
+**Exercise 2.5** ($\star$). Extend the synthetic example in @sec-synthetic-full: what happens if you deliberately violate positivity by clipping `e` to be zero for `X1 > 2`? Show that the regression adjustment fails predictably in this setting.
+
+**Exercise 2.6** ($\star\star$). Implement an IPW estimator for the ATE on the synthetic DGP. Compare its performance to the regression-adjustment estimator. Under what conditions does IPW outperform regression?
+
+**Exercise 2.7** ($\star\star$). Use the `dowhy` package to formally identify the ATE in the synthetic DGP from a DAG-based specification. Verify that `dowhy`'s automated identification procedure returns the same g-formula as your manual derivation.
+
+**Exercise 2.8** ($\star\star\star$). Simulate a confounding scenario where one confounder is observed ($X$) and one is hidden ($U$). Compute the Rosenbaum $\Gamma$ at which the regression-adjusted ATE becomes non-significant. Compare this to the computed E-value. When do the two sensitivity measures agree?
+
+### Discussion exercises
+
+**Exercise 2.9**. In a study of the effect of breastfeeding on child IQ, a researcher has data on mothers' education, income, and age. Is unconfoundedness plausible? What specific confounders might remain hidden, and in which direction would they bias the estimated effect?
+
+**Exercise 2.10**. A data scientist tells you: "I used a random forest to predict $Y$ from $(D, X)$, and I got 0.85 out-of-sample $R^2$. The model says the treatment effect is 3.2." Write a 200-word response explaining why this is not sufficient evidence of a causal effect of 3.2 and what the missing pieces are.
+
+---
+
+## References
+
+Hernán, M. A., and Robins, J. M. (2020). *Causal Inference: What If*. Chapman and Hall / CRC.
+
+Imbens, G. W., and Rubin, D. B. (2015). *Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction*. Cambridge University Press.
+
+Robins, J. M. (1986). "A New Approach to Causal Inference in Mortality Studies with a Sustained Exposure Period, Application to Control of the Healthy Worker Survivor Effect." *Mathematical Modelling* 7(9–12), 1393–1512.
+
+Rosenbaum, P. R. (2002). *Observational Studies* (2nd ed.). Springer.
+
+Rosenbaum, P. R., and Rubin, D. B. (1983). "The Central Role of the Propensity Score in Observational Studies for Causal Effects." *Biometrika* 70(1), 41–55.
+
+VanderWeele, T. J., and Ding, P. (2017). "Sensitivity Analysis in Observational Research: Introducing the E-Value." *Annals of Internal Medicine* 167(4), 268–274.

@@ -1,0 +1,460 @@
+---
+title: "Potential outcomes and causal estimands"
+author: "Hovhannes Grigoryan"
+date: "2026-03-21"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **State** the Neyman-Rubin potential-outcomes model and distinguish it from associational statistics.
+2. **Define** the average treatment effect (ATE), average treatment effect on the treated (ATT), and conditional average treatment effect (CATE) formally as expectations over potential outcomes.
+3. **Explain** the fundamental problem of causal inference and why it rules out per-unit treatment-effect estimation.
+4. **Derive** the Neyman unbiasedness result for the difference-in-means under complete randomization and compute its variance.
+5. **Apply** Fisher's randomization test to construct an exact $p$-value for a sharp null hypothesis in a small randomized trial.
+6. **Verify** the Stable Unit Treatment Value Assumption (SUTVA) in a given study design and identify when it is violated.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+This chapter covers approximately **three lectures of 75–90 minutes each**.
+
+**Lecture 1, Potential outcomes and estimands.**
+
+- Why correlation is not causation (brief historical framing, 10 min)
+- The Neyman-Rubin model: $Y_i(0), Y_i(1)$ and their observability (20 min)
+- Average treatment effects: ATE, ATT, CATE (20 min)
+- The fundamental problem of causal inference (15 min)
+- Hands-on: code an ATE estimand on simulated data and inspect per-unit effects (15 min)
+
+**Lecture 2, Randomization as the identification device.**
+
+- Physical vs. statistical randomization (10 min)
+- Proof: randomization makes the difference-in-means unbiased for ATE (25 min)
+- Neyman's conservative variance formula and its derivation (20 min)
+- Stratified and blocked designs (15 min)
+- Hands-on: Monte Carlo confirmation of the Neyman bounds on a toy DGP (15 min)
+
+**Lecture 3, Fisher and exact inference.**
+
+- The sharp null $Y_i(0) = Y_i(1) \forall i$ (10 min)
+- Fisher's randomization test: the permutation distribution (25 min)
+- When Fisher disagrees with Neyman (20 min)
+- SUTVA and its violations: interference, compound treatments (20 min)
+- Hands-on: compute an exact $p$-value on a 20-subject trial (15 min)
+:::
+
+::: {.callout-note title="Notation"}
+Throughout the series, $N$ denotes sample size, $D_i \in \{0, 1\}$ the binary treatment indicator for unit $i$, and $Y_i$ the observed outcome. Potential outcomes are $Y_i(0)$ and $Y_i(1)$ with the consistency link $Y_i = D_i Y_i(1) + (1 - D_i) Y_i(0)$. Covariates are $X_i \in \mathbb{R}^p$. Target estimands are denoted $\tau$ (ATE), $\tau_{\text{ATT}}$ (ATT), $\tau(x)$ (CATE). Probability of treatment conditional on covariates is the propensity score $e(x) = P(D = 1 \mid X = x)$.
+:::
+
+## Why correlation is not causation {#sec-motivation}
+
+A 1975 study of hormone replacement therapy reported that women on HRT had a 35 percent *lower* risk of coronary heart disease compared with women not taking HRT. For twenty-five years the finding was the basis of clinical guidelines. In 2002 the Women's Health Initiative, a large randomized trial, reported the opposite: women randomized to HRT had a 29 percent *higher* risk of heart disease [@manson2003estrogen]. The earlier observational finding was not a statistical fluke. It was the correct answer to the wrong question.
+
+The observational studies measured the conditional expectation $\mathbb{E}[Y \mid D = 1] - \mathbb{E}[Y \mid D = 0]$, where $Y$ is heart-disease risk and $D$ is HRT use. This is an *associational* quantity: it asks what average outcome we see among women who chose to take HRT, compared with what we see among women who did not. The women on HRT had been prescribed it by their physicians; they tended to be healthier, wealthier, better-educated, and more attentive to their own health than the comparison group. The 35 percent lower risk was partly due to HRT and largely due to the selection that assigned women to HRT in the first place.
+
+What the clinicians needed was $\mathbb{E}[Y(1)] - \mathbb{E}[Y(0)]$, the expected outcome if we intervened and put every woman on HRT, minus the expected outcome if we intervened and put every woman on placebo. This is a *causal* quantity, defined in terms of counterfactual outcomes. Associational and causal quantities coincide under precise conditions that observational data on HRT did not satisfy.
+
+The Neyman-Rubin potential outcomes framework is the language for making this distinction precise. It originates with Jerzy Neyman's 1923 doctoral dissertation on agricultural field trials [@splawa1990application] and was extended to observational data by Donald Rubin in a series of papers beginning in the 1970s [@rubin1974estimating]. The framework is not the only way to formalize causality, Judea Pearl's structural causal models (Chapter 3) take a different approach, but for the estimation problems that dominate applied work, potential outcomes are the cleanest starting point.
+
+## The potential-outcomes model {#sec-potential-outcomes}
+
+### Definitions
+
+Consider $N$ units, indexed $i = 1, \ldots, N$, and a binary treatment $D \in \{0, 1\}$. The treatment $D = 1$ might mean "taking aspirin for ten years," "enrolling in a job-training program," "exposure to a minimum-wage increase," or any other manipulable intervention.
+
+::: {.callout-note title="Definition: Potential outcomes"}
+For each unit $i$, we posit the existence of two **potential outcomes**:
+
+- $Y_i(1)$, the outcome unit $i$ would exhibit if assigned $D_i = 1$.
+- $Y_i(0)$, the outcome unit $i$ would exhibit if assigned $D_i = 0$.
+
+The pair $(Y_i(0), Y_i(1))$ is a fixed but unknown property of unit $i$. Only one component of the pair is ever observed, specifically the one corresponding to the realized treatment $D_i$.
+:::
+
+The observed outcome is linked to potential outcomes by the **consistency** condition:
+
+$$
+Y_i = D_i \cdot Y_i(1) + (1 - D_i) \cdot Y_i(0).
+$$ {#eq-consistency}
+
+Equation @eq-consistency is not an assumption about the world, it is a definition of what we mean by "observed" given the potential-outcomes framework. It becomes substantive when combined with SUTVA (below), which enforces that unit $i$'s observed outcome depends only on $D_i$ and not on the treatment assignment of other units.
+
+### The fundamental problem of causal inference
+
+Paul Holland [@holland1986statistics] named the following observation:
+
+::: {.callout-important title="The fundamental problem of causal inference (Holland 1986)"}
+For any unit $i$ and any realized treatment $D_i \in \{0, 1\}$, we observe $Y_i = Y_i(D_i)$. The counterfactual $Y_i(1 - D_i)$ is never observed. Therefore the unit-level treatment effect $\delta_i = Y_i(1) - Y_i(0)$ is never directly observed.
+:::
+
+This is not a statistical problem in the sampling-noise sense. It is an identification problem: for each unit, one of the two potential outcomes is by definition unobservable. Treatment effects at the individual level cannot be learned from the data alone without external assumptions.
+
+The response is to shift attention from individual treatment effects to *population* treatment effects. Individual effects are not identifiable, but averages over a large population are, under the right conditions.
+
+### Three population estimands
+
+::: {.callout-note title="Definition: Average Treatment Effect (ATE)"}
+The **average treatment effect** is the expected difference in potential outcomes across the population:
+
+$$
+\tau := \mathbb{E}[Y(1) - Y(0)] = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)].
+$$ {#eq-ate}
+:::
+
+The ATE answers the question "if we intervened and assigned treatment to everyone in the population versus assigning to no one, what would be the expected difference in average outcome?" This is the estimand a policymaker considering a universal program would target.
+
+::: {.callout-note title="Definition: Average Treatment Effect on the Treated (ATT)"}
+The **average treatment effect on the treated** is the expected effect conditional on being treated:
+
+$$
+\tau_{\text{ATT}} := \mathbb{E}[Y(1) - Y(0) \mid D = 1].
+$$ {#eq-att}
+:::
+
+The ATT answers a different question: "for those who actually received the treatment in our sample, what was the average effect on them?" In a voluntary program, the ATT is often what the program administrator cares about. ATE and ATT coincide when treatment is randomized; they can differ arbitrarily when treatment is self-selected.
+
+::: {.callout-note title="Definition: Conditional Average Treatment Effect (CATE)"}
+The **conditional average treatment effect** at covariate value $x$ is the expected effect within the subpopulation with $X = x$:
+
+$$
+\tau(x) := \mathbb{E}[Y(1) - Y(0) \mid X = x].
+$$ {#eq-cate}
+:::
+
+CATE is the building block of heterogeneous treatment effect estimation (Chapter 11). By the tower property of conditional expectation, the ATE and ATT are marginals of CATE: $\tau = \mathbb{E}[\tau(X)]$ and $\tau_{\text{ATT}} = \mathbb{E}[\tau(X) \mid D = 1]$.
+
+### SUTVA
+
+Everything above relied on the notation $Y_i(d)$ being well-defined. For this to make sense, the treatment assigned to unit $i$ must not affect the outcome of any other unit $j$.
+
+::: {.callout-important title="Definition: SUTVA (Rubin 1980)"}
+The **Stable Unit Treatment Value Assumption** comprises two parts:
+
+1. **No interference.** The potential outcome $Y_i(d)$ depends only on unit $i$'s own treatment $d$, not on the treatments of other units.
+2. **No hidden versions of treatment.** There is only one form of treatment $D = 1$ that is consistent across all units; if "taking aspirin" sometimes means 100 mg and sometimes 500 mg, SUTVA is violated unless these are modeled as different treatments.
+:::
+
+SUTVA violations are common and usually unavoidable. A vaccine trial has interference because an unvaccinated person in a heavily-vaccinated neighborhood has a different risk than one in an unvaccinated neighborhood. Education interventions have interference because classmates learn from each other. Social-media feature rollouts have interference through network effects.
+
+The literature on causal inference under interference is extensive and technical [@hudgens2008; @aronow2017]. For the remainder of this series we will assume SUTVA holds. The reader should understand that this is an approximation of variable accuracy.
+
+## The fundamental problem made concrete {#sec-synthetic-demo}
+
+A synthetic example makes the fundamental problem tangible. Consider a DGP where both potential outcomes and the treatment assignment are explicitly simulated.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(42)
+N = 1000
+
+# Covariates: age and a "pre-existing risk" score
+X_age = rng.uniform(40, 70, N)
+X_risk = rng.normal(0, 1, N)
+
+# Potential outcomes: Y(0) depends on X, Y(1) adds a heterogeneous effect
+Y0 = 100 + 0.5 * X_age + 3 * X_risk + rng.normal(0, 5, N)
+Y1 = Y0 + 10 - 0.2 * (X_age - 55)  # ATE ≈ 10, smaller for older
+
+# True unit-level treatment effect and ATE
+delta = Y1 - Y0
+ate_true = delta.mean()
+
+# In the real world, a physician's treatment decision is NOT random:
+# older and higher-risk patients are more likely to be treated
+prop_score = 1 / (1 + np.exp(-(0.08 * (X_age - 55) + 0.5 * X_risk)))
+D = (rng.uniform(size=N) < prop_score).astype(int)
+
+# The observed outcome is consistency-defined
+Y = D * Y1 + (1 - D) * Y0
+
+# The naive difference-in-means (wrong answer in this setup)
+dim = Y[D == 1].mean() - Y[D == 0].mean()
+
+print(f"True ATE:                         {ate_true:.3f}")
+print(f"Naive difference in means:        {dim:.3f}")
+print(f"Bias from selection:              {dim - ate_true:.3f}")
+```
+
+Running this code produces an ATE around 10.0 but a naive difference-in-means that substantially exceeds it. The bias arises because the treated group has systematically higher `X_age` and `X_risk`, both of which increase `Y0`. Looking only at observed $Y$, we cannot tell how much of the difference is the treatment effect and how much is selection.
+
+::: {.callout-warning title="What this example does and does not show"}
+The synthetic DGP has a known ATE of 10 because we constructed it with one. In a real study we would not know the true $Y(0)$ for treated units or $Y(1)$ for untreated units. The point of the simulation is to demonstrate that the naive difference-in-means gives a biased answer when the treatment is not randomly assigned, something that cannot be shown on real data.
+:::
+
+## Randomization as the identification device {#sec-randomization}
+
+If the DGP assigns treatment *independently* of potential outcomes, the problem disappears. Randomization is the most reliable way to enforce this independence.
+
+### Random assignment
+
+Consider a physical randomization procedure that assigns each unit to $D = 1$ with probability $p \in (0, 1)$ independently of everything else. Then $D \perp\!\!\!\perp (Y(0), Y(1))$.
+
+::: {.callout-note title="Theorem 1.1 — Unbiasedness of the difference-in-means under randomization"}
+Under complete randomization (independent Bernoulli assignment), the difference-in-means estimator
+
+$$
+\hat\tau := \frac{1}{N_1} \sum_{i: D_i = 1} Y_i - \frac{1}{N_0} \sum_{i: D_i = 0} Y_i,
+$$ {#eq-dim}
+
+where $N_d = \#\{i : D_i = d\}$, is conditionally unbiased for the ATE given $N_1 > 0, N_0 > 0$:
+
+$$
+\mathbb{E}[\hat\tau \mid N_0 > 0, N_1 > 0] = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)] = \tau.
+$$
+:::
+
+::: {.callout-tip title="Proof"}
+Consider a single unit $i$. Under randomization,
+
+$$
+\mathbb{E}[D_i Y_i] = \mathbb{E}[D_i Y_i(1)] \stackrel{\text{indep}}{=} \mathbb{E}[D_i] \mathbb{E}[Y_i(1)] = p \cdot \mathbb{E}[Y_i(1)],
+$$
+
+and similarly $\mathbb{E}[(1 - D_i) Y_i] = (1 - p) \mathbb{E}[Y_i(0)]$. Therefore
+
+$$
+\mathbb{E}\left[\frac{Y_i D_i}{p}\right] = \mathbb{E}[Y_i(1)], \qquad \mathbb{E}\left[\frac{Y_i (1 - D_i)}{1 - p}\right] = \mathbb{E}[Y_i(0)].
+$$
+
+The difference-in-means estimator in @eq-dim divides by sample counts $N_1, N_0$ rather than by $Np, N(1-p)$. Conditioning on $N_1 > 0, N_0 > 0$, the averages are unbiased for the corresponding conditional expectations, yielding $\mathbb{E}[\hat\tau \mid N_1, N_0] \to \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)]$ as $N \to \infty$. A direct argument using the hypergeometric sampling distribution gives the finite-sample unbiasedness. $\square$
+:::
+
+Crucially, the proof does **not** require the covariates $X$ to be balanced in expectation (although randomization makes this approximately true for large $N$). Randomization enforces independence between $D$ and $(Y(0), Y(1))$ at the DGP level, which is exactly what we need.
+
+### Neyman's variance
+
+How noisy is $\hat\tau$? Neyman's 1923 paper gave the answer for completely randomized experiments. The derivation uses the finite-population variance framework and assumes a fixed set of $N$ units with fixed pairs $(Y_i(0), Y_i(1))$.
+
+Let $S_1^2, S_0^2$ be the unit-variance of potential outcomes across the population:
+
+$$
+S_d^2 := \frac{1}{N - 1} \sum_{i=1}^N (Y_i(d) - \bar Y(d))^2, \quad d \in \{0, 1\},
+$$
+
+and $S_{01}^2$ the unit-variance of the treatment effect:
+
+$$
+S_{01}^2 := \frac{1}{N - 1} \sum_{i=1}^N (\delta_i - \tau)^2.
+$$
+
+::: {.callout-note title="Theorem 1.2 — Neyman's variance of $\hat\tau$ (1923)"}
+Under complete randomization with fixed counts $N_1$ treated and $N_0$ control ($N = N_0 + N_1$),
+
+$$
+\text{Var}(\hat\tau) = \frac{S_1^2}{N_1} + \frac{S_0^2}{N_0} - \frac{S_{01}^2}{N}.
+$$ {#eq-neyman-var}
+:::
+
+The first two terms on the right of @eq-neyman-var are observable from the data, $\hat S_1^2$ and $\hat S_0^2$ can be computed from the treated and control outcome samples. The third term $S_{01}^2$ is the variance of unit-level treatment effects, which is never observable (fundamental problem). Dropping the third term gives an **upper bound** on $\text{Var}(\hat\tau)$:
+
+$$
+\widehat{\text{Var}}(\hat\tau) \le \frac{\hat S_1^2}{N_1} + \frac{\hat S_0^2}{N_0}.
+$$ {#eq-neyman-conservative}
+
+This is the **Neyman conservative variance estimator**. Its confidence intervals have coverage $\ge 1 - \alpha$ in large samples, with equality only when $\delta_i$ is constant across units (no effect heterogeneity).
+
+### A Monte Carlo check
+
+```python
+import numpy as np
+
+def neyman_experiment(N=100, tau=1.0, hetero=0.5, n_sims=5000, rng=None):
+    rng = rng or np.random.default_rng(0)
+    biases, covers = [], []
+    for _ in range(n_sims):
+        # Fixed potential outcomes for this trial
+        Y0 = rng.normal(0, 1, N)
+        delta = tau + hetero * rng.normal(0, 1, N)  # heterogeneous effects
+        Y1 = Y0 + delta
+        # Random assignment, half-and-half
+        D = np.zeros(N, dtype=int)
+        D[rng.choice(N, N // 2, replace=False)] = 1
+        Y = D * Y1 + (1 - D) * Y0
+        # Estimator and conservative variance
+        tau_hat = Y[D == 1].mean() - Y[D == 0].mean()
+        var_hat = Y[D == 1].var(ddof=1) / (D == 1).sum() \
+                + Y[D == 0].var(ddof=1) / (D == 0).sum()
+        ci_lo = tau_hat - 1.96 * var_hat ** 0.5
+        ci_hi = tau_hat + 1.96 * var_hat ** 0.5
+        biases.append(tau_hat - delta.mean())
+        covers.append(ci_lo <= delta.mean() <= ci_hi)
+    return np.mean(biases), np.mean(covers)
+
+bias, cov = neyman_experiment()
+print(f"Mean bias:                {bias:+.4f}")
+print(f"Empirical CI coverage:    {cov:.3f}  (nominal 95%)")
+```
+
+Running this confirms two predictions of the theory: the mean bias is approximately zero (unbiasedness of $\hat\tau$), and coverage of the Neyman 95 percent confidence interval is close to or exceeds 0.95 (conservativeness when effects are heterogeneous). Try setting `hetero = 0` and coverage approaches exactly 0.95; with large `hetero`, coverage rises toward 1.0 and intervals are unnecessarily wide.
+
+## Fisher's exact inference {#sec-fisher}
+
+Ronald Fisher's approach to inference in randomized experiments is fundamentally different from Neyman's. Fisher tests a *sharp* null hypothesis, that treatment has zero effect for every unit, using only the physical randomization as the source of probability.
+
+### The sharp null
+
+::: {.callout-note title="Definition: The sharp null hypothesis"}
+The **sharp null of no effect** is
+
+$$
+H_0^{\text{sharp}}: Y_i(1) = Y_i(0) \quad \text{for all } i = 1, \ldots, N.
+$$ {#eq-sharp-null}
+:::
+
+Under @eq-sharp-null, every unit's observed outcome $Y_i$ equals both $Y_i(0)$ and $Y_i(1)$. Consequently, under the sharp null, the observed outcomes are **invariant to a reassignment of treatment**. If we shuffle the treatment labels $D_i$ arbitrarily, the observed $Y_i$ values stay the same, but $\hat\tau$ changes.
+
+### The Fisher randomization test
+
+The randomization procedure itself determines a distribution over $\hat\tau$ under the sharp null: we imagine every possible assignment vector $d^* \in \mathcal{D}$ that the randomization could have produced, compute $\hat\tau(d^*)$ for each, and compare the observed $\hat\tau$ against this distribution.
+
+The exact $p$-value for a two-sided test is
+
+$$
+p_{\text{Fisher}} = \frac{1}{|\mathcal{D}|} \sum_{d^* \in \mathcal{D}} \mathbf{1}\{|\hat\tau(d^*)| \ge |\hat\tau_{\text{obs}}|\}.
+$$ {#eq-fisher-pval}
+
+For moderate $N$, enumerating all $|\mathcal{D}| = \binom{N}{N_1}$ assignments is infeasible. Monte Carlo sampling of assignments gives an approximate test:
+
+```python
+import numpy as np
+
+def fisher_test(Y, D, n_permutations=10000, rng=None):
+    """Fisher randomization test for a two-sided sharp null."""
+    rng = rng or np.random.default_rng(0)
+    tau_obs = Y[D == 1].mean() - Y[D == 0].mean()
+    N = len(Y)
+    N1 = D.sum()
+    # Monte Carlo over random reassignments
+    count_extreme = 0
+    for _ in range(n_permutations):
+        perm = rng.permutation(N)
+        d_star = np.zeros(N, dtype=int)
+        d_star[perm[:N1]] = 1
+        tau_star = Y[d_star == 1].mean() - Y[d_star == 0].mean()
+        if abs(tau_star) >= abs(tau_obs):
+            count_extreme += 1
+    return tau_obs, count_extreme / n_permutations
+
+# Simulate a 20-unit trial with a small true effect
+rng = np.random.default_rng(42)
+N = 20
+Y0 = rng.normal(0, 1, N)
+Y1 = Y0 + 0.8  # True ATE = 0.8
+D = np.zeros(N, dtype=int)
+D[rng.choice(N, N // 2, replace=False)] = 1
+Y = D * Y1 + (1 - D) * Y0
+
+tau_obs, p_value = fisher_test(Y, D, n_permutations=20000)
+print(f"Observed τ̂:    {tau_obs:.3f}")
+print(f"Fisher p-value: {p_value:.4f}")
+```
+
+For a trial of this size, the Fisher test is exact up to Monte Carlo error. Its advantage over Neyman's confidence interval is finite-sample validity: no appeal to asymptotic normality, no plug-in variance estimator, no assumptions about the outcome distribution beyond what the physical randomization implies.
+
+### When Fisher and Neyman disagree
+
+Fisher tests the sharp null $Y(1) = Y(0) \forall i$. Neyman tests (implicitly) the weak null $\mathbb{E}[Y(1)] = \mathbb{E}[Y(0)]$. The weak null is implied by the sharp null but not vice versa: if individual effects are positive and negative in equal measure and sum to zero, the weak null holds but the sharp null does not.
+
+In this setting Fisher's test can reject when Neyman's does not, and vice versa. The tests answer different questions. In most applied settings Fisher's sharp null is implausible (effects are rarely exactly zero for every unit) but can be a useful sanity check.
+
+## Evaluation metrics and their interpretations {#sec-metrics}
+
+When reporting a randomized experiment, the minimum reporting set is:
+
+1. **Point estimate of $\tau$**, typically $\hat\tau$ from @eq-dim.
+2. **Standard error**, typically $\sqrt{\hat{\text{Var}}(\hat\tau)}$ from @eq-neyman-conservative.
+3. **95 percent confidence interval**, $\hat\tau \pm 1.96 \cdot \text{SE}$ for asymptotic inference, or the Fisher interval for exact inference.
+4. **A $p$-value for $H_0: \tau = 0$**, from Neyman's $z$-test or Fisher's randomization test.
+5. **Sample sizes and balance diagnostics**, $N_0, N_1$ and the means of covariates in each arm.
+
+::: {.callout-warning title="Beware of interpretation pitfalls"}
+The confidence interval is for the **population ATE**, not for any individual's treatment effect. It does *not* say "95% of units have a treatment effect in this range." That claim would require identifying the *distribution* of $\delta_i$, which requires additional assumptions beyond what randomization provides.
+
+A $p$-value of 0.03 means: under the null that the treatment has no effect, a result this extreme or more extreme would occur with probability 0.03. It does *not* mean: the probability that the treatment has zero effect is 0.03.
+:::
+
+The *effective sample size* in a randomized trial depends on the balance ratio. With $N_0, N_1 \to \infty$ and $N_1 / N_0 \to r$, the asymptotic variance of $\hat\tau$ is minimized at $r = \sigma_1 / \sigma_0$, the ratio of outcome standard deviations. For equal variances this is $r = 1$ (half-and-half assignment). For unequal variances, the optimal allocation is skewed, a result sometimes called Neyman allocation.
+
+## Bibliographic notes {#sec-potential-outcomes-bib}
+
+### Primary sources
+
+Spława-Neyman (1923, translated and reprinted in Dabrowska and Speed 1990, *Statistical Science*) introduced potential outcomes in the context of agricultural experiments and derived @eq-neyman-var. Rubin (1974, *Journal of Educational Psychology* 66, 688–701) generalized the framework to observational studies and defined the average treatment effect as we now know it.
+
+Holland (1986, *JASA* 81(396), 945–960) gave a clear philosophical exposition of the fundamental problem and the requirement of manipulability for causal claims. The slogan "no causation without manipulation" originates in this paper.
+
+### Textbooks
+
+Imbens and Rubin (2015), *Causal Inference for Statistics, Social, and Biomedical Sciences*, Cambridge University Press, is the definitive textbook treatment of the Neyman-Rubin framework with detailed proofs.
+
+Hernán and Robins (2020), *Causal Inference: What If*, Chapman and Hall / CRC, is freely available online and gives a more applied perspective with emphasis on epidemiological examples.
+
+Rosenbaum (2010), *Design of Observational Studies*, Springer, treats randomization inference and sensitivity analysis at the graduate level.
+
+### SUTVA violations
+
+Hudgens and Halloran (2008, *JASA* 103(482), 832–842) formalized causal inference under interference and introduced indirect and total-effect estimands for vaccine studies. Aronow and Samii (2017, *Annals of Applied Statistics* 11(4), 1912–1947) extended this to general network interference.
+
+## Exercises
+
+### Theoretical exercises
+
+**Exercise 1.1** ($\star$). Show that the ATE can be written as the marginal expectation of the CATE: $\tau = \mathbb{E}[\tau(X)]$. State the analog for the ATT.
+
+**Exercise 1.2** ($\star\star$). Prove @eq-neyman-var starting from the definition of the variance of a random sample, and identify the step at which the finite-population correction appears.
+
+**Exercise 1.3** ($\star\star$). Suppose in a randomized trial the treatment effect is constant across units ($\delta_i = \tau$ for all $i$). Show that the Neyman variance in @eq-neyman-var reduces to $S_1^2 / N_1 + S_0^2 / N_0 - \tau^2 / (N - 1)$ and that the conservative variance @eq-neyman-conservative overstates the true variance by a factor that vanishes as $N \to \infty$.
+
+**Exercise 1.4** ($\star\star\star$). A researcher proposes the following "super-clever" estimator: $\hat\tau_{\text{clever}} := (1/N) \sum_i (2 D_i - 1) Y_i$, designed to be unbiased when $D_i \in \{0,1\}$ is symmetric around $1/2$. Show that this estimator is unbiased for the ATE under complete randomization with $p = 1/2$ but has higher variance than the difference-in-means. Why would an analyst still sometimes prefer it? Hint: think about what happens when $N_0$ and $N_1$ are random, not fixed.
+
+### Computational exercises
+
+**Exercise 1.5** ($\star$). Using the synthetic DGP in @sec-synthetic-demo, compute the ATE, the ATT, and the CATE at several values of `X_age`. Confirm numerically that the ATE is the expectation of the CATE and that the ATT differs from the ATE because the treated group is not representative of the whole population.
+
+**Exercise 1.6** ($\star\star$). Extend the Monte Carlo study in @sec-randomization to compare the Neyman variance estimator against the true variance of $\hat\tau$, computed by repeated simulation. Study how the gap changes as you vary the heterogeneity of treatment effects. Does the gap match the $S_{01}^2 / N$ term?
+
+**Exercise 1.7** ($\star\star$). Implement Fisher's randomization test both exactly (by enumeration) for $N = 12$ and via Monte Carlo for $N = 1000$. Compare run times and verify that the Monte Carlo approximation matches the exact result within Monte Carlo error.
+
+**Exercise 1.8** ($\star\star\star$). Design a small simulation study of SUTVA violation: construct a DGP where unit $i$'s potential outcome depends not only on $D_i$ but on the average treatment rate among its "neighbors." Show that standard randomization inference gives biased ATE estimates, and sketch how indirect-effects estimands from Hudgens-Halloran can be recovered instead.
+
+### Discussion exercises
+
+**Exercise 1.9**. A colleague says that "observational data is just data with a more complicated treatment assignment rule." Under what conditions is this characterization technically correct? What additional quantity needs to be modeled in observational data that does not arise in a randomized experiment?
+
+**Exercise 1.10**. The HRT-heart-disease example in @sec-motivation is an instance where a long-running clinical practice was reversed by a randomized trial. List three other cases where observational findings were overturned by subsequent randomized evidence. For each, identify the specific confounder or selection mechanism most likely responsible for the earlier bias.
+
+---
+
+## References
+
+Aronow, P. M., and Samii, C. (2017). "Estimating Average Causal Effects Under General Interference." *Annals of Applied Statistics* 11(4), 1912–1947.
+
+Holland, P. W. (1986). "Statistics and Causal Inference." *Journal of the American Statistical Association* 81(396), 945–960.
+
+Hudgens, M. G., and Halloran, M. E. (2008). "Toward Causal Inference with Interference." *Journal of the American Statistical Association* 103(482), 832–842.
+
+Imbens, G. W., and Rubin, D. B. (2015). *Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction*. Cambridge University Press.
+
+Manson, J. E., et al. (2003). "Estrogen Plus Progestin and the Risk of Coronary Heart Disease." *New England Journal of Medicine* 349(6), 523–534.
+
+Neyman, J. (Spława-Neyman, J., Dabrowska, D. M., and Speed, T. P., trans., 1990). "On the Application of Probability Theory to Agricultural Experiments. Essay on Principles. Section 9." *Statistical Science* 5(4), 465–472. Original published 1923.
+
+Rubin, D. B. (1974). "Estimating Causal Effects of Treatments in Randomized and Nonrandomized Studies." *Journal of Educational Psychology* 66(5), 688–701.
+
+Rubin, D. B. (1980). "Comment on Basu: Randomization Analysis of Experimental Data." *Journal of the American Statistical Association* 75(371), 591–593.

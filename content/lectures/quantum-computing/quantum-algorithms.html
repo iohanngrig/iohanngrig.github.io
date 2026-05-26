@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-04-25">
+
+<title>Quantum algorithms with provable speedup</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="quantum-algorithms_files/libs/clipboard/clipboard.min.js"></script>
+<script src="quantum-algorithms_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="quantum-algorithms_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="quantum-algorithms_files/libs/quarto-html/popper.min.js"></script>
+<script src="quantum-algorithms_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="quantum-algorithms_files/libs/quarto-html/anchor.min.js"></script>
+<link href="quantum-algorithms_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="quantum-algorithms_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="quantum-algorithms_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="quantum-algorithms_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="quantum-algorithms_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-shor" id="toc-sec-shor" class="nav-link active" data-scroll-target="#sec-shor"><span class="header-section-number">1</span> Shor’s algorithm</a>
+  <ul class="collapse">
+  <li><a href="#reduction-to-period-finding" id="toc-reduction-to-period-finding" class="nav-link" data-scroll-target="#reduction-to-period-finding"><span class="header-section-number">1.1</span> Reduction to period finding</a></li>
+  <li><a href="#the-quantum-fourier-transform" id="toc-the-quantum-fourier-transform" class="nav-link" data-scroll-target="#the-quantum-fourier-transform"><span class="header-section-number">1.2</span> The Quantum Fourier Transform</a></li>
+  <li><a href="#the-algorithm" id="toc-the-algorithm" class="nav-link" data-scroll-target="#the-algorithm"><span class="header-section-number">1.3</span> The algorithm</a></li>
+  <li><a href="#resource-estimate-for-rsa-2048" id="toc-resource-estimate-for-rsa-2048" class="nav-link" data-scroll-target="#resource-estimate-for-rsa-2048"><span class="header-section-number">1.4</span> Resource estimate for RSA-2048</a></li>
+  </ul></li>
+  <li><a href="#sec-grover" id="toc-sec-grover" class="nav-link" data-scroll-target="#sec-grover"><span class="header-section-number">2</span> Grover’s algorithm</a>
+  <ul class="collapse">
+  <li><a href="#the-grover-iteration" id="toc-the-grover-iteration" class="nav-link" data-scroll-target="#the-grover-iteration"><span class="header-section-number">2.1</span> The Grover iteration</a></li>
+  <li><a href="#optimality" id="toc-optimality" class="nav-link" data-scroll-target="#optimality"><span class="header-section-number">2.2</span> Optimality</a></li>
+  <li><a href="#amplitude-amplification" id="toc-amplitude-amplification" class="nav-link" data-scroll-target="#amplitude-amplification"><span class="header-section-number">2.3</span> Amplitude amplification</a></li>
+  <li><a href="#implications-for-optimization" id="toc-implications-for-optimization" class="nav-link" data-scroll-target="#implications-for-optimization"><span class="header-section-number">2.4</span> Implications for optimization</a></li>
+  </ul></li>
+  <li><a href="#sec-hhl" id="toc-sec-hhl" class="nav-link" data-scroll-target="#sec-hhl"><span class="header-section-number">3</span> HHL, linear systems in polylog time</a>
+  <ul class="collapse">
+  <li><a href="#the-three-asterisks" id="toc-the-three-asterisks" class="nav-link" data-scroll-target="#the-three-asterisks"><span class="header-section-number">3.1</span> The three asterisks</a></li>
+  <li><a href="#when-the-speedup-is-real" id="toc-when-the-speedup-is-real" class="nav-link" data-scroll-target="#when-the-speedup-is-real"><span class="header-section-number">3.2</span> When the speedup is real</a></li>
+  <li><a href="#dequantization" id="toc-dequantization" class="nav-link" data-scroll-target="#dequantization"><span class="header-section-number">3.3</span> Dequantization</a></li>
+  </ul></li>
+  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">4</span> Summary, what is and is not speedable</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">5</span> Exercises</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">6</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Quantum algorithms with provable speedup</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 25, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Derive</strong> Shor’s algorithm by reducing factoring to period-finding via the Quantum Fourier Transform.</li>
+<li><strong>State and prove the optimality</strong> of Grover’s quadratic speedup via the BBBV lower bound.</li>
+<li><strong>Explain</strong> how HHL solves sparse linear systems in polylog time and why Aaronson’s fine-print limits its practical scope.</li>
+<li><strong>Distinguish</strong> algorithms with exponential, quadratic, and no asymptotic speedup and map each to its complexity-theoretic foundation.</li>
+<li><strong>Estimate</strong> the qubit resources required to run Shor on RSA-2048 using the Gidney-Ekerå 2021 analysis.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three 75–90 min lectures: (1) QFT and Shor’s algorithm; (2) Grover’s algorithm, optimality proof, amplitude amplification; (3) HHL, its fine print, and the boundary between provable and advertised speedups.</p>
+</div>
+</div>
+</div>
+<section id="sec-shor" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-shor"><span class="header-section-number">1</span> Shor’s algorithm</h2>
+<p>Shor’s 1995 algorithm is the quantum speedup most responsible for post-quantum cryptography as a research field. It factors an <span class="math inline">\(N\)</span>-bit integer in <span class="math inline">\(O((\log N)^3)\)</span> quantum operations, exponentially faster than the best classical algorithm, the general number field sieve at <span class="math inline">\(\exp(O((\log N)^{1/3} (\log \log N)^{2/3}))\)</span>.</p>
+<section id="reduction-to-period-finding" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="reduction-to-period-finding"><span class="header-section-number">1.1</span> Reduction to period finding</h3>
+<p>For <span class="math inline">\(a\)</span> coprime to <span class="math inline">\(N\)</span>, the multiplicative order <span class="math inline">\(r\)</span> of <span class="math inline">\(a\)</span> modulo <span class="math inline">\(N\)</span> satisfies <span class="math inline">\(a^r \equiv 1 \pmod N\)</span>. If <span class="math inline">\(r\)</span> is even and <span class="math inline">\(a^{r/2} \not\equiv \pm 1\)</span>, then <span class="math inline">\(\gcd(a^{r/2} - 1, N)\)</span> is a nontrivial factor. Period finding is the hard part; once <span class="math inline">\(r\)</span> is known, factoring follows in classical polynomial time.</p>
+</section>
+<section id="the-quantum-fourier-transform" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="the-quantum-fourier-transform"><span class="header-section-number">1.2</span> The Quantum Fourier Transform</h3>
+<p>The QFT on <span class="math inline">\(n\)</span> qubits is</p>
+<p><span class="math display">\[
+|x\rangle \mapsto \frac{1}{\sqrt{2^n}} \sum_{y=0}^{2^n - 1} e^{2\pi i x y / 2^n} |y\rangle.
+\]</span></p>
+<p>It can be implemented with <span class="math inline">\(O(n^2)\)</span> gates using Hadamards and controlled phase rotations. The classical Fast Fourier Transform on a vector of length <span class="math inline">\(2^n\)</span> requires <span class="math inline">\(O(n \cdot 2^n)\)</span> operations. The QFT’s exponential advantage is real and rests on the tensor-product structure of quantum states.</p>
+</section>
+<section id="the-algorithm" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="the-algorithm"><span class="header-section-number">1.3</span> The algorithm</h3>
+<ol type="1">
+<li>Prepare <span class="math inline">\(\frac{1}{\sqrt{Q}} \sum_{x=0}^{Q-1} |x\rangle |0\rangle\)</span> with <span class="math inline">\(Q \approx N^2\)</span>.</li>
+<li>Apply modular exponentiation to compute <span class="math inline">\(|x\rangle |a^x \bmod N\rangle\)</span>.</li>
+<li>Measure the second register. The first collapses to a superposition over <span class="math inline">\(x\)</span> sharing the same <span class="math inline">\(a^x \bmod N\)</span>, an arithmetic progression with period <span class="math inline">\(r\)</span>.</li>
+<li>Apply QFT to the first register. Output concentrates near multiples of <span class="math inline">\(Q / r\)</span>.</li>
+<li>Measure and classically post-process via continued fractions to recover <span class="math inline">\(r\)</span>.</li>
+</ol>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 2.1 — Shor's complexity">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 2.1 — Shor’s complexity
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Shor’s algorithm factors an <span class="math inline">\(N\)</span>-bit integer in <span class="math inline">\(O(n^3)\)</span> quantum gates with success probability <span class="math inline">\(\Omega(1/\log n)\)</span>, boosted to <span class="math inline">\(1 - \epsilon\)</span> by <span class="math inline">\(O(\log(1/\epsilon))\)</span> repetitions.</p>
+</div>
+</div>
+</section>
+<section id="resource-estimate-for-rsa-2048" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="resource-estimate-for-rsa-2048"><span class="header-section-number">1.4</span> Resource estimate for RSA-2048</h3>
+<p>Gidney-Ekerå (2021) carefully analyzed Shor with surface-code error correction. Their estimate: <strong>20 million physical qubits</strong> running for 8 hours, assuming physical error rate <span class="math inline">\(10^{-3}\)</span>. Current hardware has <span class="math inline">\(\sim 10^3\)</span> physical qubits. The resource gap is four orders of magnitude in qubits and significant in error rates.</p>
+</section>
+</section>
+<section id="sec-grover" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-grover"><span class="header-section-number">2</span> Grover’s algorithm</h2>
+<p>Grover’s algorithm solves unstructured search in <span class="math inline">\(O(\sqrt N)\)</span> quantum queries where <span class="math inline">\(N = 2^n\)</span>. Classically this requires <span class="math inline">\(\Theta(N)\)</span> queries.</p>
+<section id="the-grover-iteration" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="the-grover-iteration"><span class="header-section-number">2.1</span> The Grover iteration</h3>
+<p>Start in the uniform superposition <span class="math inline">\(|s\rangle = \frac{1}{\sqrt N} \sum_x |x\rangle\)</span>. Apply the iteration</p>
+<p><span class="math display">\[
+G = (2|s\rangle \langle s| - I)(I - 2 |x^*\rangle \langle x^*|)
+\]</span></p>
+<p>a total of <span class="math inline">\(k = \lfloor \pi \sqrt{N} / 4 \rfloor\)</span> times, then measure. Geometric interpretation: the state rotates by angle <span class="math inline">\(2\theta\)</span> per iteration in the 2D plane spanned by <span class="math inline">\(|x^*\rangle\)</span> and the uniform superposition of non-marked states, where <span class="math inline">\(\sin\theta = 1/\sqrt N\)</span>. After <span class="math inline">\(k\)</span> iterations the amplitude on <span class="math inline">\(|x^*\rangle\)</span> is <span class="math inline">\(\sin((2k+1)\theta) \approx 1\)</span>.</p>
+</section>
+<section id="optimality" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="optimality"><span class="header-section-number">2.2</span> Optimality</h3>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 2.2 — Grover is optimal (BBBV 1997)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 2.2 — Grover is optimal (BBBV 1997)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Any quantum algorithm for unstructured search requires <span class="math inline">\(\Omega(\sqrt N)\)</span> queries. Grover achieves this rate up to a constant factor.</p>
+</div>
+</div>
+<p>This is one of the cleanest lower bounds in quantum complexity. The proof, due to Bennett-Bernstein-Brassard-Vazirani, proceeds by adversary argument on the pattern of queries that a correct algorithm must make to distinguish one oracle from another.</p>
+</section>
+<section id="amplitude-amplification" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="amplitude-amplification"><span class="header-section-number">2.3</span> Amplitude amplification</h3>
+<p>Brassard-Høyer-Mosca-Tapp (2002) generalize Grover: for any state-preparation procedure <span class="math inline">\(\mathcal{A}\)</span> with initial success probability <span class="math inline">\(p\)</span>, amplitude amplification achieves amplified probability in <span class="math inline">\(O(1 / \sqrt p)\)</span> calls to <span class="math inline">\(\mathcal{A}\)</span>. This replaces <span class="math inline">\(\sqrt N\)</span> with <span class="math inline">\(\sqrt{1/p}\)</span> in a wide range of estimation problems and underlies many quantum subroutines, including the Monte Carlo speedup of Chapter 3 in this series.</p>
+</section>
+<section id="implications-for-optimization" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="implications-for-optimization"><span class="header-section-number">2.4</span> Implications for optimization</h3>
+<p>Grover provides a <em>generic</em> quadratic speedup on brute-force enumeration: NP-hard problems with <span class="math inline">\(2^n\)</span> search space admit Grover-based enumeration in <span class="math inline">\(2^{n/2}\)</span>. This is mathematically elegant but practically limited: classical heuristics (branch and bound, SDP, local search) already exponentially beat <span class="math inline">\(2^n\)</span> on structured instances. Grover on top of brute force is not the competitive baseline.</p>
+</section>
+</section>
+<section id="sec-hhl" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-hhl"><span class="header-section-number">3</span> HHL, linear systems in polylog time</h2>
+<p>Harrow, Hassidim, and Lloyd (2009) showed: given a sparse <span class="math inline">\(N \times N\)</span> matrix <span class="math inline">\(A\)</span> with condition number <span class="math inline">\(\kappa\)</span> and a quantum state <span class="math inline">\(|b\rangle\)</span>, produce a state <span class="math inline">\(|x\rangle \propto A^{-1}|b\rangle\)</span> in time <span class="math inline">\(O(s^2 \kappa^2 \log N / \epsilon)\)</span>. Classical conjugate gradient is <span class="math inline">\(O(N s \sqrt\kappa \log(1/\epsilon))\)</span>. At first glance, exponential speedup.</p>
+<section id="the-three-asterisks" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="the-three-asterisks"><span class="header-section-number">3.1</span> The three asterisks</h3>
+<p>Aaronson (2015) articulated the fine print:</p>
+<ol type="1">
+<li><strong>State preparation.</strong> HHL assumes <span class="math inline">\(|b\rangle\)</span> is already prepared. Preparing an arbitrary <span class="math inline">\(N\)</span>-entry classical vector as a quantum state takes <span class="math inline">\(\Omega(N)\)</span> time, erasing the exponential speedup. Only if <span class="math inline">\(b\)</span> arises from a quantum circuit (e.g., another simulation) does the input cost not dominate.</li>
+<li><strong>Output extraction.</strong> We get the state <span class="math inline">\(|x\rangle\)</span>, not its classical components. Extracting a single entry requires <span class="math inline">\(\Omega(1/\epsilon)\)</span> amplitude-estimation samples; extracting all <span class="math inline">\(N\)</span> entries is <span class="math inline">\(\Omega(N)\)</span>.</li>
+<li><strong>Condition number.</strong> If <span class="math inline">\(\kappa = \Omega(N)\)</span>, the algorithm is no faster than classical. Real-world matrices often have poor conditioning.</li>
+</ol>
+</section>
+<section id="when-the-speedup-is-real" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="when-the-speedup-is-real"><span class="header-section-number">3.2</span> When the speedup is real</h3>
+<p>HHL is an exponential speedup under Aaronson’s four criteria: <span class="math inline">\(|b\rangle\)</span> is efficiently quantum-preparable; <span class="math inline">\(A\)</span> is efficiently quantum-accessible (sparse or QRAM); only global properties of <span class="math inline">\(|x\rangle\)</span> are needed; and <span class="math inline">\(\kappa\)</span> is polylogarithmic or polynomial in problem parameters. Such settings exist in computational physics and quantum chemistry but are rare in mainstream operations research.</p>
+</section>
+<section id="dequantization" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="dequantization"><span class="header-section-number">3.3</span> Dequantization</h3>
+<p>Tang (2018) dequantized an HHL-derived quantum recommender system, showing that under classical <span class="math inline">\(\ell_2\)</span>-sampling access to the input, a classical algorithm achieves the same polylog scaling with polynomial overhead. A cascade of similar results followed for PCA, SVMs, and linear regression. The lesson: many claimed HHL-based quantum ML speedups were illusory, a consequence of unequal input access rather than quantum-physical advantage.</p>
+</section>
+</section>
+<section id="sec-summary" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">4</span> Summary, what is and is not speedable</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>Speedup</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Factoring, discrete log</td>
+<td>Exponential (Shor)</td>
+<td>Provable against best classical known</td>
+</tr>
+<tr class="even">
+<td>Unstructured search</td>
+<td>Quadratic (Grover)</td>
+<td>Provably optimal in query model</td>
+</tr>
+<tr class="odd">
+<td>Sparse linear systems with QRAM</td>
+<td>Exponential (HHL)</td>
+<td>Subject to fine-print criteria</td>
+</tr>
+<tr class="even">
+<td>Amplitude estimation / Monte Carlo</td>
+<td>Quadratic (Brassard et al.)</td>
+<td>Provably optimal, fault-tolerance-limited</td>
+</tr>
+<tr class="odd">
+<td>NP-hard optimization</td>
+<td>None proven</td>
+<td>Heuristic approaches only (QAOA, adiabatic)</td>
+</tr>
+<tr class="even">
+<td>General quantum ML</td>
+<td>Not guaranteed</td>
+<td>Dequantization attacks have rescinded many claims</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exercises" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="exercises"><span class="header-section-number">5</span> Exercises</h2>
+<p><strong>Exercise 2.1</strong> (<span class="math inline">\(\star\star\)</span>). Derive the QFT’s <span class="math inline">\(O(n^2)\)</span> gate count by constructing it from Hadamards and controlled phase rotations.</p>
+<p><strong>Exercise 2.2</strong> (<span class="math inline">\(\star\star\star\)</span>). Prove Grover’s <span class="math inline">\(\pi\sqrt N / 4\)</span> iteration count by tracking the state vector in the <span class="math inline">\((|x^*\rangle, |s'\rangle)\)</span> plane and applying the rotation identity for <span class="math inline">\(k\)</span> iterations.</p>
+<p><strong>Exercise 2.3</strong> (<span class="math inline">\(\star\star\)</span>). For a 2048-bit RSA modulus, estimate the physical-qubit resources required for Shor using the Gidney-Ekerå framework. Compare to the largest currently deployed quantum hardware.</p>
+<p><strong>Exercise 2.4</strong> (<span class="math inline">\(\star\star\star\)</span>). Implement Grover’s algorithm in Qiskit for <span class="math inline">\(n = 4, 6, 8\)</span>. Measure the probability of success vs.&nbsp;number of iterations and compare to the analytical formula.</p>
+<p><strong>Exercise 2.5</strong> (<span class="math inline">\(\star\)</span>). Read Aaronson’s 2015 “Read the Fine Print” <em>Nature Physics</em> commentary. Identify one HHL application in the current literature that does or does not satisfy all four criteria.</p>
+<hr>
+</section>
+<section id="references" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="references"><span class="header-section-number">6</span> References</h2>
+<p>Bennett, C. H., Bernstein, E., Brassard, G., and Vazirani, U. (1997). “Strengths and Weaknesses of Quantum Computing.” <em>SIAM Journal on Computing</em> 26(5), 1510–1523.</p>
+<p>Brassard, G., Høyer, P., Mosca, M., and Tapp, A. (2002). “Quantum Amplitude Amplification and Estimation.” <em>Contemporary Mathematics</em> 305, 53–74.</p>
+<p>Gidney, C., and Ekerå, M. (2021). “How to Factor 2048-bit RSA Integers in 8 Hours Using 20 Million Noisy Qubits.” <em>Quantum</em> 5, 433.</p>
+<p>Grover, L. K. (1996). “A Fast Quantum Mechanical Algorithm for Database Search.” <em>Proceedings of the 28th STOC</em>, 212–219.</p>
+<p>Harrow, A. W., Hassidim, A., and Lloyd, S. (2009). “Quantum Algorithm for Linear Systems of Equations.” <em>Physical Review Letters</em> 103, 150502.</p>
+<p>Aaronson, S. (2015). “Read the Fine Print.” <em>Nature Physics</em> 11, 291–293.</p>
+<p>Shor, P. W. (1995/1999). “Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer.” <em>SIAM Journal on Computing</em> 26(5), 1484–1509.</p>
+<p>Tang, E. (2018/2019). “A Quantum-Inspired Classical Algorithm for Recommendation Systems.” <em>Proceedings of STOC 2019</em>, 217–228.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,421 @@
+---
+title: "DAGs and the do-calculus"
+author: "Hovhannes Grigoryan"
+date: "2026-03-28"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Represent** a substantive causal story as a directed acyclic graph (DAG), distinguishing causal direction from statistical dependence.
+2. **Apply** the d-separation criterion to read off conditional independence statements from a DAG.
+3. **State and use** the backdoor and frontdoor criteria to decide which covariates to condition on when estimating a causal effect.
+4. **Execute** Pearl's three rules of the do-calculus to transform interventional queries into observational ones.
+5. **Explain** the Shpitser-Pearl identification algorithm and diagnose whether a given causal effect is identifiable from observational data.
+6. **Implement** DAG manipulation and identification queries in Python using `pgmpy` and `dowhy`.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three lectures of 75–90 minutes.
+
+**Lecture 1, DAGs and d-separation.**
+
+- Motivating: why we need a second formalism beyond potential outcomes (10 min)
+- Directed acyclic graphs: nodes, edges, paths (15 min)
+- Chains, forks, colliders (20 min)
+- The d-separation theorem (25 min)
+- Hands-on: build a DAG in `pgmpy` and query conditional independencies (15 min)
+
+**Lecture 2, Backdoor, frontdoor, and the do-calculus.**
+
+- The intervention $do(X = x)$ formally (10 min)
+- Backdoor criterion and when it applies (25 min)
+- Frontdoor criterion for the mediator case (25 min)
+- Pearl's three rules (20 min)
+- Hands-on: apply the backdoor criterion via `dowhy` (15 min)
+
+**Lecture 3, Identification algorithm and bridge to potential outcomes.**
+
+- The identification problem in full generality (15 min)
+- Shpitser-Pearl algorithm (20 min)
+- When does the backdoor criterion equal unconfoundedness? (20 min)
+- The DAG → g-formula mapping (20 min)
+- Reading group: a paper using a DAG to defend an identifying assumption (20 min)
+:::
+
+::: {.callout-note title="Notation"}
+A directed acyclic graph $\mathcal{G} = (V, E)$ has vertex set $V$ (variables) and edge set $E \subseteq V \times V$ (directed arcs). The notation $A \to B$ means an arc from $A$ to $B$. We write $\text{pa}(V)$ for parents of $V$ in $\mathcal{G}$, $\text{de}(V)$ for descendants, and $\text{an}(V)$ for ancestors. Conditional independence is $A \perp\!\!\!\perp B \mid C$. The do-operator $do(X = x)$ denotes intervention that sets $X$ to $x$, distinct from observational conditioning $\mid X = x$.
+:::
+
+## Why another formalism? {#sec-why-dags}
+
+Chapter 1 gave us potential outcomes. Chapter 2 gave us identification under unconfoundedness. Why add DAGs?
+
+Because *which variables to put in $X$* is the hardest question in applied causal inference, and the potential-outcomes framework does not answer it. Unconfoundedness says $(Y(0), Y(1)) \perp\!\!\!\perp D \mid X$, condition on the right variables and you are fine. But which variables are the right ones? Adding every variable you have access to is a common beginner mistake that can make the bias worse, not better, through a phenomenon called collider bias.
+
+DAGs provide the graphical language in which these questions have clean algorithmic answers. The machinery originated with Wright's path analysis (1920s), was formalized by Spirtes, Glymour, and Scheines (1993), and reached its modern form in Judea Pearl's structural causal models [@pearl1995causal; @pearl2009causality]. In 2011 Pearl received the Turing Award largely for this line of work.
+
+For the applied researcher, DAGs serve three purposes:
+
+1. **Communication.** A DAG makes the researcher's causal assumptions explicit and reviewable.
+2. **Identification.** Graph-theoretic algorithms determine what is and is not identifiable.
+3. **Debugging.** DAGs help diagnose which variables cause bias when conditioned on.
+
+This chapter is a working introduction, not a comprehensive treatment. For the complete algebra, see Pearl (2009) [@pearl2009causality] or the more accessible Pearl, Glymour, and Jewell (2016) [@pearl2016primer].
+
+## DAGs as causal models {#sec-dags}
+
+### Definitions
+
+A **directed acyclic graph** consists of a finite set of variables $V$ and a set of directed arcs between them, with the constraint that no variable is its own ancestor (no cycles). The interpretation is:
+
+::: {.callout-note title="Causal interpretation of a DAG"}
+An arc $A \to B$ means that $A$ is a **direct cause** of $B$, intervening on $A$ changes $B$, holding fixed all other direct causes of $B$.
+:::
+
+The absence of an arc encodes the stronger claim that the two variables have no direct causal link (given the rest of the model). Absent arcs are often more important than present ones: they are where the identifying assumptions live.
+
+A **path** between two variables is a sequence of variables connected by arcs, regardless of direction. A **directed path** follows arc directions throughout.
+
+### Three elementary structures
+
+Almost every DAG reasoning reduces to identifying and handling three elementary structures.
+
+**Chain.** $A \to M \to B$. Information flows from $A$ to $B$ via $M$. Conditioning on $M$ blocks this flow: $A \perp\!\!\!\perp B \mid M$.
+
+**Fork.** $A \leftarrow C \to B$. Common cause $C$ induces statistical dependence between $A$ and $B$. Conditioning on $C$ removes this dependence: $A \perp\!\!\!\perp B \mid C$. This is the classical confounding structure.
+
+**Collider.** $A \to C \leftarrow B$. Variable $C$ is a **collider** between $A$ and $B$. Unlike chains and forks, a collider *blocks* a path by default. Conditioning on a collider (or one of its descendants) *opens* the path, inducing spurious dependence between its parents.
+
+The collider structure is the reason "add every covariate to your regression" is wrong. If the outcome $Y$ and treatment $D$ are both caused by a variable $X$, then $X$ is *not* a collider and conditioning on it is the right move. But if $X$ is a descendant of both $D$ and $Y$, then $X$ is a collider and conditioning on it injects bias.
+
+### The d-separation theorem
+
+The three elementary structures combine into a general criterion for reading off conditional independence from a DAG.
+
+::: {.callout-note title="Definition: d-separation"}
+A path between variables $A$ and $B$ is **blocked** by a set $Z$ if either:
+
+- The path contains a **chain** $\cdots \to M \to \cdots$ or **fork** $\cdots \leftarrow M \to \cdots$ such that $M \in Z$, or
+- The path contains a **collider** $\cdots \to C \leftarrow \cdots$ such that $C \notin Z$ and no descendant of $C$ is in $Z$.
+
+$A$ and $B$ are **d-separated** by $Z$ if every path between $A$ and $B$ is blocked by $Z$. Write $A \perp\!\!\!\perp_d B \mid Z$.
+:::
+
+::: {.callout-note title="Theorem 3.1 — d-separation implies conditional independence"}
+If the DAG $\mathcal{G}$ is a correct causal diagram for the joint distribution $P$, and $A \perp\!\!\!\perp_d B \mid Z$ in $\mathcal{G}$, then $A \perp\!\!\!\perp B \mid Z$ in $P$.
+:::
+
+The converse also holds for what are called *faithful* distributions, those in which no additional independencies exist beyond those implied by the DAG. Faithfulness fails in degenerate cases (exact numerical cancellation) and is assumed in most applied work.
+
+## A synthetic example with `pgmpy` {#sec-pgmpy-example}
+
+Consider a toy DGP: we want the causal effect of `Education` on `Earnings`, with `Ability` as an unmeasured common cause and `Experience` as a mediator.
+
+```python
+from pgmpy.models import DiscreteBayesianNetwork
+from pgmpy.inference import VariableElimination
+
+# Define the DAG
+dag = DiscreteBayesianNetwork([
+    ('Ability', 'Education'),     # Higher ability → more education
+    ('Ability', 'Earnings'),       # and higher earnings (confounding)
+    ('Education', 'Experience'),   # Education → early-career experience
+    ('Experience', 'Earnings'),    # Experience → earnings
+    ('Education', 'Earnings'),     # Direct return to schooling
+])
+
+# Check d-separation: is Education ⊥ Earnings | Ability?
+# NO, there are two open paths: Education → Earnings directly,
+# and Education → Experience → Earnings.
+# But we can query the software
+print(dag.is_dconnected('Education', 'Earnings'))  # True
+print(dag.is_dconnected('Education', 'Earnings', observed=['Ability']))  # True
+
+# Is Ability ⊥ Experience | Education?
+print(dag.is_dconnected('Ability', 'Experience'))           # True (via Education)
+print(dag.is_dconnected('Ability', 'Experience',
+                         observed=['Education']))           # False (Education blocks)
+```
+
+The first query confirms that `Education` and `Earnings` are marginally d-connected (both via the direct arc and via the path through `Experience`). The second confirms that conditioning on `Ability` alone does not d-separate them, we still have the `Education → Experience → Earnings` path. The third confirms that conditioning on `Education` d-separates `Ability` from `Experience`.
+
+D-separation is the mechanical engine underneath. The next step is to use it for identification.
+
+## The backdoor criterion {#sec-backdoor}
+
+Given a DAG and a target effect $D \to Y$, the central practical question is: *what set $Z$ of variables should I condition on to get an unbiased causal estimate?*
+
+::: {.callout-note title="Definition: Backdoor path"}
+A **backdoor path** from $D$ to $Y$ is a path that begins with an arc **into** $D$ (i.e., $D \leftarrow \cdots$) and ends at $Y$. These are the paths through which confounding can flow.
+:::
+
+::: {.callout-important title="Theorem 3.2 — Backdoor criterion (Pearl 1995)"}
+A set $Z$ satisfies the **backdoor criterion** relative to the pair $(D, Y)$ in a DAG $\mathcal{G}$ if:
+
+1. No node in $Z$ is a descendant of $D$.
+2. $Z$ blocks every backdoor path from $D$ to $Y$.
+
+If $Z$ satisfies the backdoor criterion, then the causal effect of $D$ on $Y$ is identifiable from observational data:
+
+$$
+P(Y = y \mid do(D = d)) = \sum_z P(Y = y \mid D = d, Z = z) P(Z = z).
+$$ {#eq-backdoor-formula}
+:::
+
+The right-hand side of @eq-backdoor-formula is the g-formula from Chapter 2, the identification of the ATE reduces to a sum over the conditioning set. The backdoor criterion tells us *which* $Z$ to use.
+
+::: {.callout-tip title="Proof sketch"}
+Condition 1 rules out conditioning on descendants of $D$, doing so would introduce bias by conditioning on colliders or by blocking the intended causal path. Condition 2 ensures that all confounding (backdoor) paths are blocked. The DAG factorization $P(V) = \prod_i P(V_i \mid \text{pa}(V_i))$ plus these two conditions give the result via an algebraic manipulation (Pearl 1995, Theorem 3.2.2).
+:::
+
+In the `Ability → Education → Earnings` example, the backdoor path is `Education ← Ability → Earnings`. Conditioning on `Ability` blocks this path. If `Ability` is observable, we can estimate the causal effect of `Education` on `Earnings` using the g-formula. If `Ability` is unobservable, which is usually the case, the backdoor criterion fails for any set $Z$ that excludes it, and we cannot identify the effect by conditioning alone.
+
+### Worked example
+
+Consider a DAG with:
+
+- $U$ (unobserved confounder) → $D, Y$
+- $X_1$ → $D, Y$ (observed confounder)
+- $X_2$ → $D, Y$ (another observed confounder)
+- $M$ mediator: $D \to M \to Y$
+- $Z$ (bad control): $D \to Z \leftarrow Y$ (collider)
+
+The backdoor paths from $D$ to $Y$ are $D \leftarrow X_1 \to Y$, $D \leftarrow X_2 \to Y$, and $D \leftarrow U \to Y$. Since $U$ is unobserved, the backdoor criterion fails. No choice of observed $Z$ can block the $U$-path. This DAG yields a non-identifiable effect under strong ignorability.
+
+If $U$ is absent from the true DGP, the set $Z = \{X_1, X_2\}$ satisfies the backdoor criterion. Note that we **should not** condition on $M$ (a mediator, would absorb part of the effect) or $Z$ (a collider, would open the path $D \to Z \leftarrow Y$ and inject bias).
+
+## The frontdoor criterion {#sec-frontdoor}
+
+Pearl's second major identification result gives a way to identify the effect of $D$ on $Y$ when the backdoor criterion fails, provided a mediator is available with specific properties.
+
+::: {.callout-note title="Theorem 3.3 — Frontdoor criterion (Pearl 1995)"}
+A set $M$ satisfies the **frontdoor criterion** with respect to $(D, Y)$ if:
+
+1. $M$ intercepts all directed paths from $D$ to $Y$.
+2. There is no backdoor path from $D$ to $M$.
+3. All backdoor paths from $M$ to $Y$ are blocked by $D$.
+
+If $M$ satisfies the frontdoor criterion, then
+
+$$
+P(Y = y \mid do(D = d)) = \sum_m P(M = m \mid D = d) \sum_{d'} P(Y = y \mid M = m, D = d') P(D = d').
+$$ {#eq-frontdoor-formula}
+:::
+
+The frontdoor formula can identify effects even in the presence of unobserved confounders between $D$ and $Y$, provided the mediator is itself unconfounded from the treatment in a very specific sense. Pearl's canonical example: the effect of smoking on lung cancer, where genes are an unmeasured confounder but tar deposits in the lungs play the role of $M$.
+
+Frontdoor applications are rarer than backdoor ones because finding a mediator $M$ satisfying all three conditions is unusual. But when it applies, it is powerful, it identifies effects that no amount of ordinary covariate adjustment can.
+
+## The do-calculus {#sec-do-calculus}
+
+The backdoor and frontdoor formulas are special cases of a more general calculus. Pearl's **do-calculus** consists of three rules that allow one to transform expressions involving $do$ into expressions that do not.
+
+Let $\mathcal{G}_{\overline{X}}$ denote the graph obtained from $\mathcal{G}$ by deleting all arcs into $X$, and $\mathcal{G}_{\underline{X}}$ the graph obtained by deleting all arcs out of $X$.
+
+::: {.callout-note title="Pearl's three rules"}
+**Rule 1 (insertion/deletion of observations).**
+If $(Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X}}}$, then
+$$P(Y \mid do(X), Z, W) = P(Y \mid do(X), W).$$
+
+**Rule 2 (action/observation exchange).**
+If $(Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X} \underline{Z}}}$, then
+$$P(Y \mid do(X), do(Z), W) = P(Y \mid do(X), Z, W).$$
+
+**Rule 3 (insertion/deletion of actions).**
+If $(Y \perp\!\!\!\perp_d Z \mid X, W)_{\mathcal{G}_{\overline{X} \overline{Z(W)}}}$, then
+$$P(Y \mid do(X), do(Z), W) = P(Y \mid do(X), W),$$
+
+where $Z(W)$ are nodes in $Z$ that are not ancestors of any node in $W$ in $\mathcal{G}_{\overline{X}}$.
+:::
+
+The rules are all consequences of d-separation in modified graphs. Rule 1 says observations unrelated to $Y$ given the intervention can be dropped. Rule 2 says actions can be exchanged for observations when the distinguishing paths are blocked. Rule 3 says irrelevant actions can be dropped.
+
+Applied in sequence, these three rules can derive the backdoor formula, the frontdoor formula, and every other identification result in the literature. A key result:
+
+::: {.callout-important title="Theorem 3.4 — Completeness of the do-calculus (Shpitser-Pearl 2006)"}
+If a causal effect $P(Y \mid do(X))$ is identifiable from observational data under a given DAG $\mathcal{G}$, then the do-calculus can produce an identifying expression. Conversely, if the do-calculus cannot produce such an expression after exhaustive application of the three rules, the effect is not identifiable from observational data.
+:::
+
+The algorithmic version (the **ID algorithm** [@shpitser2006identification]) is implemented in software and decides identifiability in time polynomial in the number of variables. Both `dowhy` (Python) and `causaleffect` (R) provide implementations.
+
+## When backdoor equals unconfoundedness {#sec-bridge-to-po}
+
+How do DAGs connect to the Chapter 2 potential-outcomes machinery?
+
+::: {.callout-important title="Theorem 3.5 — DAG-Potential-Outcomes bridge"}
+If a DAG $\mathcal{G}$ correctly encodes the data-generating process and $Z$ satisfies the backdoor criterion for $(D, Y)$ in $\mathcal{G}$, then $Z$ satisfies the unconfoundedness assumption: $(Y(0), Y(1)) \perp\!\!\!\perp D \mid Z$. Consequently,
+
+$$
+\tau = \mathbb{E}_Z\left[\mathbb{E}[Y \mid D=1, Z] - \mathbb{E}[Y \mid D=0, Z]\right].
+$$
+:::
+
+In other words: the backdoor criterion is the DAG-level *sufficient condition* for the potential-outcome-level unconfoundedness assumption. They are different ways of stating the same substantive requirement.
+
+The DAG perspective is more machine-checkable. Given a proposed DAG, software can determine whether a given $Z$ satisfies the backdoor criterion. The potential-outcomes perspective is more philosophically direct but harder to verify.
+
+A modern applied causal workflow often uses both:
+
+1. Draw the DAG based on substantive knowledge of the DGP.
+2. Use `dowhy` or manual reasoning to identify an adjustment set $Z$.
+3. Verify that $Z$ is observable and that positivity holds for it.
+4. Estimate the causal effect using regression, IPW, or DML with $Z$ as the adjustment covariates.
+
+Every step depends on the DAG being correct. DAGs are themselves untestable assumptions about the world, but they make those assumptions visible and reviewable in a way that an unstructured "control for the right things" approach does not.
+
+## A full workflow with `dowhy` {#sec-dowhy-workflow}
+
+```python
+import pandas as pd
+import numpy as np
+from dowhy import CausalModel
+
+# Simulate a confounded DGP
+rng = np.random.default_rng(0)
+N = 2000
+U = rng.normal(0, 1, N)                              # unobserved confounder
+X1 = 0.5 * U + rng.normal(0, 1, N)                   # observed covariate
+X2 = rng.binomial(1, 0.5, N)
+D = (0.7 * X1 + 0.3 * X2 + 0.4 * U + rng.normal(0, 0.5, N) > 0).astype(int)
+Y = 2 * D + 1.5 * X1 + 0.8 * X2 + 0.6 * U + rng.normal(0, 1, N)
+
+df = pd.DataFrame({'D': D, 'Y': Y, 'X1': X1, 'X2': X2})
+# Note: U is not in the dataframe, it is unobserved
+
+# The causal graph in gml format, omitting U because it's unobserved
+causal_graph = """
+graph [
+    directed 1
+    node [id "D" label "D"]
+    node [id "Y" label "Y"]
+    node [id "X1" label "X1"]
+    node [id "X2" label "X2"]
+    edge [source "X1" target "D"]
+    edge [source "X2" target "D"]
+    edge [source "X1" target "Y"]
+    edge [source "X2" target "Y"]
+    edge [source "D" target "Y"]
+]
+"""
+
+model = CausalModel(data=df, treatment='D', outcome='Y', graph=causal_graph)
+
+# Identification step: let dowhy find the adjustment set
+identified_estimand = model.identify_effect()
+print(identified_estimand)
+
+# Estimation step: linear regression with adjustment
+estimate = model.estimate_effect(identified_estimand,
+                                   method_name='backdoor.linear_regression')
+print(f"DoWhy estimated effect: {estimate.value:.3f}")
+
+# Refutation: test robustness to unobserved confounders via sensitivity
+refute = model.refute_estimate(identified_estimand, estimate,
+                                method_name='add_unobserved_common_cause',
+                                confounders_effect_on_treatment='linear',
+                                confounders_effect_on_outcome='linear')
+print(refute)
+```
+
+The identification step reports which adjustment set `dowhy` selects (here, $\{X_1, X_2\}$ via the backdoor criterion). The estimation step applies linear regression with that adjustment. Because the true DGP has an unobserved confounder $U$, the estimated effect is biased, this is a feature of the example, not a software bug. The refutation step injects synthetic unobserved confounders and asks how much the estimate would move; it is the automated version of sensitivity analysis from Chapter 2.
+
+## Evaluation metrics specific to DAG-based analysis {#sec-dag-metrics}
+
+1. **DAG provenance.** Does the DAG come from substantive knowledge (domain experts, published literature) or from data (constraint-based discovery, e.g., PC algorithm)? Data-derived DAGs are under-identified in general, multiple DAGs are compatible with the same conditional independences.
+2. **Identifiability report.** Report whether the causal effect was identifiable under the DAG and which adjustment set was chosen.
+3. **Sensitivity to DAG mis-specification.** If you suspect an additional arc might exist, re-identify under the perturbed DAG. Large swings in the identified adjustment set are a red flag.
+4. **Positivity on the adjustment set.** Once an adjustment set is chosen, standard positivity diagnostics apply.
+
+::: {.callout-warning title="DAGs do not substitute for substantive thought"}
+Two different researchers can draw different DAGs for the same problem, and no dataset can tell us which is correct. The DAG is a formalization of substantive causal knowledge; it is not a substitute for that knowledge. The quality of causal inference is ultimately bounded by the quality of the researcher's domain understanding.
+:::
+
+## Bibliographic notes {#sec-dag-bib}
+
+### Primary sources
+
+Pearl (1995), "Causal Diagrams for Empirical Research," *Biometrika* 82(4), 669–688, is the foundational modern paper. The target article plus discussions and rejoinder give a full perspective.
+
+Pearl (2009), *Causality: Models, Reasoning, and Inference* (2nd ed.), Cambridge University Press, is the definitive 400-page treatment. Chapter 3 covers d-separation and identification in detail.
+
+Spirtes, Glymour, and Scheines (2000), *Causation, Prediction, and Search* (2nd ed.), MIT Press, gives an alternative (more algorithmic) view emphasizing causal discovery from data.
+
+### Completeness and algorithms
+
+Shpitser and Pearl (2006), "Identification of Joint Interventional Distributions in Recursive Semi-Markovian Causal Models," AAAI. Tian and Pearl's earlier ID algorithm is the foundation; Shpitser-Pearl extended it to conditional effects and proved completeness.
+
+Bareinboim and Pearl (2016), "Causal Inference and the Data-Fusion Problem," *PNAS* 113(27), 7345–7352. Extends identification theory to combining experimental and observational data.
+
+### Applied and accessible
+
+Pearl, Glymour, and Jewell (2016), *Causal Inference in Statistics: A Primer*, Wiley, is the accessible intro. 150 pages, designed for upper-undergraduate / early-graduate.
+
+Cunningham (2021), *Causal Inference: The Mixtape*, Yale University Press, is freely available and mixes DAGs with potential outcomes in the context of econometric applications.
+
+### Software
+
+`pgmpy` (Python), DAG representation, d-separation queries, basic inference.
+`dowhy` (Microsoft, 2018+), end-to-end identification / estimation / refutation.
+`causaleffect` (R), faithful implementation of the Shpitser-Pearl ID algorithm.
+`DAGitty`, interactive DAG builder with automatic backdoor-adjustment-set suggestion (browser-based at dagitty.net).
+
+## Exercises
+
+### Theoretical exercises
+
+**Exercise 3.1** ($\star$). In a DAG with variables $\{A, B, C, D, E\}$ and arcs $A \to B, A \to C, B \to D, C \to D, D \to E$, list all paths between $A$ and $E$. For each, identify whether it is blocked by conditioning on $\{D\}$, on $\{B\}$, or on $\{B, C\}$.
+
+**Exercise 3.2** ($\star\star$). Prove the backdoor criterion by reducing it to d-separation plus an algebraic manipulation. You may cite the factorization $P(V) = \prod_i P(V_i \mid \text{pa}(V_i))$ without proof.
+
+**Exercise 3.3** ($\star\star$). Construct a DAG in which the causal effect of $D$ on $Y$ is identifiable via the frontdoor criterion but not via the backdoor criterion. Show the frontdoor formula in full.
+
+**Exercise 3.4** ($\star\star\star$). Trace through the ID algorithm on a given DAG. Take the graph with $D, M_1, M_2, Y$ and unmeasured $U \to D, Y$ plus $D \to M_1 \to M_2 \to Y$. Is the effect of $D$ on $Y$ identifiable? If so, derive the identifying expression using Pearl's three rules.
+
+### Computational exercises
+
+**Exercise 3.5** ($\star$). Using `pgmpy`, construct the `Ability / Education / Experience / Earnings` DAG from §@sec-pgmpy-example. Enumerate every pair of variables and report whether each pair is d-separated under four conditioning sets: $\emptyset$, $\{Ability\}$, $\{Experience\}$, $\{Ability, Experience\}$.
+
+**Exercise 3.6** ($\star\star$). Using `dowhy`, encode a DAG for the synthetic DGP in Chapter 2 and verify that the automatically-selected adjustment set matches the one you derived manually.
+
+**Exercise 3.7** ($\star\star$). Implement a simple d-separation checker from scratch in Python. Your function should take a graph adjacency matrix, a set of conditioning nodes, and a query pair, and return whether the pair is d-separated given the conditioning set. Test against `pgmpy` on a small DAG.
+
+**Exercise 3.8** ($\star\star\star$). Implement the backdoor-adjustment-set enumeration: given a DAG and a treatment-outcome pair, enumerate all minimal sets $Z$ satisfying the backdoor criterion. Compare your implementation against `dagitty`'s browser-based tool on three test DAGs.
+
+### Discussion exercises
+
+**Exercise 3.9**. In a study of the effect of minimum-wage increases on employment, draw a DAG including the following variables: labor market conditions, state characteristics, minimum wage, employment. Where would unmeasured confounding most plausibly enter? How would you diagnose it if the DAG were even approximately correct?
+
+**Exercise 3.10**. DAGs formalize assumptions but do not verify them. Suppose two researchers draw substantively different DAGs for the same problem and derive different identifying adjustment sets. How should a third-party reader evaluate the difference? What does this tell you about the epistemic status of DAGs as tools for causal inference?
+
+---
+
+## References
+
+Bareinboim, E., and Pearl, J. (2016). "Causal Inference and the Data-Fusion Problem." *Proceedings of the National Academy of Sciences* 113(27), 7345–7352.
+
+Cunningham, S. (2021). *Causal Inference: The Mixtape*. Yale University Press.
+
+Pearl, J. (1995). "Causal Diagrams for Empirical Research." *Biometrika* 82(4), 669–688.
+
+Pearl, J. (2009). *Causality: Models, Reasoning, and Inference* (2nd ed.). Cambridge University Press.
+
+Pearl, J., Glymour, M., and Jewell, N. P. (2016). *Causal Inference in Statistics: A Primer*. Wiley.
+
+Shpitser, I., and Pearl, J. (2006). "Identification of Joint Interventional Distributions in Recursive Semi-Markovian Causal Models." *Proceedings of the 21st AAAI Conference on Artificial Intelligence*, 1219–1226.
+
+Spirtes, P., Glymour, C., and Scheines, R. (2000). *Causation, Prediction, and Search* (2nd ed.). MIT Press.

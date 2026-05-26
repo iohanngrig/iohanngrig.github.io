@@ -1,0 +1,175 @@
+---
+title: "Quantum optimization and supremacy claims"
+author: "Hovhannes Grigoryan"
+date: "2026-04-19"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Encode** a constrained combinatorial optimization problem as a QUBO and then as an Ising Hamiltonian.
+2. **Derive** the adiabatic-theorem runtime bound and interpret what the minimum spectral gap implies for hardness.
+3. **Construct** a QAOA circuit and state the approximation-ratio guarantee on 3-regular Max-Cut (Farhi-Goldstone-Gutmann 2014).
+4. **Distinguish** provable quantum speedups (Shor, Grover) from heuristic quantum approaches (QAOA, adiabatic, variational methods).
+5. **Critique** hardware "quantum supremacy" claims, including the classical-simulation counterattacks that collapsed the 2019 Sycamore claim.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures: (1) optimization formulations and adiabatic theory; (2) QAOA and variational methods; (3) NISQ reality, supremacy claims, and the dequantization program.
+:::
+
+## The question {#sec-quantum-opt-question}
+
+A physicist is told the good news: quantum computers will "solve optimization." An operations researcher, having built production-grade branch-and-bound solvers for twenty years, asks for a specific claim. Will we see exponential speedup for NP-hard problems? Polynomial speedup? Constant-factor speedup on restricted problem classes? For which problems, under what noise conditions, on what time horizon? The answer is sharper than enthusiasts suggest and more nuanced than skeptics allow.
+
+This chapter separates three questions that are easy to confuse: (a) what quantum algorithms can *provably* do faster than any classical algorithm; (b) what near-term quantum hardware has actually *demonstrated*; (c) whether either of those tells us anything specific about the constrained optimization problems operations researchers care about. Short answers: very few things provably, sampling tasks rather than optimization, and, with important caveats, probably not in the regime anyone currently uses classical solvers for.
+
+## From constrained optimization to Ising {#sec-ising-reduction}
+
+A constrained optimization problem
+
+$$
+\min_{x \in \mathcal{X}} f(x) \quad \text{s.t.} \quad g_j(x) \leq 0, \; j = 1, \ldots, m,
+$$
+
+with binary variables $x \in \{0, 1\}^n$ and quadratic objective reduces via Lagrangian penalty to **Quadratic Unconstrained Binary Optimization** (QUBO):
+
+$$
+\min_{x \in \{0, 1\}^n} x^\top Q x + \lambda \sum_j \max(0, g_j(x))^2.
+$$
+
+Substituting $x_i = (1 - s_i)/2$ with spin $s_i \in \{-1, +1\}$, QUBO becomes the **Ising model**
+
+$$
+H_{\text{Ising}}(s) = \sum_{i < j} J_{ij} s_i s_j + \sum_i h_i s_i.
+$$ {#eq-ising}
+
+Solving @eq-ising exactly is NP-hard (Barahona 1982). Max-Cut, graph coloring, portfolio selection, traffic routing, and many scheduling problems reduce to Ising. Quantum algorithms for Ising thus apply to this entire class.
+
+## The adiabatic approach {#sec-adiabatic}
+
+The adiabatic theorem of Born-Fock (1928) states: a quantum system remains in its instantaneous ground state under slow-enough time-dependent Hamiltonian evolution. Farhi, Goldstone, Gutmann, and Sipser (2000) turned this into a computational paradigm. Encode the optimum of @eq-ising as the ground state of a Hamiltonian $H_C$. Start in the ground state of an easy Hamiltonian $H_B = -\sum_i X_i$. Evolve slowly:
+
+$$
+H(s) = (1 - s) H_B + s H_C, \quad s = t / T \in [0, 1].
+$$
+
+At $s = 1$, with sufficient runtime $T$, the state is the ground state of $H_C$, the optimum.
+
+How slow is slow enough? Jansen-Ruskai-Seiler (2007) give the bound
+
+$$
+T \gg \frac{\max_s \|\dot H(s)\|}{\min_s \Delta(s)^2},
+$$ {#eq-adiabatic-bound}
+
+where $\Delta(s)$ is the spectral gap between ground state and first excited state at time $s$. Runtime scales inversely with the *square* of the minimum gap.
+
+::: {.callout-important title="Theorem 1.1 — The adiabatic-gap bottleneck (Altshuler-Krovi-Roland 2010)"}
+For worst-case random instances of 3-SAT, the minimum adiabatic gap closes as $\Delta_{\min} \sim 2^{-\alpha n}$ for some $\alpha > 0$, requiring exponential runtime. The adiabatic algorithm is not a general-purpose NP-solver.
+:::
+
+Aharonov et al. (2007) proved adiabatic computation is polynomially equivalent to standard gate-model quantum computation, so this is not a bug in the adiabatic formulation but a fact about quantum computing's power.
+
+## QAOA as the gate-model approximation {#sec-qaoa}
+
+The Quantum Approximate Optimization Algorithm (Farhi, Goldstone, Gutmann 2014) discretizes the adiabatic path. With $p$ layers and $2p$ classical parameters $(\boldsymbol{\gamma}, \boldsymbol{\beta})$,
+
+$$
+|\psi_p\rangle = e^{-i \beta_p H_B} e^{-i \gamma_p H_C} \cdots e^{-i \beta_1 H_B} e^{-i \gamma_1 H_C} |+\rangle^{\otimes n}.
+$$ {#eq-qaoa-ansatz}
+
+One measures $\langle \psi_p | H_C | \psi_p \rangle$ and uses a classical optimizer over $(\boldsymbol{\gamma}, \boldsymbol{\beta})$. As $p \to \infty$ with optimal parameters, QAOA recovers the adiabatic ground state.
+
+### The $p=1$ Max-Cut guarantee
+
+Farhi-Goldstone-Gutmann 2014 proved for 3-regular Max-Cut:
+
+$$
+\mathbb{E}[f(x_{\text{QAOA},p=1})] \geq 0.6924 \cdot f(x^*).
+$$ {#eq-qaoa-bound}
+
+The classical Goemans-Williamson SDP (1995) achieves 0.8786. **QAOA at $p=1$ does not beat classical SDP.**
+
+At $p=11$ on the Sherrington-Kirkpatrick model, Farhi-Goldstone-Gutmann-Zhou (2019) showed QAOA outperforms standard SDP in the infinite-size limit, but trails the conjecturally optimal Montanari (2019) classical algorithm. QAOA has no proven asymptotic speedup on general combinatorial problems.
+
+## The NISQ hardware reality {#sec-nisq}
+
+Preskill (2018) named the current era Noisy Intermediate-Scale Quantum: devices of 50–1000 qubits without error correction. His honest assessment has aged well: *"the 100-qubit quantum computer will not change the world right away."*
+
+Harrigan, Arute, and the full Google Quantum AI team (2020, Nature Physics) ran QAOA on the 53-qubit Sycamore processor and reported:
+
+- **Hardware-native graphs** (matching Sycamore's planar connectivity): approximation ratio independent of problem size, improving with depth.
+- **Non-native graphs** (Max-Cut, SK model): performance *decreased* with problem size. Circuits of thousands of gates beat random guessing but not efficient classical algorithms.
+
+The authors concluded: *"it will be challenging to scale near-term implementations of the QAOA for problems on non-native graphs."* This is the single most important paper on the practical reach of quantum optimization.
+
+## Supremacy claims, scrutinized {#sec-supremacy}
+
+The 2019 Sycamore experiment (Arute et al., Nature) sampled 53-qubit random circuits in 200 seconds and estimated 10,000 years on Summit. Two follow-up results tightened the gap:
+
+- Huang et al. (2020): tensor-network simulation cut the estimate to **20 days**.
+- Liu et al. (2021): Sunway supercomputer pushed it to **1 week**, explicitly "collapsing the quantum supremacy claim."
+
+Boson sampling (Aaronson-Arkhipov 2011) provides a complementary route: Zhong et al. (2020, Science) demonstrated a 100-mode photonic processor achieving $\sim 10^{14}$ speedup over simulated classical attacks, a speedup that has survived subsequent classical counterattacks. The later Jiuzhang 4.0 (Liu et al. 2025) extended this to 3050 photon clicks.
+
+Critically, these supremacy demonstrations are **sampling tasks**, not optimization. They produce random bit-strings from hard distributions. No supremacy experiment has shown quantum advantage on a real combinatorial optimization problem; the closest attempt (Harrigan et al. 2020) went against the quantum processor.
+
+## Evaluation metrics {#sec-metrics}
+
+When evaluating a quantum-optimization claim:
+
+1. **Provable speedup or heuristic?** Shor-style (exponential) and Grover-style (quadratic) speedups have optimality proofs. QAOA and adiabatic do not.
+2. **Match to hardware topology.** Compilation to hardware graphs introduces depth $O(n)$ SWAP chains on non-native problems. Report whether the claimed speedup survives compilation.
+3. **Comparison baseline.** Beating classical brute-force is uninteresting; beating classical heuristics (SDP, cutting planes, simulated annealing) is the bar.
+4. **Dequantization check.** Does the claimed advantage survive a Tang-style (2018) dequantization attack that allows classical $\ell_2$-sampling on the same input?
+5. **Noise budget.** At current per-gate error $10^{-3}$, circuits exceeding $\sim 10^3$ gates are fidelity-destroyed. Claims of deeper-circuit benefits require fault-tolerant hardware.
+
+## Exercises
+
+**Exercise 1.1** ($\star\star$). Prove @eq-ising from QUBO via the substitution $x_i = (1 - s_i) / 2$. Identify the constant shift in objective value and describe how it relates to $J_{ij}$ and $h_i$.
+
+**Exercise 1.2** ($\star\star\star$). Derive @eq-adiabatic-bound starting from time-dependent perturbation theory. Identify the step at which the gap squared appears.
+
+**Exercise 1.3** ($\star$). Simulate a classical branch-and-bound solver on a 20-qubit Max-Cut instance and compare its solve time to the QAOA-at-$p=3$ approximation ratio on the same instance. Use `networkx` for graph generation.
+
+**Exercise 1.4** ($\star\star$). Implement a QAOA simulator at $p=1$ in PyTorch or Qiskit. Verify numerically that the approximation ratio on 3-regular Max-Cut matches the analytical bound @eq-qaoa-bound.
+
+---
+
+## References
+
+Aharonov, D., van Dam, W., Kempe, J., Landau, Z., Lloyd, S., and Regev, O. (2007). "Adiabatic Quantum Computation Is Equivalent to Standard Quantum Computation." *SIAM Journal on Computing* 37(1), 166–194.
+
+Altshuler, B., Krovi, H., and Roland, J. (2010). "Anderson Localization Makes Adiabatic Quantum Optimization Fail." *PNAS* 107(28), 12446–12450.
+
+Arute, F. et al. (2019). "Quantum Supremacy Using a Programmable Superconducting Processor." *Nature* 574, 505–510.
+
+Farhi, E., Goldstone, J., Gutmann, S. (2014). "A Quantum Approximate Optimization Algorithm." [arXiv:1411.4028](https://arxiv.org/abs/1411.4028).
+
+Farhi, E., Goldstone, J., Gutmann, S., and Sipser, M. (2000). "Quantum Computation by Adiabatic Evolution." [arXiv:quant-ph/0001106](https://arxiv.org/abs/quant-ph/0001106).
+
+Harrigan, M. P., Arute, F., et al. (2021). "Quantum Approximate Optimization of Non-Planar Graph Problems on a Planar Superconducting Processor." *Nature Physics* 17, 332–336.
+
+Huang, C., Zhang, F., Newman, M., et al. (2020). "Classical Simulation of Quantum Supremacy Circuits." [arXiv:2005.06787](https://arxiv.org/abs/2005.06787).
+
+Jansen, S., Ruskai, M.-B., and Seiler, R. (2007). "Bounds for the Adiabatic Approximation with Applications to Quantum Computation." *Journal of Mathematical Physics* 48, 102111.
+
+Liu, X., Guo, C., Liu, Y., et al. (2021). "Redefining the Quantum Supremacy Baseline With a New Generation Sunway Supercomputer." [arXiv:2111.01066](https://arxiv.org/abs/2111.01066).
+
+Preskill, J. (2018). "Quantum Computing in the NISQ Era and Beyond." *Quantum* 2, 79.
+
+Zhong, H.-S., Wang, H., Deng, Y.-H., et al. (2020). "Quantum Computational Advantage Using Photons." *Science* 370(6523), 1460–1463.

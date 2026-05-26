@@ -1,0 +1,167 @@
+---
+title: "Computational irreducibility and the limits of optimization"
+author: "Hovhannes Grigoryan"
+date: "2026-04-26"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **State and prove** the No Free Lunch theorem (Wolpert 1996) for supervised learning.
+2. **Explain** Wolfram's notion of computational irreducibility and identify examples in cellular automata and physics.
+3. **Derive** the PAC sample-complexity lower bound for a hypothesis class of VC dimension $d$.
+4. **Evaluate** what each of these negative results does and does not imply for the feasibility of AGI.
+5. **Distinguish** "no algorithm is universally best" from "no better algorithm exists for my problem", a common misreading of No Free Lunch.
+:::
+
+## Three negative results, three lessons {#sec-three-negatives}
+
+Computer science and statistics have produced three deep negative results relevant to the limits of optimization and learning:
+
+1. **No Free Lunch** (Wolpert 1996): averaged over all possible problems, every algorithm performs the same.
+2. **Computational irreducibility** (Wolfram 1984, 2002): some computations cannot be shortcut by any cleverness, you must simulate step by step.
+3. **PAC lower bounds** (Vapnik-Chervonenkis 1971, Blumer et al. 1989): learning a concept class of complexity $d$ requires at least $\Omega(d / \epsilon)$ examples.
+
+These are sometimes rolled together by AI pessimists as "AGI is impossible because of these theorems." This chapter examines each carefully to see what they do and do not say.
+
+## The No Free Lunch theorem {#sec-nfl}
+
+::: {.callout-important title="Theorem 4.1 — No Free Lunch (Wolpert 1996)"}
+For supervised learning over a discrete space $\mathcal{X}$ and a labeling $y: \mathcal{X} \to \{0, 1\}$, any two learning algorithms $A, B$ satisfy
+
+$$
+\sum_{y \in \mathcal{Y}} \mathbb{E}[\text{error of } A \mid y] = \sum_{y \in \mathcal{Y}} \mathbb{E}[\text{error of } B \mid y],
+$$
+
+where $\mathcal{Y}$ is the set of all possible labelings. Averaged uniformly over labelings, all algorithms have identical expected error.
+:::
+
+::: {.callout-tip title="Proof sketch"}
+For any fixed training set, the space of consistent hypotheses is a function of $\mathcal{X}$ and $y$; an adversarial test-set labeling can always be constructed to make a specific algorithm wrong on unseen examples. Summing over all labelings, every algorithm's errors and non-errors balance. $\square$
+:::
+
+### What NFL does not say
+
+The NFL theorem is frequently misinterpreted. It does *not* say:
+
+- **No algorithm is better than any other on specific problems.** NFL is an *average* over all labelings. On the subset of labelings that match real-world structure (smooth, compositional, sparse), structured algorithms like neural networks dramatically outperform random guessing.
+- **Machine learning is useless.** NFL is the counterpart of the uniform prior. Real-world problems have structure, and ML algorithms exploit that structure. NFL just tells us we cannot do it in a problem-*independent* way.
+- **AGI is impossible.** AGI requires performing well on a specific distribution of problems (the ones agents in the real world face), not a uniform distribution over labelings.
+
+The NFL theorem is a statement about the **need for inductive bias**, not about the limits of learning. An algorithm with strong inductive biases that match the real world can succeed where one with uniform beliefs cannot.
+
+## Computational irreducibility {#sec-irreducibility}
+
+Stephen Wolfram introduced the notion in his 1984 work on cellular automata [@wolfram1984universality] and elaborated it in *A New Kind of Science* (2002). The claim:
+
+::: {.callout-important title="Wolfram's computational irreducibility thesis"}
+There exist computational processes that cannot be predicted without simulating them step by step. The fastest way to know the outcome of such a process is to run it.
+:::
+
+### Concrete examples
+
+- **Rule 30.** A simple one-dimensional cellular automaton with a three-cell nearest-neighbor rule. Its output over time produces sequences that appear random and resist compression.
+- **General Turing machines.** By the halting problem, there is no algorithm that predicts whether an arbitrary Turing machine will halt faster than running it.
+- **Quantum many-body systems.** Simulating a $n$-qubit system classically requires $2^n$ operations; the quantum system itself does it in linear time. Whether a classical shortcut exists for all such systems is an open problem but believed to be impossible in general.
+
+### What this means
+
+Computational irreducibility is a statement about *some* processes, not all. Most engineering-relevant computations *are* reducible, we build computers that shortcut natural processes every day. But there exist processes (often of intrinsic mathematical interest) for which no shortcut exists.
+
+For AI: it is plausible that agents reasoning about their own behavior, complex multi-agent dynamics, and certain planning problems are irreducible. This means intelligent systems may face intrinsic uncertainty about their own futures that no computational power can resolve.
+
+It does *not* mean AGI is impossible. It means AGI has to operate in an environment where some questions are intrinsically hard.
+
+## PAC learning lower bounds {#sec-pac}
+
+The PAC (Probably Approximately Correct) framework (Valiant 1984) characterizes the sample complexity of learning.
+
+::: {.callout-important title="Theorem 4.2 — VC sample-complexity lower bound (Blumer et al. 1989)"}
+Let $\mathcal{H}$ be a hypothesis class with VC dimension $d$. Any PAC-learning algorithm for $\mathcal{H}$ requires
+
+$$
+N \geq \Omega\left(\frac{d}{\epsilon} + \frac{1}{\epsilon} \log\frac{1}{\delta}\right)
+$$
+
+training examples to achieve error at most $\epsilon$ with probability at least $1 - \delta$.
+:::
+
+The tight bound is $\Theta(d / \epsilon)$ for $\delta$ constant. This says: more complex hypothesis classes (higher VC dimension) require proportionally more data to learn.
+
+### For deep learning
+
+Deep neural networks have VC dimension polynomial in the number of parameters; for a network with $p$ parameters, VC is $\tilde O(p)$. By the lower bound, learning such a network to accuracy $\epsilon$ would require $\Omega(p / \epsilon)$ examples, impractical for $p = 10^9$.
+
+Yet GPT-4 generalizes from far fewer distinct examples than its parameter count suggests. How?
+
+Several resolutions:
+
+- **Implicit regularization.** SGD does not explore the full hypothesis class; it settles in a low-dimensional manifold of "simple" solutions.
+- **Neural Tangent Kernel.** In the infinite-width limit, deep networks act as kernel machines with effective dimension far below the parameter count.
+- **Compression.** The learned function often lies in a compressible subspace (weights with low effective rank, activations with low-dimensional representations).
+
+The upshot: the VC bound is tight in the worst case but loose for deep learning. The bound is a statement about a *class* of hypotheses, not the specific hypotheses SGD actually converges to.
+
+## What these results do not preclude {#sec-not-preclude}
+
+None of the three negative results above precludes AGI:
+
+1. **NFL** says algorithms need inductive biases. Real-world inductive biases (compositionality, causal structure, physical laws) enable learning on the *specific* distribution of real-world problems, not a uniform distribution over all possible problems.
+2. **Computational irreducibility** says some processes cannot be shortcut. AGI agents face this the same way humans do: they live with uncertainty about deeply chaotic systems. This is a constraint on *any* agent, including biological ones.
+3. **PAC lower bounds** say learning complex concepts requires proportionally much data, but this does not mean infinite data; it means the sample complexity scales with concept complexity.
+
+What these results *do* suggest: AGI requires good inductive biases (addressing NFL), efficient exploitation of structure where it exists (addressing irreducibility where possible), and massive training data or smart regularization (addressing PAC bounds).
+
+This is the empirical trajectory of deep learning. The negative results are not *obstacles*; they are *design constraints*.
+
+## Exercises
+
+**Exercise 4.1** ($\star\star$). Prove the NFL theorem by counting pairs of (training set, test labeling) and showing that every algorithm has the same count of correct predictions averaged over labelings.
+
+**Exercise 4.2** ($\star$). Run Rule 30 for 100 time steps and attempt to predict step 101 using any function fitting machinery (polynomial regression, neural network). Show that the error approximately equals random guessing.
+
+**Exercise 4.3** ($\star\star$). Prove Theorem 4.2 for the PAC lower bound. Use the probabilistic method: construct a distribution on hypotheses for which any learner must have high error.
+
+**Exercise 4.4** ($\star\star\star$). Read Valle-Pérez et al. 2018 ("Deep Learning Generalizes Because the Parameter-Function Map is Biased Towards Simple Functions"). Explain why SGD on deep networks might violate the pessimistic PAC lower bound in practice.
+
+---
+
+## Series wrap-up
+
+This four-chapter series on AGI foundations has argued for a particular view:
+
+- **Gödel-Löb** shows that rigorous self-verification is deeply constrained for any sufficiently powerful formal system, including AGI. This is a real constraint on self-improving AI.
+- **AIXI** provides a theoretical definition of universal intelligence but is uncomputable and does not reflect the structured inductive biases that make practical AI feasible.
+- **World models** are a concrete architectural approach that has achieved sample-efficient learning across diverse domains. They are the most plausible near-term route to more capable AI.
+- **Computational irreducibility and PAC bounds** are genuine theoretical constraints that shape what AGI can do, but they do not preclude AGI. They characterize the design requirements, good inductive biases, efficient use of structure, massive training data.
+
+Taken together, the negative results suggest that AGI is hard but not impossible, and its path will involve careful attention to the specific structure of the real world rather than any universal prescription.
+
+---
+
+## References
+
+Blumer, A., Ehrenfeucht, A., Haussler, D., and Warmuth, M. K. (1989). "Learnability and the Vapnik-Chervonenkis Dimension." *Journal of the ACM* 36(4), 929–965.
+
+Valiant, L. G. (1984). "A Theory of the Learnable." *Communications of the ACM* 27(11), 1134–1142.
+
+Valle-Pérez, G., Camargo, C. Q., and Louis, A. A. (2018). "Deep Learning Generalizes Because the Parameter-Function Map is Biased Towards Simple Functions." *ICLR 2019*.
+
+Vapnik, V. N., and Chervonenkis, A. Y. (1971). "On the Uniform Convergence of Relative Frequencies of Events to Their Probabilities." *Theory of Probability and Its Applications* 16(2), 264–280.
+
+Wolfram, S. (1984). "Universality and Complexity in Cellular Automata." *Physica D* 10, 1–35.
+
+Wolfram, S. (2002). *A New Kind of Science*. Wolfram Media.
+
+Wolpert, D. H. (1996). "The Lack of A Priori Distinctions Between Learning Algorithms." *Neural Computation* 8(7), 1341–1390.

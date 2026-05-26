@@ -1,0 +1,18 @@
+# Whitelist for false-positive matches by global git-secrets config.
+# All entries are upstream Quartz files or our own privacy-block pattern list.
+# Comments here intentionally avoid the trigger words themselves.
+
+# Our own privacy-blocklist file (must contain the literal patterns it blocks)
+^\.privacy/patterns\.txt:
+\.privacy/patterns\.txt
+
+# Upstream Quartz emoji map: contains many dictionary words that
+# collide with internal-system codenames (color names, country flags, etc.)
+^quartz/util/emojimap\.json:
+quartz/util/emojimap\.json
+
+# Upstream Quartz i18n locales (translations including Portuguese variants)
+^quartz/i18n/locales/
+
+# Upstream Quartz inline scripts that may reference celestial-body words
+^quartz/components/scripts/

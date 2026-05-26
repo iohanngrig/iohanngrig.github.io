@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-03-29">
+
+<title>Randomized experiments</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="04-randomized-experiments_files/libs/clipboard/clipboard.min.js"></script>
+<script src="04-randomized-experiments_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="04-randomized-experiments_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="04-randomized-experiments_files/libs/quarto-html/popper.min.js"></script>
+<script src="04-randomized-experiments_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="04-randomized-experiments_files/libs/quarto-html/anchor.min.js"></script>
+<link href="04-randomized-experiments_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="04-randomized-experiments_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="04-randomized-experiments_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="04-randomized-experiments_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="04-randomized-experiments_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-design-identification" id="toc-sec-design-identification" class="nav-link active" data-scroll-target="#sec-design-identification"><span class="header-section-number">1</span> Design as the source of identification</a></li>
+  <li><a href="#sec-crd" id="toc-sec-crd" class="nav-link" data-scroll-target="#sec-crd"><span class="header-section-number">2</span> Completely randomized designs</a>
+  <ul class="collapse">
+  <li><a href="#definition-and-properties" id="toc-definition-and-properties" class="nav-link" data-scroll-target="#definition-and-properties"><span class="header-section-number">2.1</span> Definition and properties</a></li>
+  <li><a href="#optimal-allocation" id="toc-optimal-allocation" class="nav-link" data-scroll-target="#optimal-allocation"><span class="header-section-number">2.2</span> Optimal allocation</a></li>
+  <li><a href="#sample-size" id="toc-sample-size" class="nav-link" data-scroll-target="#sample-size"><span class="header-section-number">2.3</span> Sample size</a></li>
+  </ul></li>
+  <li><a href="#sec-stratified" id="toc-sec-stratified" class="nav-link" data-scroll-target="#sec-stratified"><span class="header-section-number">3</span> Stratified and blocked designs</a>
+  <ul class="collapse">
+  <li><a href="#stratified-crd" id="toc-stratified-crd" class="nav-link" data-scroll-target="#stratified-crd"><span class="header-section-number">3.1</span> Stratified CRD</a></li>
+  <li><a href="#variance-reduction" id="toc-variance-reduction" class="nav-link" data-scroll-target="#variance-reduction"><span class="header-section-number">3.2</span> Variance reduction</a></li>
+  <li><a href="#blocking" id="toc-blocking" class="nav-link" data-scroll-target="#blocking"><span class="header-section-number">3.3</span> Blocking</a></li>
+  </ul></li>
+  <li><a href="#sec-cuped" id="toc-sec-cuped" class="nav-link" data-scroll-target="#sec-cuped"><span class="header-section-number">4</span> CUPED and variance reduction</a>
+  <ul class="collapse">
+  <li><a href="#the-cuped-identity" id="toc-the-cuped-identity" class="nav-link" data-scroll-target="#the-cuped-identity"><span class="header-section-number">4.1</span> The CUPED identity</a></li>
+  <li><a href="#cuped-as-regression" id="toc-cuped-as-regression" class="nav-link" data-scroll-target="#cuped-as-regression"><span class="header-section-number">4.2</span> CUPED as regression</a></li>
+  <li><a href="#code-example" id="toc-code-example" class="nav-link" data-scroll-target="#code-example"><span class="header-section-number">4.3</span> Code example</a></li>
+  </ul></li>
+  <li><a href="#sec-cluster" id="toc-sec-cluster" class="nav-link" data-scroll-target="#sec-cluster"><span class="header-section-number">5</span> Cluster-randomized designs</a>
+  <ul class="collapse">
+  <li><a href="#cluster-robust-standard-errors" id="toc-cluster-robust-standard-errors" class="nav-link" data-scroll-target="#cluster-robust-standard-errors"><span class="header-section-number">5.1</span> Cluster-robust standard errors</a></li>
+  </ul></li>
+  <li><a href="#sec-noncompliance" id="toc-sec-noncompliance" class="nav-link" data-scroll-target="#sec-noncompliance"><span class="header-section-number">6</span> Noncompliance</a></li>
+  <li><a href="#sec-crd-metrics" id="toc-sec-crd-metrics" class="nav-link" data-scroll-target="#sec-crd-metrics"><span class="header-section-number">7</span> Evaluation metrics</a></li>
+  <li><a href="#sec-crd-bib" id="toc-sec-crd-bib" class="nav-link" data-scroll-target="#sec-crd-bib"><span class="header-section-number">8</span> Bibliographic notes</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#theoretical-exercises" id="toc-theoretical-exercises" class="nav-link" data-scroll-target="#theoretical-exercises"><span class="header-section-number">9.1</span> Theoretical exercises</a></li>
+  <li><a href="#computational-exercises" id="toc-computational-exercises" class="nav-link" data-scroll-target="#computational-exercises"><span class="header-section-number">9.2</span> Computational exercises</a></li>
+  <li><a href="#discussion-exercises" id="toc-discussion-exercises" class="nav-link" data-scroll-target="#discussion-exercises"><span class="header-section-number">9.3</span> Discussion exercises</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">10</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Randomized experiments</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 29, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Design</strong> a completely randomized experiment, a stratified design, a blocked design, and a clustered design, and choose among them based on the variance structure of the outcome.</li>
+<li><strong>Analyze</strong> the resulting data using the Neyman unbiased estimator and Fisher’s exact test.</li>
+<li><strong>Compute</strong> the sample size required to detect an effect of given magnitude at specified power.</li>
+<li><strong>Apply</strong> CUPED-style variance reduction using pre-experiment covariates to tighten confidence intervals without biasing estimates.</li>
+<li><strong>Identify</strong> when cluster-randomized designs require the cluster-robust variance estimator and derive that estimator.</li>
+<li><strong>Evaluate</strong> the treatment effect on the treated in a noncompliance setting via the intent-to-treat versus per-protocol analyses.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three lectures of 75–90 minutes each.</p>
+<p><strong>Lecture 1, Design choices.</strong></p>
+<ul>
+<li>Completely randomized design (10 min)</li>
+<li>Stratification and blocking: when to use each (25 min)</li>
+<li>Clustered randomization: variance inflation and power loss (25 min)</li>
+<li>Factorial and sequential designs (brief, 15 min)</li>
+<li>Hands-on: simulate a blocked trial vs completely randomized, compare variances (15 min)</li>
+</ul>
+<p><strong>Lecture 2, Power and sample size.</strong></p>
+<ul>
+<li>Neyman formula for minimum detectable effect (15 min)</li>
+<li>Power calculations: two-tailed test at 80% power (25 min)</li>
+<li>Unequal-variance allocation (Neyman allocation) (20 min)</li>
+<li>Multiple-hypothesis adjustment: Bonferroni, BH (20 min)</li>
+<li>Hands-on: power analysis for a 2×2 factorial design (10 min)</li>
+</ul>
+<p><strong>Lecture 3, Variance reduction and noncompliance.</strong></p>
+<ul>
+<li>CUPED and related post-stratification (Deng-Xu-Kohavi 2013) (25 min)</li>
+<li>The CUPED identity and its zero-bias guarantee (20 min)</li>
+<li>Intent-to-treat vs per-protocol (20 min)</li>
+<li>Wald estimator for noncompliance and instrumental-variable bridge (15 min)</li>
+<li>Hands-on: CUPED on simulated AB test data (10 min)</li>
+</ul>
+</div>
+</div>
+</div>
+<section id="sec-design-identification" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-design-identification"><span class="header-section-number">1</span> Design as the source of identification</h2>
+<p>In Chapter 1 we proved that randomization eliminates confounding: <span class="math inline">\(D \perp\!\!\!\perp (Y(0), Y(1))\)</span> by construction, so the difference-in-means is unbiased for the ATE. This chapter asks a different question: given that we can randomize, <em>how should</em> we randomize to maximize statistical efficiency?</p>
+<p>The answer is that the design of the experiment determines the variance of the estimator, even when every design is unbiased. A well-designed trial can achieve the same statistical precision as a poorly-designed one at a fraction of the sample size. In an era of A/B testing at global tech companies, where each percentage point of precision translates to millions in operational value, experimental design is a practical discipline with substantial economic stakes.</p>
+</section>
+<section id="sec-crd" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-crd"><span class="header-section-number">2</span> Completely randomized designs</h2>
+<section id="definition-and-properties" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="definition-and-properties"><span class="header-section-number">2.1</span> Definition and properties</h3>
+<p>In a <strong>completely randomized design</strong> (CRD) with <span class="math inline">\(N\)</span> units and target treated count <span class="math inline">\(N_1\)</span>, the treated set is a simple random sample of size <span class="math inline">\(N_1\)</span> drawn without replacement from the <span class="math inline">\(N\)</span> units. The remaining <span class="math inline">\(N_0 = N - N_1\)</span> units are controls.</p>
+<p>The CRD is the simplest experimental design. Its variance, from Chapter 1 Theorem 1.2, is</p>
+<p><span id="eq-crd-var"><span class="math display">\[
+\text{Var}(\hat\tau) = \frac{S_1^2}{N_1} + \frac{S_0^2}{N_0} - \frac{S_{01}^2}{N},
+\tag{1}\]</span></span></p>
+<p>where <span class="math inline">\(S_d^2\)</span> is the population variance of <span class="math inline">\(Y(d)\)</span> and <span class="math inline">\(S_{01}^2\)</span> is the population variance of <span class="math inline">\(\delta_i = Y_i(1) - Y_i(0)\)</span>.</p>
+</section>
+<section id="optimal-allocation" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="optimal-allocation"><span class="header-section-number">2.2</span> Optimal allocation</h3>
+<p>For a total budget <span class="math inline">\(N = N_0 + N_1\)</span> and known <span class="math inline">\(S_0, S_1\)</span>, the allocation minimizing <a href="#eq-crd-var" class="quarto-xref">Equation&nbsp;1</a> is</p>
+<p><span id="eq-neyman-allocation"><span class="math display">\[
+\frac{N_1}{N} = \frac{S_1}{S_0 + S_1}.
+\tag{2}\]</span></span></p>
+<p>This is the <strong>Neyman allocation</strong>. For equal variances <span class="math inline">\(S_0 = S_1\)</span>, the optimum is <span class="math inline">\(N_1 = N / 2\)</span>, the familiar half-and-half. For unequal variances, common in experiments where the treatment group exhibits more dispersion, the optimum is skewed toward the higher-variance arm.</p>
+<p>Neyman allocation is derived by minimizing <span class="math inline">\(S_1^2 / N_1 + S_0^2 / (N - N_1)\)</span> subject to <span class="math inline">\(N_1 + N_0 = N\)</span> via Lagrangian, yielding <span class="math inline">\(N_1 / N_0 = S_1 / S_0\)</span>.</p>
+</section>
+<section id="sample-size" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="sample-size"><span class="header-section-number">2.3</span> Sample size</h3>
+<p>To detect a minimum effect <span class="math inline">\(\tau^*\)</span> with power <span class="math inline">\(1 - \beta\)</span> at significance level <span class="math inline">\(\alpha\)</span>, assuming <span class="math inline">\(\sigma_0 = \sigma_1 = \sigma\)</span> and equal allocation,</p>
+<p><span id="eq-sample-size"><span class="math display">\[
+N = 4 \sigma^2 \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{(\tau^*)^2}.
+\tag{3}\]</span></span></p>
+<p>For <span class="math inline">\(\alpha = 0.05, 1 - \beta = 0.80\)</span>, the factor <span class="math inline">\((z_{1-\alpha/2} + z_{1-\beta})^2 = (1.96 + 0.84)^2 \approx 7.85\)</span>. A researcher targeting <span class="math inline">\(\tau^* = 0.2\sigma\)</span> (small-effect Cohen’s <span class="math inline">\(d\)</span>) needs <span class="math inline">\(N \ge 4 \cdot 1 \cdot 7.85 / 0.04 = 785\)</span>. For <span class="math inline">\(\tau^* = 0.5\sigma\)</span> (medium effect), <span class="math inline">\(N \ge 126\)</span>.</p>
+</section>
+</section>
+<section id="sec-stratified" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-stratified"><span class="header-section-number">3</span> Stratified and blocked designs</h2>
+<p>Suppose the outcome depends substantially on a pre-experiment covariate <span class="math inline">\(X\)</span>, age in a medical trial, prior spending in a marketing experiment. A CRD will sometimes, by chance, assign all the old patients to one arm, creating a noisy estimate. Stratification removes this risk.</p>
+<section id="stratified-crd" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="stratified-crd"><span class="header-section-number">3.1</span> Stratified CRD</h3>
+<p>Partition the <span class="math inline">\(N\)</span> units into <span class="math inline">\(K\)</span> strata by <span class="math inline">\(X\)</span> (e.g., age quintiles). Within each stratum <span class="math inline">\(k\)</span>, independently apply a CRD with strata-specific sample sizes <span class="math inline">\((N_{0k}, N_{1k})\)</span>. The overall estimator is the weighted average:</p>
+<p><span id="eq-strat-estimator"><span class="math display">\[
+\hat\tau_{\text{strat}} = \sum_{k=1}^K \frac{N_k}{N} (\bar Y_{1k} - \bar Y_{0k}).
+\tag{4}\]</span></span></p>
+</section>
+<section id="variance-reduction" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="variance-reduction"><span class="header-section-number">3.2</span> Variance reduction</h3>
+<p>The variance of <span class="math inline">\(\hat\tau_{\text{strat}}\)</span> is a weighted sum of within-stratum variances. A standard ANOVA decomposition gives</p>
+<p><span class="math display">\[
+\text{Var}(\hat\tau_{\text{strat}}) = \sum_k \left(\frac{N_k}{N}\right)^2 \text{Var}(\hat\tau_k) = \sum_k \left(\frac{N_k}{N}\right)^2 \left(\frac{S_{1k}^2}{N_{1k}} + \frac{S_{0k}^2}{N_{0k}} - \frac{S_{01,k}^2}{N_k}\right).
+\]</span></p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 4.1 — Stratification reduces variance (Cochran 1977)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 4.1 — Stratification reduces variance (Cochran 1977)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If the strata are formed by a pre-experiment covariate <span class="math inline">\(X\)</span> that predicts the outcome, then</p>
+<p><span class="math display">\[
+\text{Var}(\hat\tau_{\text{strat}}) \le \text{Var}(\hat\tau_{\text{CRD}}),
+\]</span></p>
+<p>with strict inequality when <span class="math inline">\(\text{Var}(\mathbb{E}[Y(d) \mid X]) &gt; 0\)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof sketch">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof sketch
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The total variance of <span class="math inline">\(Y(d)\)</span> decomposes as</p>
+<p><span class="math display">\[
+\text{Var}(Y(d)) = \mathbb{E}[\text{Var}(Y(d) \mid X)] + \text{Var}(\mathbb{E}[Y(d) \mid X]).
+\]</span></p>
+<p>Stratifying by <span class="math inline">\(X\)</span> averages over the <em>within-stratum</em> variance <span class="math inline">\(\mathbb{E}[\text{Var}(Y(d) \mid X)]\)</span>. The between-stratum variance <span class="math inline">\(\text{Var}(\mathbb{E}[Y(d) \mid X])\)</span> is removed from the estimator’s variance because each stratum’s ATE is estimated separately and then weighted. The difference is the variance reduction. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+</section>
+<section id="blocking" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="blocking"><span class="header-section-number">3.3</span> Blocking</h3>
+<p>A <strong>block</strong> is a stratum of size <span class="math inline">\(M\)</span> with exactly <span class="math inline">\(M / 2\)</span> treated and <span class="math inline">\(M / 2\)</span> control (for a balanced block of even size). Blocking is stratification taken to the limit of small strata. The most extreme case is matched pairs: <span class="math inline">\(M = 2\)</span>, with one treated and one control per pair.</p>
+<p>Blocking maximally removes between-stratum variance at the cost of design flexibility. A matched-pairs design can achieve a variance reduction of 2–10× over a CRD when blocks are well-matched on predictive covariates.</p>
+</section>
+</section>
+<section id="sec-cuped" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-cuped"><span class="header-section-number">4</span> CUPED and variance reduction</h2>
+<p>The most widely deployed variance-reduction technique in industry A/B testing is <strong>CUPED</strong> (Controlled-experiment Using Pre-Experiment Data), introduced by Deng, Xu, and Kohavi (2013) <span class="citation" data-cites="deng2013improving">[@deng2013improving]</span> and now standard at Microsoft, Google, Netflix, Booking, and many others.</p>
+<section id="the-cuped-identity" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-cuped-identity"><span class="header-section-number">4.1</span> The CUPED identity</h3>
+<p>Suppose we observe a pre-experiment covariate <span class="math inline">\(X\)</span> for each unit. Define</p>
+<p><span id="eq-cuped-def"><span class="math display">\[
+Y^{\text{CUPED}}_i := Y_i - \theta (X_i - \bar X),
+\tag{5}\]</span></span></p>
+<p>for some constant <span class="math inline">\(\theta\)</span>. Then the CUPED-adjusted estimator is</p>
+<p><span class="math display">\[
+\hat\tau^{\text{CUPED}} = \bar Y_1^{\text{CUPED}} - \bar Y_0^{\text{CUPED}}.
+\]</span></p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 4.2 — CUPED is unbiased and has lower variance (Deng-Xu-Kohavi 2013)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 4.2 — CUPED is unbiased and has lower variance (Deng-Xu-Kohavi 2013)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For any <span class="math inline">\(\theta \in \mathbb{R}\)</span>,</p>
+<ol type="a">
+<li><p><span class="math inline">\(\mathbb{E}[\hat\tau^{\text{CUPED}}] = \tau\)</span> (unbiasedness is preserved).</p></li>
+<li><p>The variance is minimized at <span class="math inline">\(\theta^* = \text{Cov}(Y, X) / \text{Var}(X)\)</span>, yielding</p></li>
+</ol>
+<p><span class="math display">\[
+\text{Var}(\hat\tau^{\text{CUPED}}) = \text{Var}(\hat\tau) \cdot (1 - \rho_{Y, X}^2),
+\]</span></p>
+<p>where <span class="math inline">\(\rho_{Y, X}\)</span> is the correlation between the outcome and the pre-experiment covariate.</p>
+</div>
+</div>
+<p>A pre-experiment covariate with correlation 0.5 with the outcome yields a 25% variance reduction. At correlation 0.7, a 50% reduction. For e-commerce A/B tests where last-month’s spend correlates 0.8 with this-month’s spend, CUPED routinely achieves 60%+ variance reduction.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Unbiasedness: under randomization <span class="math inline">\(D \perp\!\!\!\perp X\)</span>, so subtracting a function of <span class="math inline">\(X\)</span> has zero average effect on the treatment-control contrast.</p>
+<p>Variance minimization: <span class="math inline">\(\text{Var}(\hat\tau^{\text{CUPED}}) = \text{Var}(\bar Y_1 - \theta \bar X_1) + \text{Var}(\bar Y_0 - \theta \bar X_0) - 2\text{Cov}(\cdot, \cdot)\)</span>. Minimize with respect to <span class="math inline">\(\theta\)</span> by setting the derivative to zero. The result is <span class="math inline">\(\theta^* = \text{Cov}(Y, X) / \text{Var}(X)\)</span>, which is the OLS coefficient of <span class="math inline">\(Y\)</span> on <span class="math inline">\(X\)</span>. Substituting, variance becomes <span class="math inline">\(\text{Var}(\hat\tau)(1 - \rho^2)\)</span>. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+</section>
+<section id="cuped-as-regression" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="cuped-as-regression"><span class="header-section-number">4.2</span> CUPED as regression</h3>
+<p>CUPED is equivalent to fitting</p>
+<p><span class="math display">\[
+Y_i = \alpha + \tau D_i + \theta X_i + \varepsilon_i
+\]</span></p>
+<p>via OLS and reading off <span class="math inline">\(\hat\tau\)</span>. The regression-adjustment identification is exactly the CUPED construction.</p>
+</section>
+<section id="code-example" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="code-example"><span class="header-section-number">4.3</span> Code example</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> norm</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Pre-experiment covariate predicts outcome</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>tau <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (rng.uniform(size<span class="op">=</span>N) <span class="op">&lt;</span> <span class="fl">0.5</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> <span class="fl">0.8</span> <span class="op">*</span> X <span class="op">+</span> tau <span class="op">*</span> D <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="fl">0.5</span>, N)   <span class="co"># correlation ≈ 0.8 between Y and X</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Naive estimator</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>tau_naive <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>var_naive <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">1</span>).<span class="bu">sum</span>() <span class="op">+</span> Y[D <span class="op">==</span> <span class="dv">0</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">0</span>).<span class="bu">sum</span>()</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># CUPED estimator</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> np.cov(Y, X, ddof<span class="op">=</span><span class="dv">1</span>)[<span class="dv">0</span>, <span class="dv">1</span>] <span class="op">/</span> np.var(X, ddof<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>Y_cuped <span class="op">=</span> Y <span class="op">-</span> theta <span class="op">*</span> (X <span class="op">-</span> X.mean())</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>tau_cuped <span class="op">=</span> Y_cuped[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y_cuped[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>var_cuped <span class="op">=</span> Y_cuped[D <span class="op">==</span> <span class="dv">1</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">1</span>).<span class="bu">sum</span>() <span class="op">+</span> Y_cuped[D <span class="op">==</span> <span class="dv">0</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">0</span>).<span class="bu">sum</span>()</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Naive τ̂:   </span><span class="sc">{</span>tau_naive<span class="sc">:.4f}</span><span class="ss">  (SE = </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(var_naive)<span class="sc">:.4f}</span><span class="ss">)"</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CUPED τ̂:   </span><span class="sc">{</span>tau_cuped<span class="sc">:.4f}</span><span class="ss">  (SE = </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(var_cuped)<span class="sc">:.4f}</span><span class="ss">)"</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Variance reduction: </span><span class="sc">{</span>(<span class="dv">1</span> <span class="op">-</span> var_cuped<span class="op">/</span>var_naive) <span class="op">*</span> <span class="dv">100</span><span class="sc">:.1f}</span><span class="ss">%"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The CUPED SE is dramatically lower than the naive one, often by 30–60 percent on real A/B-test data. The technique has no ideological opponents and is essentially free to implement.</p>
+</section>
+</section>
+<section id="sec-cluster" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-cluster"><span class="header-section-number">5</span> Cluster-randomized designs</h2>
+<p>In many experiments the unit of randomization is not the unit of analysis. A classroom is randomized to an educational intervention but student test scores are the outcome. A hospital is randomized to a treatment protocol but patient outcomes are measured. These are <strong>cluster-randomized designs</strong>.</p>
+<p>Cluster randomization induces positive within-cluster correlation of the outcome, which inflates the variance of the ATE estimator.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 4.3 — Variance inflation from clustering">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 4.3 — Variance inflation from clustering
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In a cluster-randomized design with <span class="math inline">\(K\)</span> clusters each of size <span class="math inline">\(M\)</span>, the variance of the difference-in-means is inflated by a <strong>design effect</strong></p>
+<p><span id="eq-design-effect"><span class="math display">\[
+\text{DE} = 1 + (M - 1) \rho_{\text{ICC}},
+\tag{6}\]</span></span></p>
+<p>where <span class="math inline">\(\rho_{\text{ICC}}\)</span> is the intraclass correlation coefficient of the outcome.</p>
+</div>
+</div>
+<p>A trial with <span class="math inline">\(M = 30\)</span> students per classroom and <span class="math inline">\(\rho_{\text{ICC}} = 0.1\)</span> has design effect <span class="math inline">\(1 + 29 \cdot 0.1 = 3.9\)</span>, meaning the effective sample size is about four times smaller than the nominal. This is a common mistake in educational and public-health experiments.</p>
+<section id="cluster-robust-standard-errors" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="cluster-robust-standard-errors"><span class="header-section-number">5.1</span> Cluster-robust standard errors</h3>
+<p>Under clustering, the correct variance estimator treats each cluster as the unit of inference:</p>
+<p><span id="eq-cluster-robust"><span class="math display">\[
+\widehat{\text{Var}}(\hat\tau) = \frac{1}{K(K-1)} \sum_{k=1}^K (\hat\tau_k - \hat\tau)^2,
+\tag{7}\]</span></span></p>
+<p>where <span class="math inline">\(\hat\tau_k\)</span> is the estimator computed on cluster <span class="math inline">\(k\)</span> alone. This <strong>cluster-robust</strong> estimator is valid regardless of within-cluster correlation and does not require estimating <span class="math inline">\(\rho_{\text{ICC}}\)</span>.</p>
+</section>
+</section>
+<section id="sec-noncompliance" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-noncompliance"><span class="header-section-number">6</span> Noncompliance</h2>
+<p>In many trials, the assigned treatment is not the treatment actually received. Patients assigned to drug A may refuse; employees assigned to training may not attend. This is <strong>noncompliance</strong>.</p>
+<p>Two standard analyses:</p>
+<ul>
+<li><strong>Intent-to-treat (ITT):</strong> compare outcomes across assignment arms, regardless of compliance. This estimates the effect of <em>being assigned</em> to treatment.</li>
+<li><strong>Per-protocol:</strong> compare outcomes across the actually-received-treatment groups. This estimates a selection-biased effect.</li>
+</ul>
+<p>The Imbens-Angrist LATE theorem (Chapter 6) shows how to identify the effect for <em>compliers</em> using ITT as an instrumental variable. In most trials, ITT is the headline estimand because it respects the randomization.</p>
+</section>
+<section id="sec-crd-metrics" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-crd-metrics"><span class="header-section-number">7</span> Evaluation metrics</h2>
+<ol type="1">
+<li><strong>Minimum detectable effect (MDE)</strong>, what effect size the experiment can detect at given power. Report alongside the result.</li>
+<li><strong>Variance-reduction ratio</strong>, if CUPED or a regression adjustment is used, report <span class="math inline">\(1 - \text{Var}(\hat\tau^{\text{adjusted}}) / \text{Var}(\hat\tau^{\text{naive}})\)</span>.</li>
+<li><strong>Balance check</strong>, pre-specified covariate means in treated vs control arms. Large imbalance signals randomization failure (bug, incomplete enrollment, etc.).</li>
+<li><strong>Compliance rate</strong>, fraction of assigned-treatment subjects who actually received treatment. ITT is unbiased but per-protocol may deserve a complementary analysis via IV.</li>
+<li><strong>Guardrail metrics</strong>, alongside the primary effect, monitor 3–5 secondary metrics that should <em>not</em> be affected by the treatment. If they move significantly, something is off.</li>
+</ol>
+</section>
+<section id="sec-crd-bib" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-crd-bib"><span class="header-section-number">8</span> Bibliographic notes</h2>
+<p>Fisher (1935), <em>The Design of Experiments</em>, gave the first systematic treatment of randomization as an inferential tool. The book is the origin of the randomized controlled trial as a formal concept.</p>
+<p>Cochran (1977), <em>Sampling Techniques</em> (3rd ed.), covers stratification and clustering with exhaustive formulas. Still the definitive reference for design of observational survey sampling adapted to experimental contexts.</p>
+<p>Deng, Xu, Kohavi, and Walker (2013), “Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-experiment Data,” WSDM 2013, introduced CUPED. The variance reduction has been replicated across essentially every large web company.</p>
+<p>Kohavi, Tang, and Xu (2020), <em>Trustworthy Online Controlled Experiments</em>, Cambridge University Press, is the modern applied reference for web A/B testing, including sample-ratio-mismatch diagnostics, peeking, and multi-arm designs.</p>
+<p>Imbens and Rubin (2015), Part II, covers experimental design from the potential-outcomes perspective with exhaustive worked examples.</p>
+</section>
+<section id="exercises" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="exercises"><span class="header-section-number">9</span> Exercises</h2>
+<section id="theoretical-exercises" class="level3" data-number="9.1">
+<h3 data-number="9.1" class="anchored" data-anchor-id="theoretical-exercises"><span class="header-section-number">9.1</span> Theoretical exercises</h3>
+<p><strong>Exercise 4.1</strong> (<span class="math inline">\(\star\)</span>). Derive <a href="#eq-sample-size" class="quarto-xref">Equation&nbsp;3</a> starting from the asymptotic distribution of <span class="math inline">\(\hat\tau\)</span>. Show how the formula changes for a one-sided test.</p>
+<p><strong>Exercise 4.2</strong> (<span class="math inline">\(\star\star\)</span>). Prove Theorem 4.1 by computing <span class="math inline">\(\text{Var}(\hat\tau_{\text{CRD}}) - \text{Var}(\hat\tau_{\text{strat}})\)</span> and showing it equals <span class="math inline">\(\text{Var}(\mathbb{E}[Y(d) \mid X])\)</span> in an appropriate limit.</p>
+<p><strong>Exercise 4.3</strong> (<span class="math inline">\(\star\star\)</span>). Derive the optimal <span class="math inline">\(\theta^*\)</span> in Theorem 4.2 when <span class="math inline">\(X\)</span> is a vector of multiple pre-experiment covariates. Show that the result reduces to the OLS coefficients of <span class="math inline">\(Y\)</span> on <span class="math inline">\(X\)</span>.</p>
+<p><strong>Exercise 4.4</strong> (<span class="math inline">\(\star\star\star\)</span>). Generalize the CUPED identity to the cluster-randomized setting. What pre-experiment covariate would give the greatest variance reduction, and how does the design effect in <a href="#eq-design-effect" class="quarto-xref">Equation&nbsp;6</a> interact with the CUPED reduction?</p>
+</section>
+<section id="computational-exercises" class="level3" data-number="9.2">
+<h3 data-number="9.2" class="anchored" data-anchor-id="computational-exercises"><span class="header-section-number">9.2</span> Computational exercises</h3>
+<p><strong>Exercise 4.5</strong> (<span class="math inline">\(\star\)</span>). Simulate a CRD with <span class="math inline">\(N = 1000\)</span> and compute the empirical variance of the difference-in-means across 1000 replications. Compare with the theoretical Neyman variance.</p>
+<p><strong>Exercise 4.6</strong> (<span class="math inline">\(\star\star\)</span>). Implement a matched-pairs experiment with pairs formed by nearest-neighbor on a single covariate. Compare the variance with an unmatched CRD on the same DGP.</p>
+<p><strong>Exercise 4.7</strong> (<span class="math inline">\(\star\star\)</span>). Replicate the CUPED example in §<a href="#sec-cuped" class="quarto-xref">Section&nbsp;4</a>. Study how the variance-reduction ratio depends on the correlation between <span class="math inline">\(Y\)</span> and <span class="math inline">\(X\)</span>, plotting reduction vs correlation.</p>
+<p><strong>Exercise 4.8</strong> (<span class="math inline">\(\star\star\star\)</span>). Implement a cluster-randomized simulation with <span class="math inline">\(K = 20\)</span> clusters of size <span class="math inline">\(M = 30\)</span> and varying <span class="math inline">\(\rho_{\text{ICC}}\)</span>. Show numerically that the naive CRD variance formula understates uncertainty and that the cluster-robust variance <a href="#eq-cluster-robust" class="quarto-xref">Equation&nbsp;7</a> achieves nominal coverage.</p>
+</section>
+<section id="discussion-exercises" class="level3" data-number="9.3">
+<h3 data-number="9.3" class="anchored" data-anchor-id="discussion-exercises"><span class="header-section-number">9.3</span> Discussion exercises</h3>
+<p><strong>Exercise 4.9</strong>. An online retailer runs an A/B test and finds a 2.3% lift with <span class="math inline">\(p &lt; 0.01\)</span>. The CEO asks if they should deploy. Explain what additional diagnostics you would run before recommending deployment.</p>
+<p><strong>Exercise 4.10</strong>. In a vaccine trial, 30% of assigned-vaccine subjects refused. Compare the interpretations of the ITT and per-protocol analyses. Which would you report as the headline, and why?</p>
+<hr>
+</section>
+</section>
+<section id="references" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="references"><span class="header-section-number">10</span> References</h2>
+<p>Cochran, W. G. (1977). <em>Sampling Techniques</em> (3rd ed.). Wiley.</p>
+<p>Deng, A., Xu, Y., Kohavi, R., and Walker, T. (2013). “Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-experiment Data.” <em>Proceedings of the 6th ACM WSDM</em>, 123–132.</p>
+<p>Fisher, R. A. (1935). <em>The Design of Experiments</em>. Oliver and Boyd.</p>
+<p>Imbens, G. W., and Rubin, D. B. (2015). <em>Causal Inference for Statistics, Social, and Biomedical Sciences</em>. Cambridge University Press.</p>
+<p>Kohavi, R., Tang, D., and Xu, Y. (2020). <em>Trustworthy Online Controlled Experiments: A Practical Guide to A/B Testing</em>. Cambridge University Press.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-04-04">
+
+<title>Regression adjustment and weighting</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="05-regression-weighting_files/libs/clipboard/clipboard.min.js"></script>
+<script src="05-regression-weighting_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="05-regression-weighting_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="05-regression-weighting_files/libs/quarto-html/popper.min.js"></script>
+<script src="05-regression-weighting_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="05-regression-weighting_files/libs/quarto-html/anchor.min.js"></script>
+<link href="05-regression-weighting_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="05-regression-weighting_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="05-regression-weighting_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="05-regression-weighting_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="05-regression-weighting_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-three-families" id="toc-sec-three-families" class="nav-link active" data-scroll-target="#sec-three-families"><span class="header-section-number">1</span> Three families of observational estimators</a></li>
+  <li><a href="#sec-regression" id="toc-sec-regression" class="nav-link" data-scroll-target="#sec-regression"><span class="header-section-number">2</span> Regression adjustment</a>
+  <ul class="collapse">
+  <li><a href="#the-g-computation-estimator" id="toc-the-g-computation-estimator" class="nav-link" data-scroll-target="#the-g-computation-estimator"><span class="header-section-number">2.1</span> The g-computation estimator</a></li>
+  <li><a href="#consistency-and-convergence-rate" id="toc-consistency-and-convergence-rate" class="nav-link" data-scroll-target="#consistency-and-convergence-rate"><span class="header-section-number">2.2</span> Consistency and convergence rate</a></li>
+  <li><a href="#why-simple-ols-can-fail" id="toc-why-simple-ols-can-fail" class="nav-link" data-scroll-target="#why-simple-ols-can-fail"><span class="header-section-number">2.3</span> Why simple OLS can fail</a></li>
+  </ul></li>
+  <li><a href="#sec-ipw" id="toc-sec-ipw" class="nav-link" data-scroll-target="#sec-ipw"><span class="header-section-number">3</span> Inverse probability weighting</a>
+  <ul class="collapse">
+  <li><a href="#the-horvitz-thompson-estimator" id="toc-the-horvitz-thompson-estimator" class="nav-link" data-scroll-target="#the-horvitz-thompson-estimator"><span class="header-section-number">3.1</span> The Horvitz-Thompson estimator</a></li>
+  <li><a href="#bias-and-variance" id="toc-bias-and-variance" class="nav-link" data-scroll-target="#bias-and-variance"><span class="header-section-number">3.2</span> Bias and variance</a></li>
+  <li><a href="#hájek-estimator" id="toc-hájek-estimator" class="nav-link" data-scroll-target="#hájek-estimator"><span class="header-section-number">3.3</span> Hájek estimator</a></li>
+  <li><a href="#overlap-diagnostics" id="toc-overlap-diagnostics" class="nav-link" data-scroll-target="#overlap-diagnostics"><span class="header-section-number">3.4</span> Overlap diagnostics</a></li>
+  </ul></li>
+  <li><a href="#sec-aipw" id="toc-sec-aipw" class="nav-link" data-scroll-target="#sec-aipw"><span class="header-section-number">4</span> Augmented IPW and double robustness</a></li>
+  <li><a href="#sec-matching" id="toc-sec-matching" class="nav-link" data-scroll-target="#sec-matching"><span class="header-section-number">5</span> Matching</a>
+  <ul class="collapse">
+  <li><a href="#nearest-neighbor-matching" id="toc-nearest-neighbor-matching" class="nav-link" data-scroll-target="#nearest-neighbor-matching"><span class="header-section-number">5.1</span> Nearest-neighbor matching</a></li>
+  <li><a href="#caliper-matching" id="toc-caliper-matching" class="nav-link" data-scroll-target="#caliper-matching"><span class="header-section-number">5.2</span> Caliper matching</a></li>
+  <li><a href="#propensity-score-matching" id="toc-propensity-score-matching" class="nav-link" data-scroll-target="#propensity-score-matching"><span class="header-section-number">5.3</span> Propensity-score matching</a></li>
+  </ul></li>
+  <li><a href="#sec-comparison" id="toc-sec-comparison" class="nav-link" data-scroll-target="#sec-comparison"><span class="header-section-number">6</span> A head-to-head comparison on synthetic data</a></li>
+  <li><a href="#sec-reg-metrics" id="toc-sec-reg-metrics" class="nav-link" data-scroll-target="#sec-reg-metrics"><span class="header-section-number">7</span> Evaluation metrics</a></li>
+  <li><a href="#sec-reg-bib" id="toc-sec-reg-bib" class="nav-link" data-scroll-target="#sec-reg-bib"><span class="header-section-number">8</span> Bibliographic notes</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#theoretical-exercises" id="toc-theoretical-exercises" class="nav-link" data-scroll-target="#theoretical-exercises"><span class="header-section-number">9.1</span> Theoretical exercises</a></li>
+  <li><a href="#computational-exercises" id="toc-computational-exercises" class="nav-link" data-scroll-target="#computational-exercises"><span class="header-section-number">9.2</span> Computational exercises</a></li>
+  <li><a href="#discussion-exercises" id="toc-discussion-exercises" class="nav-link" data-scroll-target="#discussion-exercises"><span class="header-section-number">9.3</span> Discussion exercises</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">10</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Regression adjustment and weighting</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 4, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Derive</strong> the regression-adjusted ATE estimator and state the conditions under which it is consistent.</li>
+<li><strong>Construct</strong> the inverse probability weighting (IPW) estimator and prove its Horvitz-Thompson-style unbiasedness.</li>
+<li><strong>Explain</strong> the double-robustness property of the augmented IPW (AIPW) estimator: consistency under correct specification of either the outcome model or the propensity model.</li>
+<li><strong>Execute</strong> a matching estimator (nearest-neighbor, caliper, kernel) and compare its bias-variance tradeoff to weighting.</li>
+<li><strong>Diagnose</strong> overlap violations and assess whether an estimator is extrapolating beyond the common support.</li>
+<li><strong>Apply</strong> all four estimators to a single synthetic dataset and explain their agreement or disagreement.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three lectures of 75–90 minutes.</p>
+<p><strong>Lecture 1, Regression adjustment.</strong></p>
+<ul>
+<li>Outcome regression: OLS with treatment and covariates (15 min)</li>
+<li>The g-computation estimator (20 min)</li>
+<li>Semiparametric efficiency bound (Hahn 1998) (20 min)</li>
+<li>Why OLS alone fails with heterogeneous effects (15 min)</li>
+<li>Hands-on: fit regression adjustment on synthetic confounded DGP (15 min)</li>
+</ul>
+<p><strong>Lecture 2, Propensity-score weighting.</strong></p>
+<ul>
+<li>Horvitz-Thompson IPW estimator (20 min)</li>
+<li>Hajek variant and stabilized weights (15 min)</li>
+<li>Overlap diagnostics: propensity histogram, effective sample size (20 min)</li>
+<li>Weight trimming and clipping (15 min)</li>
+<li>Hands-on: IPW with and without trimming, compare to regression (20 min)</li>
+</ul>
+<p><strong>Lecture 3, Double robustness and matching.</strong></p>
+<ul>
+<li>AIPW and the semiparametric efficiency argument (20 min)</li>
+<li>Double-robustness theorem (20 min)</li>
+<li>Matching: nearest neighbor, caliper, propensity-score matching (20 min)</li>
+<li>Empirical comparison: regression vs IPW vs AIPW vs matching (20 min)</li>
+<li>Hands-on: apply econml’s <code>DoublyRobust</code> to the chapter DGP (10 min)</li>
+</ul>
+</div>
+</div>
+</div>
+<section id="sec-three-families" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-three-families"><span class="header-section-number">1</span> Three families of observational estimators</h2>
+<p>Chapter 2 proved that under strong ignorability the ATE is identified by the g-formula <strong>?@eq-id-formula</strong>. Translating identification into estimation spawns three families of estimators:</p>
+<ol type="1">
+<li><strong>Outcome regression</strong>, fit <span class="math inline">\(\hat \mu_0, \hat \mu_1\)</span> by regression and plug into the g-formula.</li>
+<li><strong>Inverse probability weighting</strong>, weight each unit by <span class="math inline">\(1 / e(X)\)</span> or <span class="math inline">\(1 / (1 - e(X))\)</span> and take weighted means.</li>
+<li><strong>Matching</strong>, for each treated unit find a “similar” control and compare.</li>
+</ol>
+<p>Each family has distinct bias-variance tradeoffs, distinct failure modes, and distinct model-specification sensitivity. A fourth family, <strong>augmented IPW</strong>, combines outcome regression and weighting to achieve <em>double robustness</em>: consistency when either but not necessarily both of the nuisance models is correctly specified. This is the conceptual precursor to DML (Chapter 10).</p>
+</section>
+<section id="sec-regression" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-regression"><span class="header-section-number">2</span> Regression adjustment</h2>
+<section id="the-g-computation-estimator" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="the-g-computation-estimator"><span class="header-section-number">2.1</span> The g-computation estimator</h3>
+<p>By the identification formula <strong>?@eq-id-formula</strong>, the ATE is</p>
+<p><span class="math display">\[
+\tau = \mathbb{E}_X[\mu_1(X) - \mu_0(X)].
+\]</span></p>
+<p>The <strong>g-computation</strong> (or <em>regression imputation</em>) estimator replaces each nuisance by an estimate:</p>
+<p><span id="eq-g-comp"><span class="math display">\[
+\hat\tau^{\text{g-comp}} = \frac{1}{N} \sum_{i=1}^N \left(\hat\mu_1(X_i) - \hat\mu_0(X_i)\right).
+\tag{1}\]</span></span></p>
+<p>Implementation: fit two separate regressions, one on the treated sample and one on the control sample, then evaluate both on every unit’s covariates and average the difference. This is sometimes called the <strong>T-learner</strong> <span class="citation" data-cites="kunzel2019meta">[@kunzel2019meta]</span> because it fits two separate learners.</p>
+</section>
+<section id="consistency-and-convergence-rate" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="consistency-and-convergence-rate"><span class="header-section-number">2.2</span> Consistency and convergence rate</h3>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 5.1 — Consistency of g-computation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 5.1 — Consistency of g-computation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Under strong ignorability (Chapter 2) and if <span class="math inline">\(\hat\mu_d \to \mu_d\)</span> in <span class="math inline">\(L_2\)</span> probability at rate <span class="math inline">\(n^{-\alpha}\)</span> for some <span class="math inline">\(\alpha &gt; 0\)</span>, then</p>
+<p><span class="math display">\[
+\hat\tau^{\text{g-comp}} \xrightarrow{p} \tau.
+\]</span></p>
+<p>If <span class="math inline">\(\alpha &gt; 1/4\)</span>, the estimator is <span class="math inline">\(\sqrt n\)</span>-consistent and asymptotically normal with variance given by the semiparametric efficiency bound <span class="citation" data-cites="hahn1998role">[@hahn1998role]</span>.</p>
+</div>
+</div>
+<p>The key requirement is that the outcome regression be estimated at rate <span class="math inline">\(n^{-1/4}\)</span> or faster. OLS with a correctly specified parametric model reaches <span class="math inline">\(n^{-1/2}\)</span>. Lasso, random forests, and boosting reach <span class="math inline">\(n^{-\alpha}\)</span> for <span class="math inline">\(\alpha \in (1/4, 1/2)\)</span> under smoothness assumptions.</p>
+</section>
+<section id="why-simple-ols-can-fail" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="why-simple-ols-can-fail"><span class="header-section-number">2.3</span> Why simple OLS can fail</h3>
+<p>A common practice is to estimate <span class="math inline">\(\tau\)</span> by running OLS of <span class="math inline">\(Y\)</span> on <span class="math inline">\(D, X\)</span> jointly:</p>
+<p><span class="math display">\[
+Y_i = \alpha + \tau D_i + \beta^\top X_i + \varepsilon_i.
+\]</span></p>
+<p>This is consistent for the ATE <strong>only when</strong> the treatment-covariate interactions are absent, i.e., when <span class="math inline">\(\mu_1(X) - \mu_0(X)\)</span> is a constant. With heterogeneous effects the simple OLS gives a weighted average of treatment effects that does not equal the ATE in general, a point emphasized by Angrist and Pischke <span class="citation" data-cites="angrist2009mostly">[@angrist2009mostly]</span> and sharpened in the recent DiD literature (Chapter 7).</p>
+<p>The g-computation estimator <a href="#eq-g-comp" class="quarto-xref">Equation&nbsp;1</a> handles heterogeneity correctly by fitting the two outcome regressions separately and averaging over the <em>marginal</em> distribution of <span class="math inline">\(X\)</span>.</p>
+</section>
+</section>
+<section id="sec-ipw" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-ipw"><span class="header-section-number">3</span> Inverse probability weighting</h2>
+<section id="the-horvitz-thompson-estimator" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="the-horvitz-thompson-estimator"><span class="header-section-number">3.1</span> The Horvitz-Thompson estimator</h3>
+<p>Exercise 2.2 showed that under strong ignorability,</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1)] = \mathbb{E}\left[\frac{D Y}{e(X)}\right], \quad \mathbb{E}[Y(0)] = \mathbb{E}\left[\frac{(1 - D) Y}{1 - e(X)}\right].
+\]</span></p>
+<p>The <strong>inverse probability weighting</strong> (IPW) estimator plugs in an estimated propensity score <span class="math inline">\(\hat e\)</span>:</p>
+<p><span id="eq-ipw"><span class="math display">\[
+\hat\tau^{\text{IPW}} = \frac{1}{N} \sum_{i=1}^N \left(\frac{D_i Y_i}{\hat e(X_i)} - \frac{(1 - D_i) Y_i}{1 - \hat e(X_i)}\right).
+\tag{2}\]</span></span></p>
+</section>
+<section id="bias-and-variance" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="bias-and-variance"><span class="header-section-number">3.2</span> Bias and variance</h3>
+<p>IPW is unbiased when <span class="math inline">\(\hat e = e\)</span> exactly. In practice <span class="math inline">\(\hat e\)</span> is estimated, usually by logistic regression:</p>
+<p><span class="math display">\[
+\hat e(X) = \frac{1}{1 + \exp(-X^\top \hat\beta)},
+\]</span></p>
+<p>with <span class="math inline">\(\hat\beta\)</span> estimated by maximum likelihood on the treatment indicator.</p>
+<p>IPW has high variance when some <span class="math inline">\(\hat e(X_i)\)</span> are close to 0 or 1, a single outlier weight of <span class="math inline">\(1 / \hat e(X_i) = 100\)</span> can dominate the estimator. Two practical fixes:</p>
+<ul>
+<li><strong>Weight trimming:</strong> discard units with <span class="math inline">\(\hat e\)</span> outside <span class="math inline">\((\epsilon, 1 - \epsilon)\)</span> for some <span class="math inline">\(\epsilon &gt; 0\)</span>.</li>
+<li><strong>Weight clipping:</strong> replace <span class="math inline">\(\hat e(X_i) &lt; \epsilon\)</span> with <span class="math inline">\(\epsilon\)</span>.</li>
+</ul>
+<p>Both introduce bias but reduce variance. The tradeoff is quantified in Crump, Hotz, Imbens, and Mitnik (2009) <span class="citation" data-cites="crump2009dealing">[@crump2009dealing]</span>.</p>
+</section>
+<section id="hájek-estimator" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="hájek-estimator"><span class="header-section-number">3.3</span> Hájek estimator</h3>
+<p>The IPW estimator as defined has weights that do not average to 1. The <strong>Hájek normalization</strong> divides by the sum of weights:</p>
+<p><span id="eq-hajek"><span class="math display">\[
+\hat\tau^{\text{Hajek}} = \frac{\sum_i D_i Y_i / \hat e(X_i)}{\sum_i D_i / \hat e(X_i)} - \frac{\sum_i (1 - D_i) Y_i / (1 - \hat e(X_i))}{\sum_i (1 - D_i) / (1 - \hat e(X_i))}.
+\tag{3}\]</span></span></p>
+<p>The Hájek estimator is biased in finite samples (due to the ratio-of-averages) but has lower variance than the Horvitz-Thompson form, especially with extreme weights.</p>
+</section>
+<section id="overlap-diagnostics" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="overlap-diagnostics"><span class="header-section-number">3.4</span> Overlap diagnostics</h3>
+<p>Before running IPW, plot a histogram of <span class="math inline">\(\hat e(X_i)\)</span> in each arm. Regions with few observations in one arm indicate <strong>positivity violation</strong>: the identification assumption is failing on those covariate values. A common heuristic is to report the <strong>effective sample size</strong></p>
+<p><span class="math display">\[
+N_{\text{eff}} = \frac{\left(\sum_i w_i\right)^2}{\sum_i w_i^2},
+\]</span></p>
+<p>where <span class="math inline">\(w_i\)</span> are the IPW weights. When <span class="math inline">\(N_{\text{eff}} \ll N\)</span>, a few units dominate.</p>
+</section>
+</section>
+<section id="sec-aipw" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-aipw"><span class="header-section-number">4</span> Augmented IPW and double robustness</h2>
+<p>Combining outcome regression with IPW gives the <strong>augmented IPW</strong> (AIPW) estimator:</p>
+<p><span id="eq-aipw"><span class="math display">\[
+\hat\tau^{\text{AIPW}} = \frac{1}{N} \sum_{i=1}^N \left\{\hat\mu_1(X_i) - \hat\mu_0(X_i) + \frac{D_i (Y_i - \hat\mu_1(X_i))}{\hat e(X_i)} - \frac{(1 - D_i)(Y_i - \hat\mu_0(X_i))}{1 - \hat e(X_i)}\right\}.
+\tag{4}\]</span></span></p>
+<p>The first term is the g-computation estimator. The second is a residual correction weighted by the inverse propensity. The residual correction is exactly zero in expectation when <span class="math inline">\(\hat\mu = \mu\)</span>, so if the outcome regression is correct, the IPW piece does not introduce bias. Conversely, if <span class="math inline">\(\hat e = e\)</span>, the outcome residuals are weighted correctly and any bias from <span class="math inline">\(\hat\mu\)</span> is absorbed into the residual term’s correction.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 5.2 — Double robustness of AIPW (Robins, Rotnitzky, Zhao 1994)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 5.2 — Double robustness of AIPW (Robins, Rotnitzky, Zhao 1994)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(\hat\tau^{\text{AIPW}}\)</span> is consistent for <span class="math inline">\(\tau\)</span> if <strong>either</strong> <span class="math inline">\(\hat\mu_d \to \mu_d\)</span> <strong>or</strong> <span class="math inline">\(\hat e \to e\)</span> (at any rate). If both converge at rate <span class="math inline">\(n^{-1/4}\)</span>, the estimator is <span class="math inline">\(\sqrt n\)</span>-consistent and asymptotically efficient.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof sketch">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof sketch
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Write AIPW as <span class="math inline">\(\hat\tau^{\text{AIPW}} = \hat\mu_1 - \hat\mu_0 + \mathbb{E}[\text{residual correction}]\)</span> where the residual correction is</p>
+<p><span class="math display">\[
+\frac{D(Y - \hat\mu_1)}{\hat e} - \frac{(1-D)(Y - \hat\mu_0)}{1 - \hat e}.
+\]</span></p>
+<p>If <span class="math inline">\(\hat\mu = \mu\)</span>, the correction has mean zero by unconfoundedness. If <span class="math inline">\(\hat e = e\)</span>, the correction has mean <span class="math inline">\(\mu_1 - \hat\mu_1 - (\mu_0 - \hat\mu_0) = -(\hat\mu_1 - \hat\mu_0) + (\mu_1 - \mu_0)\)</span>, so adding it to <span class="math inline">\(\hat\mu_1 - \hat\mu_0\)</span> gives <span class="math inline">\(\mu_1 - \mu_0 = \tau\)</span>. Either way, bias is zero in the limit.</p>
+<p>The rate condition for <span class="math inline">\(\sqrt n\)</span>-consistency is <span class="math inline">\(\|\hat\mu - \mu\|_2 \cdot \|\hat e - e\|_2 = o(n^{-1/2})\)</span>, achievable when both rates are <span class="math inline">\(n^{-1/4}\)</span>. This is identical to the DML rate condition (Chapter 10). <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+<p>AIPW is the foundation of all modern doubly-robust causal ML estimators. DML extends AIPW to non-standard estimands (partially linear models, IV, panel) and makes the rate condition explicit.</p>
+</section>
+<section id="sec-matching" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-matching"><span class="header-section-number">5</span> Matching</h2>
+<p>Matching estimators sidestep the propensity and outcome models by pairing each treated unit with one or more similar controls directly.</p>
+<section id="nearest-neighbor-matching" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="nearest-neighbor-matching"><span class="header-section-number">5.1</span> Nearest-neighbor matching</h3>
+<p>For each treated unit <span class="math inline">\(i\)</span>, find the control <span class="math inline">\(j\)</span> minimizing some distance <span class="math inline">\(\|X_i - X_j\|\)</span>. Estimate the treatment effect for <span class="math inline">\(i\)</span> as <span class="math inline">\(Y_i - Y_{j(i)}\)</span>, and the ATT as the average:</p>
+<p><span id="eq-nn-matching"><span class="math display">\[
+\hat\tau^{\text{NN}}_{\text{ATT}} = \frac{1}{N_1} \sum_{i: D_i = 1} \left(Y_i - \frac{1}{M} \sum_{j \in \text{NN}_M(i)} Y_j\right),
+\tag{5}\]</span></span></p>
+<p>where <span class="math inline">\(\text{NN}_M(i)\)</span> is the set of <span class="math inline">\(M\)</span> nearest control neighbors. Typical choice is <span class="math inline">\(M \in \{1, 3, 5\}\)</span>.</p>
+<p>Common distances: Mahalanobis <span class="math inline">\(\|X_i - X_j\|_{\Sigma^{-1}}\)</span> with covariance <span class="math inline">\(\Sigma\)</span>; Euclidean on standardized covariates; propensity-score distance <span class="math inline">\(|\hat e(X_i) - \hat e(X_j)|\)</span>.</p>
+</section>
+<section id="caliper-matching" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="caliper-matching"><span class="header-section-number">5.2</span> Caliper matching</h3>
+<p>To avoid matching across unrepresentative pairs, impose a maximum allowed distance (caliper) <span class="math inline">\(c\)</span>. Treated units without a control within the caliper are dropped. This helps enforce positivity but reduces the sample.</p>
+</section>
+<section id="propensity-score-matching" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="propensity-score-matching"><span class="header-section-number">5.3</span> Propensity-score matching</h3>
+<p>Rosenbaum and Rubin (1983) showed that matching on the scalar propensity score <span class="math inline">\(\hat e\)</span> alone is sufficient under the balancing-score property (Chapter 2 Theorem 2.2). Propensity-score matching is historically popular because it reduces the dimensionality of the matching problem from <span class="math inline">\(p\)</span> to 1.</p>
+<p>Abadie and Imbens (2006) <span class="citation" data-cites="abadie2006large">[@abadie2006large]</span> showed that matching estimators are <span class="math inline">\(\sqrt n\)</span>-consistent for continuous covariates only when the number of matching variables is at most 2. For higher-dimensional <span class="math inline">\(X\)</span>, matching has a slower rate, and regression or AIPW is preferred.</p>
+</section>
+</section>
+<section id="sec-comparison" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-comparison"><span class="header-section-number">6</span> A head-to-head comparison on synthetic data</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression, LinearRegression</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.neighbors <span class="im">import</span> NearestNeighbors</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">2000</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Confounded DGP with heterogeneous effects</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, (N, <span class="dv">5</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span>(<span class="fl">0.5</span> <span class="op">*</span> X[:, <span class="dv">0</span>] <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> X[:, <span class="dv">1</span>])))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (rng.uniform(size<span class="op">=</span>N) <span class="op">&lt;</span> e).astype(<span class="bu">int</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Y0 <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> X[:, <span class="dv">0</span>] <span class="op">+</span> X[:, <span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>Y1 <span class="op">=</span> Y0 <span class="op">+</span> <span class="dv">3</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X[:, <span class="dv">0</span>]   <span class="co"># ATE ≈ 3 plus heterogeneity</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> D <span class="op">*</span> Y1 <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y0</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>ate_true <span class="op">=</span> (Y1 <span class="op">-</span> Y0).mean()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimators</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>e_hat <span class="op">=</span> LogisticRegression().fit(X, D).predict_proba(X)[:, <span class="dv">1</span>]</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>mu1 <span class="op">=</span> LinearRegression().fit(X[D <span class="op">==</span> <span class="dv">1</span>], Y[D <span class="op">==</span> <span class="dv">1</span>]).predict(X)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>mu0 <span class="op">=</span> LinearRegression().fit(X[D <span class="op">==</span> <span class="dv">0</span>], Y[D <span class="op">==</span> <span class="dv">0</span>]).predict(X)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>tau_naive <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>tau_gcomp <span class="op">=</span> (mu1 <span class="op">-</span> mu0).mean()</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>tau_ipw   <span class="op">=</span> np.mean(D <span class="op">*</span> Y <span class="op">/</span> e_hat <span class="op">-</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y <span class="op">/</span> (<span class="dv">1</span> <span class="op">-</span> e_hat))</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>tau_aipw  <span class="op">=</span> (mu1 <span class="op">-</span> mu0).mean() <span class="op">+</span> np.mean(D <span class="op">*</span> (Y <span class="op">-</span> mu1) <span class="op">/</span> e_hat <span class="op">-</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> (Y <span class="op">-</span> mu0) <span class="op">/</span> (<span class="dv">1</span> <span class="op">-</span> e_hat))</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Matching: 1-NN on propensity score</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>nn0 <span class="op">=</span> NearestNeighbors(n_neighbors<span class="op">=</span><span class="dv">1</span>).fit(e_hat[D <span class="op">==</span> <span class="dv">0</span>].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>nn1 <span class="op">=</span> NearestNeighbors(n_neighbors<span class="op">=</span><span class="dv">1</span>).fit(e_hat[D <span class="op">==</span> <span class="dv">1</span>].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>Y0_sorted <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">0</span>]</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>Y1_sorted <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>]</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>match0 <span class="op">=</span> Y0_sorted[nn0.kneighbors(e_hat[D <span class="op">==</span> <span class="dv">1</span>].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>), return_distance<span class="op">=</span><span class="va">False</span>).flatten()]</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>match1 <span class="op">=</span> Y1_sorted[nn1.kneighbors(e_hat[D <span class="op">==</span> <span class="dv">0</span>].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>), return_distance<span class="op">=</span><span class="va">False</span>).flatten()]</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>tau_match <span class="op">=</span> ((Y[D <span class="op">==</span> <span class="dv">1</span>] <span class="op">-</span> match0).<span class="bu">sum</span>() <span class="op">+</span> (match1 <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>]).<span class="bu">sum</span>()) <span class="op">/</span> N</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"True ATE:              </span><span class="sc">{</span>ate_true<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Naive:                 </span><span class="sc">{</span>tau_naive<span class="sc">:.3f}</span><span class="ss">   bias = </span><span class="sc">{</span>tau_naive <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"G-computation:         </span><span class="sc">{</span>tau_gcomp<span class="sc">:.3f}</span><span class="ss">   bias = </span><span class="sc">{</span>tau_gcomp <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"IPW:                   </span><span class="sc">{</span>tau_ipw<span class="sc">:.3f}</span><span class="ss">   bias = </span><span class="sc">{</span>tau_ipw <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"AIPW:                  </span><span class="sc">{</span>tau_aipw<span class="sc">:.3f}</span><span class="ss">   bias = </span><span class="sc">{</span>tau_aipw <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Propensity matching:   </span><span class="sc">{</span>tau_match<span class="sc">:.3f}</span><span class="ss">   bias = </span><span class="sc">{</span>tau_match <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On this DGP, AIPW typically has the smallest bias and variance, g-computation is close behind, IPW has highest variance (extreme weights), and matching is roughly tied with g-computation. The naive estimator is badly biased.</p>
+</section>
+<section id="sec-reg-metrics" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-reg-metrics"><span class="header-section-number">7</span> Evaluation metrics</h2>
+<ol type="1">
+<li><strong>Overlap</strong>, propensity histogram, effective sample size.</li>
+<li><strong>Bias from specification</strong>, compare regression and IPW estimates; large disagreement suggests misspecification.</li>
+<li><strong>Sensitivity to unmeasured confounding</strong>, Rosenbaum <span class="math inline">\(\Gamma\)</span>, E-values as in Chapter 2.</li>
+<li><strong>Calibration of propensity model</strong>, reliability diagram or Brier score. Miscalibrated propensities amplify IPW bias.</li>
+<li><strong>Cross-validated outcome model fit</strong>, <span class="math inline">\(R^2\)</span> for each nuisance, out-of-fold.</li>
+</ol>
+</section>
+<section id="sec-reg-bib" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-reg-bib"><span class="header-section-number">8</span> Bibliographic notes</h2>
+<p>Hirano, Imbens, and Ridder (2003), “Efficient Estimation of Average Treatment Effects Using the Estimated Propensity Score,” <em>Econometrica</em> 71, 1161–1189, proved that nonparametrically estimating the propensity score yields a semiparametrically efficient IPW estimator, a surprising and important result.</p>
+<p>Robins, Rotnitzky, and Zhao (1994), “Estimation of Regression Coefficients When Some Regressors Are Not Always Observed,” <em>JASA</em> 89, 846–866, is the foundational AIPW paper.</p>
+<p>Bang and Robins (2005), “Doubly Robust Estimation in Missing Data and Causal Inference Models,” <em>Biometrics</em> 61, 962–973, gives the cleanest statement of double robustness.</p>
+<p>Abadie and Imbens (2006), “Large Sample Properties of Matching Estimators for Average Treatment Effects,” <em>Econometrica</em> 74, 235–267, provides the definitive asymptotic theory of matching.</p>
+<p>Künzel, Sekhon, Bickel, and Yu (2019), “Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning,” <em>PNAS</em> 116, 4156–4165, introduces and compares S-, T-, X-, and R-learners.</p>
+</section>
+<section id="exercises" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="exercises"><span class="header-section-number">9</span> Exercises</h2>
+<section id="theoretical-exercises" class="level3" data-number="9.1">
+<h3 data-number="9.1" class="anchored" data-anchor-id="theoretical-exercises"><span class="header-section-number">9.1</span> Theoretical exercises</h3>
+<p><strong>Exercise 5.1</strong> (<span class="math inline">\(\star\star\)</span>). Prove that the Horvitz-Thompson estimator <a href="#eq-ipw" class="quarto-xref">Equation&nbsp;2</a> is unbiased when <span class="math inline">\(\hat e = e\)</span>. Use the potential-outcomes expression from Exercise 2.2.</p>
+<p><strong>Exercise 5.2</strong> (<span class="math inline">\(\star\star\)</span>). Derive the AIPW efficient influence function and verify that its variance equals the semiparametric efficiency bound of Hahn (1998).</p>
+<p><strong>Exercise 5.3</strong> (<span class="math inline">\(\star\star\star\)</span>). Show that if the logistic propensity model is misspecified, the IPW estimator can have bias of order <span class="math inline">\(\sqrt n\)</span>, i.e., it fails to be <span class="math inline">\(\sqrt n\)</span>-consistent. What does this imply about the role of AIPW’s double robustness?</p>
+</section>
+<section id="computational-exercises" class="level3" data-number="9.2">
+<h3 data-number="9.2" class="anchored" data-anchor-id="computational-exercises"><span class="header-section-number">9.2</span> Computational exercises</h3>
+<p><strong>Exercise 5.4</strong> (<span class="math inline">\(\star\)</span>). Replicate the comparison in §<a href="#sec-comparison" class="quarto-xref">Section&nbsp;6</a> with an alternative DGP where <span class="math inline">\(e(X)\)</span> is bimodal (some units have <span class="math inline">\(e\)</span> near 0.01, some near 0.99). Show that IPW fails catastrophically and that weight trimming partially repairs it.</p>
+<p><strong>Exercise 5.5</strong> (<span class="math inline">\(\star\star\)</span>). Implement matching with a caliper of 0.1 standard deviations of the propensity score. Compare to unconstrained NN matching on the synthetic DGP.</p>
+<p><strong>Exercise 5.6</strong> (<span class="math inline">\(\star\star\)</span>). Use <code>econml</code>’s <code>DoublyRobustLearner</code> with a random forest outcome model and a gradient-boosted propensity model. Compare with the hand-coded AIPW in §<a href="#sec-comparison" class="quarto-xref">Section&nbsp;6</a>.</p>
+<p><strong>Exercise 5.7</strong> (<span class="math inline">\(\star\star\star\)</span>). Design a DGP where the outcome regression is correctly specified but the propensity model is not. Verify that AIPW is consistent while naive IPW is not.</p>
+</section>
+<section id="discussion-exercises" class="level3" data-number="9.3">
+<h3 data-number="9.3" class="anchored" data-anchor-id="discussion-exercises"><span class="header-section-number">9.3</span> Discussion exercises</h3>
+<p><strong>Exercise 5.8</strong>. In a health insurance claims analysis, a colleague applies IPW but reports an effective sample size of <span class="math inline">\(N_{\text{eff}} \approx 50\)</span> out of <span class="math inline">\(N = 10000\)</span>. What should you recommend they do?</p>
+<p><strong>Exercise 5.9</strong>. Why would a regulator prefer a matching estimate over an IPW estimate for a pharmaceutical effectiveness claim? What aspects of matching are easier to audit?</p>
+<hr>
+</section>
+</section>
+<section id="references" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="references"><span class="header-section-number">10</span> References</h2>
+<p>Abadie, A., and Imbens, G. W. (2006). “Large Sample Properties of Matching Estimators for Average Treatment Effects.” <em>Econometrica</em> 74(1), 235–267.</p>
+<p>Bang, H., and Robins, J. M. (2005). “Doubly Robust Estimation in Missing Data and Causal Inference Models.” <em>Biometrics</em> 61(4), 962–973.</p>
+<p>Crump, R. K., Hotz, V. J., Imbens, G. W., and Mitnik, O. A. (2009). “Dealing with Limited Overlap in Estimation of Average Treatment Effects.” <em>Biometrika</em> 96(1), 187–199.</p>
+<p>Hahn, J. (1998). “On the Role of the Propensity Score in Efficient Semiparametric Estimation of Average Treatment Effects.” <em>Econometrica</em> 66(2), 315–331.</p>
+<p>Hirano, K., Imbens, G. W., and Ridder, G. (2003). “Efficient Estimation of Average Treatment Effects Using the Estimated Propensity Score.” <em>Econometrica</em> 71(4), 1161–1189.</p>
+<p>Künzel, S. R., Sekhon, J. S., Bickel, P. J., and Yu, B. (2019). “Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning.” <em>Proceedings of the National Academy of Sciences</em> 116(10), 4156–4165.</p>
+<p>Robins, J. M., Rotnitzky, A., and Zhao, L. P. (1994). “Estimation of Regression Coefficients When Some Regressors Are Not Always Observed.” <em>Journal of the American Statistical Association</em> 89(427), 846–866.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

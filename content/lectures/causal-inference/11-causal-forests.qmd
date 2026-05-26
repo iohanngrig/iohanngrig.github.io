@@ -1,0 +1,178 @@
+---
+title: "Causal forests and heterogeneous treatment effects"
+author: "Hovhannes Grigoryan"
+date: "2026-04-25"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Distinguish** the ATE from the conditional average treatment effect (CATE) and understand why CATE estimation is a separate statistical problem.
+2. **Construct** a causal forest using honest-split trees and explain the role of the honest-split property.
+3. **State and interpret** the Wager-Athey consistency and asymptotic normality theorem for causal forests.
+4. **Apply** the generalized random forest framework to quantile treatment effects and policy evaluation.
+5. **Implement** a causal forest using `econml.CausalForestDML` and interpret its pointwise confidence intervals.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures: (1) why heterogeneity matters, honest splitting, bias-variance tradeoff for ML on causal problems; (2) the Wager-Athey theorem, consistency proof sketch, pointwise CIs; (3) Generalized Random Forests, policy learning, hands-on with econml.
+:::
+
+## From ATE to CATE {#sec-ate-to-cate}
+
+The ATE summarizes the effect over an entire population. It can be small, statistically significant, and entirely uninformative about policy: a drug that doubles survival for 30 percent of patients but kills 25 percent has an ATE near zero. Policy makers care about for whom the intervention works. This is the **conditional average treatment effect** (CATE):
+
+$$
+\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x].
+$$
+
+CATE estimation is fundamentally harder than ATE. ATE is a scalar; CATE is an infinite-dimensional object. Without pooling, some assumption that units with similar $x$ have similar $\tau(x)$, we cannot estimate CATE. Random forests provide that pooling automatically through the tree structure.
+
+## The honest-split idea {#sec-honest}
+
+Ordinary random forests use the same data for both tree structure selection and leaf-value estimation. For causal inference, this creates a subtle bias: the data that determined a leaf's composition are also the data whose average is used as the leaf's estimate. Wager and Athey (2018) [@wager2018estimation] proposed splitting the sample into two halves:
+
+- **Structure half.** Used only to choose tree splits.
+- **Estimation half.** Used only to compute leaf averages.
+
+This **honest splitting** eliminates the own-observation bias and makes asymptotic inference well-defined.
+
+The honest causal forest estimator of the CATE is
+
+$$
+\hat\tau(x) = \frac{1}{B} \sum_{b=1}^B \left(\bar Y_{b, 1}(x) - \bar Y_{b, 0}(x)\right),
+$$ {#eq-cf-estimator}
+
+where $\bar Y_{b, d}(x)$ is the average of $Y$ on the estimation-half units in the leaf containing $x$ in tree $b$ with treatment $d$, and $B$ is the number of trees.
+
+## The Wager-Athey consistency theorem {#sec-wager-athey}
+
+::: {.callout-important title="Theorem 11.1 — Consistency and asymptotic normality of honest causal forests (Wager-Athey 2018)"}
+Assume:
+
+1. Unconfoundedness: $(Y(0), Y(1)) \perp\!\!\!\perp D \mid X$.
+2. Honest splitting.
+3. Minimum leaf size $\geq k_{\min}$ with $k_{\min} \to \infty$ slower than $n$.
+4. Subsampling with subsample size $s_n = O(n^\beta)$ for $\beta \in (0, 1)$.
+5. Regularity: Lipschitz continuity of $\tau(x)$ and bounded moments of $Y$.
+
+Then for any $x$ in the interior of the support of $X$,
+
+$$
+\sqrt n \left(\hat\tau(x) - \tau(x)\right) \xrightarrow{d} \mathcal{N}(0, \sigma^2(x)),
+$$
+
+with consistent variance estimator $\hat\sigma^2(x)$ from the infinitesimal jackknife.
+:::
+
+The theorem provides **pointwise confidence intervals** for $\tau(x)$ at any target $x$. The bound $\sigma^2(x)$ depends on the conditional outcome variances, the propensity score, and the tree structure; it is estimable from the data.
+
+Proof sketch: honest splitting decorrelates the leaf structure from the leaf estimates, rendering the forest estimator a U-statistic of appropriate order. Asymptotic normality follows from the subsampling-based CLT [@mentch2016quantifying].
+
+## Generalized random forests {#sec-grf}
+
+Athey, Tibshirani, and Wager (2019) [@athey2019generalized] generalized causal forests to estimate any target defined by a moment condition:
+
+$$
+\mathbb{E}[\psi(O_i; \theta(x)) \mid X_i = x] = 0,
+$$
+
+for some score function $\psi$ and target parameter $\theta(x)$. Special cases:
+
+- CATE ($\psi$ is the DML orthogonal score; $\theta(x) = \tau(x)$).
+- Quantile treatment effects ($\psi$ is the check-loss subgradient).
+- Instrumental-variable treatment effects ($\psi$ incorporates an instrument).
+- Policy-learning objectives.
+
+The GRF framework implements all of these with the same honest-forest machinery. The `grf` R package (Athey et al.) and `econml.CausalForestDML` (Python) provide efficient implementations.
+
+## Practical workflow with `econml` {#sec-econml-cf}
+
+```python
+import numpy as np
+from econml.dml import CausalForestDML
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.linear_model import LogisticRegression
+
+rng = np.random.default_rng(0)
+N, P = 5000, 10
+X = rng.normal(0, 1, (N, P))
+e = 1 / (1 + np.exp(-0.5 * X[:, 0]))
+D = (rng.uniform(size=N) < e).astype(int)
+tau_true = 2 + X[:, 0] - 0.5 * X[:, 1] ** 2   # heterogeneous CATE
+Y0 = X[:, 0] + X[:, 2] + rng.normal(0, 1, N)
+Y = Y0 + D * tau_true
+
+cf = CausalForestDML(
+    model_y=GradientBoostingRegressor(),
+    model_t=LogisticRegression(),
+    discrete_treatment=True,
+    cv=5,
+    n_estimators=500,
+    random_state=0,
+)
+cf.fit(Y, D, X=X)
+
+tau_hat = cf.effect(X)
+ci_lower, ci_upper = cf.effect_interval(X)
+rmse = np.sqrt(np.mean((tau_hat - tau_true) ** 2))
+print(f"CATE RMSE: {rmse:.3f}")
+coverage = np.mean((ci_lower <= tau_true) & (tau_true <= ci_upper))
+print(f"95% CI coverage: {coverage:.3f}")
+```
+
+A well-tuned causal forest on a moderate-sized dataset typically achieves CATE RMSE within 10–20 percent of the true heterogeneity variation and CI coverage near 95 percent.
+
+## Policy learning {#sec-policy}
+
+Beyond estimation, a natural question is: *given an estimate of $\tau(x)$, which units should we treat?* The **optimal policy** targets units with $\tau(x) > 0$. Athey and Wager (2021) [@athey2021policy] analyze statistical properties of learned policies, proving regret bounds in terms of the Rademacher complexity of the policy class.
+
+Operationally, `econml.policy` and `grf::policy_tree` learn interpretable (tree-based) policies that approximate the optimal rule subject to policy-class constraints.
+
+## Bibliographic notes
+
+Wager and Athey (2018), "Estimation and Inference of Heterogeneous Treatment Effects Using Random Forests," *JASA* 113, is the foundational paper.
+
+Athey, Tibshirani, and Wager (2019), "Generalized Random Forests," *Annals of Statistics* 47, extends the framework.
+
+Künzel, Sekhon, Bickel, and Yu (2019), "Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning," *PNAS* 116, compares S-, T-, X-, and R-learners for CATE.
+
+Chernozhukov et al. 2018 (DML), the orthogonalization step in `CausalForestDML` is identical to Chapter 10's machinery.
+
+## Exercises
+
+**Exercise 11.1** ($\star\star$). Prove that without honest splitting, the causal tree estimator has bias of order 1/(leaf size), which does not vanish even asymptotically when leaf size is held fixed.
+
+**Exercise 11.2** ($\star\star$). Derive the DML score function that `CausalForestDML` uses and show it satisfies Neyman orthogonality.
+
+**Exercise 11.3** ($\star$). Replicate the synthetic example. Study how CATE RMSE varies with (a) sample size, (b) number of trees, (c) dimensionality of $X$.
+
+**Exercise 11.4** ($\star\star\star$). Implement honest splitting by hand in a single tree and verify by simulation that the leaf estimates are unbiased for the true CATE.
+
+---
+
+## References
+
+Athey, S., Tibshirani, J., and Wager, S. (2019). "Generalized Random Forests." *Annals of Statistics* 47(2), 1148–1178.
+
+Athey, S., and Wager, S. (2021). "Policy Learning with Observational Data." *Econometrica* 89(1), 133–161.
+
+Künzel, S. R., Sekhon, J. S., Bickel, P. J., and Yu, B. (2019). "Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning." *Proceedings of the National Academy of Sciences* 116(10), 4156–4165.
+
+Mentch, L., and Hooker, G. (2016). "Quantifying Uncertainty in Random Forests via Confidence Intervals and Hypothesis Tests." *Journal of Machine Learning Research* 17(1), 841–881.
+
+Wager, S., and Athey, S. (2018). "Estimation and Inference of Heterogeneous Treatment Effects Using Random Forests." *Journal of the American Statistical Association* 113(523), 1228–1242.

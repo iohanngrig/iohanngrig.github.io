@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-03-22">
+
+<title>Identification: when can data answer a causal question?</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="02-identification_files/libs/clipboard/clipboard.min.js"></script>
+<script src="02-identification_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="02-identification_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="02-identification_files/libs/quarto-html/popper.min.js"></script>
+<script src="02-identification_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="02-identification_files/libs/quarto-html/anchor.min.js"></script>
+<link href="02-identification_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="02-identification_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="02-identification_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="02-identification_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="02-identification_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-observational-setup" id="toc-sec-observational-setup" class="nav-link active" data-scroll-target="#sec-observational-setup"><span class="header-section-number">1</span> From randomization to observational data</a></li>
+  <li><a href="#sec-three-pillars" id="toc-sec-three-pillars" class="nav-link" data-scroll-target="#sec-three-pillars"><span class="header-section-number">2</span> The three pillars of observational identification</a>
+  <ul class="collapse">
+  <li><a href="#pillar-1-unconfoundedness-conditional-independence" id="toc-pillar-1-unconfoundedness-conditional-independence" class="nav-link" data-scroll-target="#pillar-1-unconfoundedness-conditional-independence"><span class="header-section-number">2.1</span> Pillar 1: Unconfoundedness (conditional independence)</a></li>
+  <li><a href="#pillar-2-positivity-overlap" id="toc-pillar-2-positivity-overlap" class="nav-link" data-scroll-target="#pillar-2-positivity-overlap"><span class="header-section-number">2.2</span> Pillar 2: Positivity (overlap)</a></li>
+  <li><a href="#pillar-3-consistency-sutva" id="toc-pillar-3-consistency-sutva" class="nav-link" data-scroll-target="#pillar-3-consistency-sutva"><span class="header-section-number">2.3</span> Pillar 3: Consistency / SUTVA</a></li>
+  </ul></li>
+  <li><a href="#sec-identification-formula" id="toc-sec-identification-formula" class="nav-link" data-scroll-target="#sec-identification-formula"><span class="header-section-number">3</span> The identification formula</a></li>
+  <li><a href="#sec-propensity-score-theorem" id="toc-sec-propensity-score-theorem" class="nav-link" data-scroll-target="#sec-propensity-score-theorem"><span class="header-section-number">4</span> The propensity score theorem</a>
+  <ul class="collapse">
+  <li><a href="#the-balancing-score-property" id="toc-the-balancing-score-property" class="nav-link" data-scroll-target="#the-balancing-score-property"><span class="header-section-number">4.1</span> The balancing-score property</a></li>
+  <li><a href="#unconfoundedness-passes-through-ex" id="toc-unconfoundedness-passes-through-ex" class="nav-link" data-scroll-target="#unconfoundedness-passes-through-ex"><span class="header-section-number">4.2</span> Unconfoundedness passes through <span class="math inline">\(e(X)\)</span></a></li>
+  </ul></li>
+  <li><a href="#sec-synthetic-full" id="toc-sec-synthetic-full" class="nav-link" data-scroll-target="#sec-synthetic-full"><span class="header-section-number">5</span> A synthetic example end-to-end</a></li>
+  <li><a href="#sec-id-vs-est" id="toc-sec-id-vs-est" class="nav-link" data-scroll-target="#sec-id-vs-est"><span class="header-section-number">6</span> Identification vs.&nbsp;estimation</a></li>
+  <li><a href="#sec-sensitivity" id="toc-sec-sensitivity" class="nav-link" data-scroll-target="#sec-sensitivity"><span class="header-section-number">7</span> When unconfoundedness fails, sensitivity analysis</a>
+  <ul class="collapse">
+  <li><a href="#rosenbaums-sensitivity-bounds" id="toc-rosenbaums-sensitivity-bounds" class="nav-link" data-scroll-target="#rosenbaums-sensitivity-bounds"><span class="header-section-number">7.1</span> Rosenbaum’s sensitivity bounds</a></li>
+  <li><a href="#e-values" id="toc-e-values" class="nav-link" data-scroll-target="#e-values"><span class="header-section-number">7.2</span> E-values</a></li>
+  </ul></li>
+  <li><a href="#sec-metrics" id="toc-sec-metrics" class="nav-link" data-scroll-target="#sec-metrics"><span class="header-section-number">8</span> Evaluation metrics for observational causal estimates</a></li>
+  <li><a href="#sec-identification-bib" id="toc-sec-identification-bib" class="nav-link" data-scroll-target="#sec-identification-bib"><span class="header-section-number">9</span> Bibliographic notes</a>
+  <ul class="collapse">
+  <li><a href="#primary-sources" id="toc-primary-sources" class="nav-link" data-scroll-target="#primary-sources"><span class="header-section-number">9.1</span> Primary sources</a></li>
+  <li><a href="#sensitivity-analysis" id="toc-sensitivity-analysis" class="nav-link" data-scroll-target="#sensitivity-analysis"><span class="header-section-number">9.2</span> Sensitivity analysis</a></li>
+  <li><a href="#software" id="toc-software" class="nav-link" data-scroll-target="#software"><span class="header-section-number">9.3</span> Software</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">10</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#theoretical-exercises" id="toc-theoretical-exercises" class="nav-link" data-scroll-target="#theoretical-exercises"><span class="header-section-number">10.1</span> Theoretical exercises</a></li>
+  <li><a href="#computational-exercises" id="toc-computational-exercises" class="nav-link" data-scroll-target="#computational-exercises"><span class="header-section-number">10.2</span> Computational exercises</a></li>
+  <li><a href="#discussion-exercises" id="toc-discussion-exercises" class="nav-link" data-scroll-target="#discussion-exercises"><span class="header-section-number">10.3</span> Discussion exercises</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">11</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Identification: when can data answer a causal question?</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 22, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>State</strong> the three pillars of causal identification in observational data, unconfoundedness, positivity, and consistency (SUTVA), and explain what each enforces.</li>
+<li><strong>Derive</strong> the identification formula <span class="math inline">\(\tau = \mathbb{E}_X[\mathbb{E}[Y \mid D=1, X] - \mathbb{E}[Y \mid D=0, X]]\)</span> under the three pillars.</li>
+<li><strong>Prove</strong> the Rosenbaum-Rubin theorem that the propensity score is a balancing score and use it to reduce a multivariate problem to a scalar adjustment.</li>
+<li><strong>Distinguish</strong> identification (existence of a population answer given assumptions) from estimation (computing an approximation from a finite sample) and explain why they are different exercises.</li>
+<li><strong>Diagnose</strong> violations of each identifying assumption in a given applied problem and assess their severity.</li>
+<li><strong>Apply</strong> the identification result to a synthetic DGP and numerically confirm that the adjusted estimand recovers the true ATE while the naive difference does not.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three lectures of 75–90 minutes.</p>
+<p><strong>Lecture 1, The three pillars.</strong></p>
+<ul>
+<li>Why observational studies need more than data (10 min)</li>
+<li>Unconfoundedness formally: <span class="math inline">\((Y(0), Y(1)) \perp\!\!\!\perp D \mid X\)</span> (20 min)</li>
+<li>Positivity and the support problem (15 min)</li>
+<li>Consistency / SUTVA revisited (10 min)</li>
+<li>Deriving the g-formula under the three assumptions (20 min)</li>
+<li>Hands-on: simulate violations of each assumption and observe the bias (15 min)</li>
+</ul>
+<p><strong>Lecture 2, The propensity score theorem.</strong></p>
+<ul>
+<li>Definition of the propensity score <span class="math inline">\(e(X) = P(D=1 \mid X)\)</span> (10 min)</li>
+<li>Balancing-score property: <span class="math inline">\(D \perp\!\!\!\perp X \mid e(X)\)</span> (proof) (20 min)</li>
+<li>Rosenbaum-Rubin theorem: unconfoundedness given <span class="math inline">\(X\)</span> implies unconfoundedness given <span class="math inline">\(e(X)\)</span> (25 min)</li>
+<li>Consequences: estimation reduces to scalar adjustment (15 min)</li>
+<li>Hands-on: fit a logistic propensity score and compute a weighted ATE (20 min)</li>
+</ul>
+<p><strong>Lecture 3, Identification vs estimation.</strong></p>
+<ul>
+<li>What can be estimated at parametric rate? What cannot? (15 min)</li>
+<li>Worked example: the Lalonde NSW-PSID identification problem (30 min)</li>
+<li>Sensitivity analysis: what if unconfoundedness fails? (20 min)</li>
+<li>A summary table of estimands and their identification conditions (15 min)</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Notation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Notation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Throughout, <span class="math inline">\(e(X) = P(D = 1 \mid X)\)</span> denotes the propensity score, <span class="math inline">\(\mu_d(X) = \mathbb{E}[Y \mid D = d, X]\)</span> the conditional outcome regression under treatment <span class="math inline">\(d\)</span>, and <span class="math inline">\(\mu(X) = \mathbb{E}[Y \mid X]\)</span> the marginal conditional expectation. The symbol <span class="math inline">\(\perp\!\!\!\perp\)</span> denotes independence.</p>
+</div>
+</div>
+<section id="sec-observational-setup" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-observational-setup"><span class="header-section-number">1</span> From randomization to observational data</h2>
+<p>In Chapter 1 we established that the difference-in-means is unbiased for the ATE under randomization. The key enabling fact was <span class="math inline">\(D \perp\!\!\!\perp (Y(0), Y(1))\)</span>, the treatment assignment is statistically independent of the potential outcomes. Randomization delivered this independence by construction.</p>
+<p>Observational data rarely has this independence. Patients in observational studies of blood-pressure medication are often <em>prescribed</em> the medication because of their blood pressure: treatment depends on covariates that also predict the outcome. Students who enroll in advanced math classes have different academic trajectories than those who do not. Firms that adopt new technology have different revenue paths than those that do not.</p>
+<p>This is <em>confounding</em>: a third variable influences both <span class="math inline">\(D\)</span> and <span class="math inline">\(Y\)</span>. Confounding is the default condition of observational data, not an exception.</p>
+<p>Observational studies can still deliver valid causal inference, but the price of admission is more assumptions. This chapter examines what those assumptions are, why they are needed, and what they buy.</p>
+</section>
+<section id="sec-three-pillars" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-three-pillars"><span class="header-section-number">2</span> The three pillars of observational identification</h2>
+<p>For the ATE to be recoverable from observational data on <span class="math inline">\((Y, D, X)\)</span>, three assumptions must hold jointly. They are often collectively called the strong ignorability assumption <span class="citation" data-cites="rosenbaum1983central">[@rosenbaum1983central]</span>.</p>
+<section id="pillar-1-unconfoundedness-conditional-independence" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="pillar-1-unconfoundedness-conditional-independence"><span class="header-section-number">2.1</span> Pillar 1: Unconfoundedness (conditional independence)</h3>
+<div class="callout callout-style-default callout-important callout-titled" title="Assumption 2.1 — Unconfoundedness">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Assumption 2.1 — Unconfoundedness
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For all <span class="math inline">\(d \in \{0, 1\}\)</span>,</p>
+<p><span id="eq-unconfoundedness"><span class="math display">\[
+Y(d) \perp\!\!\!\perp D \mid X.
+\tag{1}\]</span></span></p>
+</div>
+</div>
+<p>The condition says that once we condition on covariates <span class="math inline">\(X\)</span>, the treatment is as-good-as-randomly assigned with respect to the potential outcomes. Different names for the same idea in the literature: selection on observables, ignorable treatment assignment, no unmeasured confounding, exogeneity.</p>
+<p>Unconfoundedness is a statement about the <em>world</em>, not the data. No finite dataset can verify it. The applied researcher’s judgment is whether every factor that plausibly influences both <span class="math inline">\(D\)</span> and <span class="math inline">\(Y\)</span> is captured in <span class="math inline">\(X\)</span>. This is why careful attention to the data-generating process matters more in causal inference than in prediction.</p>
+</section>
+<section id="pillar-2-positivity-overlap" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="pillar-2-positivity-overlap"><span class="header-section-number">2.2</span> Pillar 2: Positivity (overlap)</h3>
+<div class="callout callout-style-default callout-important callout-titled" title="Assumption 2.2 — Positivity">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Assumption 2.2 — Positivity
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For all <span class="math inline">\(x\)</span> in the support of <span class="math inline">\(X\)</span>,</p>
+<p><span id="eq-positivity"><span class="math display">\[
+0 &lt; P(D = 1 \mid X = x) &lt; 1.
+\tag{2}\]</span></span></p>
+</div>
+</div>
+<p>Positivity requires that every covariate profile has some chance of being in either treatment arm. If there exists a value <span class="math inline">\(x^*\)</span> with <span class="math inline">\(P(D = 1 \mid X = x^*) = 0\)</span>, then we <em>never</em> observe a treated unit with <span class="math inline">\(X = x^*\)</span> and thus cannot learn <span class="math inline">\(\mathbb{E}[Y(1) \mid X = x^*]\)</span> without extrapolating.</p>
+<p>Positivity violations come in two flavors:</p>
+<ul>
+<li><strong>Structural.</strong> Treatment is defined such that some units cannot possibly receive it. Pregnant women were excluded from a particular drug trial; no observational data exists to estimate the effect on pregnant women.</li>
+<li><strong>Practical.</strong> The treatment is theoretically possible for all units, but some covariate combinations are extremely rare in one arm. A well-trained logistic propensity model returns 0.001 for these units. Effectively, we are extrapolating.</li>
+</ul>
+<p>Positivity is diagnosable from the data: plot a histogram of <span class="math inline">\(\hat e(X_i)\)</span> in each arm.</p>
+</section>
+<section id="pillar-3-consistency-sutva" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="pillar-3-consistency-sutva"><span class="header-section-number">2.3</span> Pillar 3: Consistency / SUTVA</h3>
+<p>Consistency is a refinement of SUTVA that links the potential-outcome notation to observed data. We stated it in Chapter 1 as equation <strong>?@eq-consistency</strong>:</p>
+<p><span class="math display">\[
+Y_i = D_i Y_i(1) + (1 - D_i) Y_i(0).
+\]</span></p>
+<p>In observational data, consistency additionally requires that the treatment <span class="math inline">\(D\)</span> is well-defined and that a given value of <span class="math inline">\(D\)</span> corresponds to the same intervention across units. This rules out “hidden versions of treatment”: if <span class="math inline">\(D = 1\)</span> sometimes means aspirin and sometimes ibuprofen, <span class="math inline">\(Y(1)\)</span> is not a well-defined random variable and any identification argument falls through.</p>
+</section>
+</section>
+<section id="sec-identification-formula" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-identification-formula"><span class="header-section-number">3</span> The identification formula</h2>
+<p>With the three pillars in hand, we can prove that the ATE is identifiable from the distribution of observable <span class="math inline">\((Y, D, X)\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 2.1 — Identification of the ATE under strong ignorability">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 2.1 — Identification of the ATE under strong ignorability
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Under unconfoundedness <a href="#eq-unconfoundedness" class="quarto-xref">Equation&nbsp;1</a>, positivity <a href="#eq-positivity" class="quarto-xref">Equation&nbsp;2</a>, and consistency <strong>?@eq-consistency</strong>,</p>
+<p><span id="eq-id-formula"><span class="math display">\[
+\tau := \mathbb{E}[Y(1) - Y(0)] = \mathbb{E}_X \bigl[\mathbb{E}[Y \mid D = 1, X] - \mathbb{E}[Y \mid D = 0, X]\bigr].
+\tag{3}\]</span></span></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the definition of ATE,</p>
+<p><span class="math display">\[
+\tau = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)].
+\]</span></p>
+<p>For the first term, apply the tower property by conditioning on <span class="math inline">\(X\)</span>:</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1)] = \mathbb{E}_X[\mathbb{E}[Y(1) \mid X]].
+\]</span></p>
+<p>By unconfoundedness <a href="#eq-unconfoundedness" class="quarto-xref">Equation&nbsp;1</a>, <span class="math inline">\(Y(1) \perp\!\!\!\perp D \mid X\)</span>, so</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1) \mid X] = \mathbb{E}[Y(1) \mid X, D = 1].
+\]</span></p>
+<p>By positivity <a href="#eq-positivity" class="quarto-xref">Equation&nbsp;2</a>, the conditioning event <span class="math inline">\(\{D = 1, X = x\}\)</span> has positive probability for every <span class="math inline">\(x\)</span> in the support. By consistency, <span class="math inline">\(Y = Y(1)\)</span> on this event, hence</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1) \mid X, D = 1] = \mathbb{E}[Y \mid X, D = 1].
+\]</span></p>
+<p>Combining,</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1)] = \mathbb{E}_X[\mathbb{E}[Y \mid X, D = 1]] = \mathbb{E}_X[\mu_1(X)].
+\]</span></p>
+<p>A symmetric argument for <span class="math inline">\(\mathbb{E}[Y(0)] = \mathbb{E}_X[\mu_0(X)]\)</span> completes the proof. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+<p>Each pillar is essential and uniquely so:</p>
+<ul>
+<li>Without <strong>unconfoundedness</strong>, we cannot replace <span class="math inline">\(\mathbb{E}[Y(d) \mid X]\)</span> by <span class="math inline">\(\mathbb{E}[Y(d) \mid X, D = d]\)</span>.</li>
+<li>Without <strong>positivity</strong>, the conditioning event <span class="math inline">\(\{D = d, X = x\}\)</span> has measure zero for some <span class="math inline">\(x\)</span>, and <span class="math inline">\(\mathbb{E}[Y \mid D = d, X = x]\)</span> is undefined.</li>
+<li>Without <strong>consistency</strong>, <span class="math inline">\(Y\)</span> on the treatment-<span class="math inline">\(d\)</span> arm is not equal to <span class="math inline">\(Y(d)\)</span>, and the last substitution fails.</li>
+</ul>
+<p>Equation <a href="#eq-id-formula" class="quarto-xref">Equation&nbsp;3</a> is known variously as the <strong>g-formula</strong> <span class="citation" data-cites="robins1986">[@robins1986]</span>, the <strong>adjustment formula</strong>, or the <strong>regression adjustment identification</strong>. It is the workhorse identification result of observational causal inference.</p>
+</section>
+<section id="sec-propensity-score-theorem" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-propensity-score-theorem"><span class="header-section-number">4</span> The propensity score theorem</h2>
+<p>Equation <a href="#eq-id-formula" class="quarto-xref">Equation&nbsp;3</a> requires adjusting for the full covariate vector <span class="math inline">\(X\)</span>, which in practice may be high-dimensional. Rosenbaum and Rubin (1983) showed that one can instead adjust for the scalar <em>propensity score</em> <span class="math inline">\(e(X) = P(D = 1 \mid X)\)</span>, reducing a hard multivariate estimation problem to a univariate one.</p>
+<section id="the-balancing-score-property" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-balancing-score-property"><span class="header-section-number">4.1</span> The balancing-score property</h3>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 2.2 — Balancing-score property of $e(X)$ (Rosenbaum-Rubin 1983)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 2.2 — Balancing-score property of <span class="math inline">\(e(X)\)</span> (Rosenbaum-Rubin 1983)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The propensity score <span class="math inline">\(e(X) = P(D = 1 \mid X)\)</span> is a <strong>balancing score</strong>: treatment assignment is independent of covariates conditional on the propensity score:</p>
+<p><span id="eq-balancing"><span class="math display">\[
+D \perp\!\!\!\perp X \mid e(X).
+\tag{4}\]</span></span></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider any measurable event <span class="math inline">\(A\)</span> on the covariates. We need <span class="math inline">\(P(D = 1 \mid X, e(X)) = P(D = 1 \mid e(X))\)</span>. Since <span class="math inline">\(e(X)\)</span> is a deterministic function of <span class="math inline">\(X\)</span>, conditioning on <span class="math inline">\(X\)</span> also determines <span class="math inline">\(e(X)\)</span>; conversely, <span class="math inline">\(\{X \in A, e(X) = c\}\)</span> is either contained in <span class="math inline">\(\{e(X) = c\}\)</span> or has zero probability. Compute</p>
+<p><span class="math display">\[
+P(D = 1 \mid e(X) = c) = \mathbb{E}[D \mid e(X) = c] \stackrel{\text{tower}}{=} \mathbb{E}[\mathbb{E}[D \mid X] \mid e(X) = c] = \mathbb{E}[e(X) \mid e(X) = c] = c.
+\]</span></p>
+<p>So <span class="math inline">\(P(D = 1 \mid e(X)) = e(X)\)</span>. By construction, <span class="math inline">\(P(D = 1 \mid X) = e(X)\)</span> also. These being equal, they are <em>both</em> <span class="math inline">\(e(X)\)</span>, and so</p>
+<p><span class="math display">\[
+P(D = 1 \mid X, e(X)) = P(D = 1 \mid X) = e(X) = P(D = 1 \mid e(X)),
+\]</span></p>
+<p>which yields <a href="#eq-balancing" class="quarto-xref">Equation&nbsp;4</a>. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+</section>
+<section id="unconfoundedness-passes-through-ex" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="unconfoundedness-passes-through-ex"><span class="header-section-number">4.2</span> Unconfoundedness passes through <span class="math inline">\(e(X)\)</span></h3>
+<p>The critical extension is:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 2.3 — Unconfoundedness given $e(X)$">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 2.3 — Unconfoundedness given <span class="math inline">\(e(X)\)</span>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">\((Y(0), Y(1)) \perp\!\!\!\perp D \mid X\)</span>, then</p>
+<p><span id="eq-unconfoundedness-by-ps"><span class="math display">\[
+(Y(0), Y(1)) \perp\!\!\!\perp D \mid e(X).
+\tag{5}\]</span></span></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Fix <span class="math inline">\(c \in [0, 1]\)</span>. It suffices to show <span class="math inline">\(P(D = 1 \mid Y(0), Y(1), e(X) = c) = P(D = 1 \mid e(X) = c)\)</span>. Conditioning further on <span class="math inline">\(X\)</span>,</p>
+<p><span class="math display">\[
+P(D = 1 \mid Y(0), Y(1), X, e(X) = c) = P(D = 1 \mid Y(0), Y(1), X) \stackrel{\text{Assum 2.1}}{=} P(D = 1 \mid X) = e(X) = c.
+\]</span></p>
+<p>This value does not depend on <span class="math inline">\((Y(0), Y(1))\)</span>, so integrating over the distribution of <span class="math inline">\(X\)</span> given <span class="math inline">\(\{Y(0), Y(1), e(X) = c\}\)</span> leaves it unchanged:</p>
+<p><span class="math display">\[
+P(D = 1 \mid Y(0), Y(1), e(X) = c) = c = P(D = 1 \mid e(X) = c).
+\]</span></p>
+<p>Hence <a href="#eq-unconfoundedness-by-ps" class="quarto-xref">Equation&nbsp;5</a>. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+<p>The practical import: rather than stratifying on the full <span class="math inline">\(p\)</span>-dimensional <span class="math inline">\(X\)</span>, we can stratify on the scalar <span class="math inline">\(e(X)\)</span>, or, more commonly, <em>weight</em> observations by <span class="math inline">\(1/e(X)\)</span> and <span class="math inline">\(1/(1 - e(X))\)</span> to recover the ATE. This is the basis for inverse-probability-weighted (IPW) estimation, covered in Chapter 5.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="What propensity-score adjustment does not fix">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>What propensity-score adjustment does not fix
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Theorem 2.3 requires unconfoundedness given <span class="math inline">\(X\)</span>. If there is an unmeasured confounder <span class="math inline">\(U\)</span>, a variable that affects both <span class="math inline">\(D\)</span> and <span class="math inline">\(Y\)</span> but is not in <span class="math inline">\(X\)</span>, then conditioning on <span class="math inline">\(e(X)\)</span> does not help. Propensity scores balance the covariates you measured, not the ones you didn’t. Sensitivity analysis (§<a href="#sec-sensitivity" class="quarto-xref">Section&nbsp;7</a>) is how we reason about unmeasured confounders.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-synthetic-full" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-synthetic-full"><span class="header-section-number">5</span> A synthetic example end-to-end</h2>
+<p>Consider a DGP with two covariates, heterogeneous treatment effects, and strong confounding. We will implement the identification formula via a regression estimator and verify numerically that it recovers the true ATE.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">2026</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Covariates</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>X1 <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)          <span class="co"># continuous, e.g., age (standardized)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X2 <span class="op">=</span> rng.binomial(<span class="dv">1</span>, <span class="fl">0.4</span>, N)      <span class="co"># binary, e.g., chronic-condition indicator</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Propensity score: treatment more likely for high X1, X2 == 1</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span>(<span class="fl">0.8</span> <span class="op">*</span> X1 <span class="op">+</span> <span class="fl">1.2</span> <span class="op">*</span> X2 <span class="op">-</span> <span class="fl">0.3</span>)))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (rng.uniform(size<span class="op">=</span>N) <span class="op">&lt;</span> e).astype(<span class="bu">int</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Potential outcomes: confounded (Y0 depends on X1, X2) and heterogeneous</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>Y0 <span class="op">=</span> <span class="dv">2</span> <span class="op">+</span> <span class="fl">1.5</span> <span class="op">*</span> X1 <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> X2 <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>Y1 <span class="op">=</span> Y0 <span class="op">+</span> <span class="dv">3</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X1           <span class="co"># heterogeneous effect: ATE near 3</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> D <span class="op">*</span> Y1 <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y0</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>ate_true <span class="op">=</span> (Y1 <span class="op">-</span> Y0).mean()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Naive (biased) estimator: mean difference</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>naive <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Identification-formula estimator: outcome regression adjustment</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit μ_1(X) and μ_0(X) separately, then integrate over the empirical X</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.column_stack([X1, X2, X1 <span class="op">*</span> X2, X1 <span class="op">**</span> <span class="dv">2</span>])  <span class="co"># include flexible features</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>model1 <span class="op">=</span> LinearRegression().fit(X[D <span class="op">==</span> <span class="dv">1</span>], Y[D <span class="op">==</span> <span class="dv">1</span>])</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>model0 <span class="op">=</span> LinearRegression().fit(X[D <span class="op">==</span> <span class="dv">0</span>], Y[D <span class="op">==</span> <span class="dv">0</span>])</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>mu1_hat <span class="op">=</span> model1.predict(X)   <span class="co"># \hat\mu_1(X_i) for every i</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>mu0_hat <span class="op">=</span> model0.predict(X)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>ate_reg <span class="op">=</span> (mu1_hat <span class="op">-</span> mu0_hat).mean()</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"True ATE:                 </span><span class="sc">{</span>ate_true<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Naive diff-in-means:      </span><span class="sc">{</span>naive<span class="sc">:.3f}</span><span class="ss">   (bias = </span><span class="sc">{</span>naive <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">)"</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Regression adjustment:    </span><span class="sc">{</span>ate_reg<span class="sc">:.3f}</span><span class="ss">   (bias = </span><span class="sc">{</span>ate_reg <span class="op">-</span> ate_true<span class="sc">:+.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Running this prints approximately:</p>
+<pre><code>True ATE:                 3.001
+Naive diff-in-means:      5.412   (bias = +2.411)
+Regression adjustment:    3.007   (bias = +0.006)</code></pre>
+<p>The naive estimator is biased because the treated sample has higher <span class="math inline">\(X_1\)</span> and higher rate of <span class="math inline">\(X_2 = 1\)</span>, both of which boost <span class="math inline">\(Y(0)\)</span>. The identification-formula estimator applies the conditional outcome regression on every unit’s observed covariates, sums the estimated individual effects, and recovers the ATE.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="The regression must be flexible enough">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>The regression must be flexible enough
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If we used only linear terms in <span class="math inline">\(X_1, X_2\)</span> for the outcome model, the estimate would still be wrong when the true relationship is nonlinear or interactive. Regression adjustment is a <em>reasoning</em> technique based on <a href="#eq-id-formula" class="quarto-xref">Equation&nbsp;3</a>, but the estimation is only as good as the regression. This is the bridge to Chapter 10’s double machine learning, which uses flexible ML to estimate <span class="math inline">\(\mu_d(X)\)</span> while retaining valid inference.</p>
+</div>
+</div>
+</section>
+<section id="sec-id-vs-est" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-id-vs-est"><span class="header-section-number">6</span> Identification vs.&nbsp;estimation</h2>
+<p>The distinction between identification and estimation is fundamental and frequently confused.</p>
+<p><strong>Identification</strong> asks: given unlimited data from the population distribution and specific assumptions, can the target parameter <span class="math inline">\(\tau\)</span> be written as a function of the observable distribution? The answer is either yes (and we have the identification formula <a href="#eq-id-formula" class="quarto-xref">Equation&nbsp;3</a>) or no (and more data does not help).</p>
+<p><strong>Estimation</strong> asks: given a finite sample from the population, how accurately can we compute the identified expression? The answer depends on sample size, statistical method, nuisance complexity, and finite-sample validity of the estimator.</p>
+<p>Identification is about the population. Estimation is about the sample. These are different exercises and require different tools:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Identification</th>
+<th>Estimation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Fails because</td>
+<td>Missing identifying assumption</td>
+<td>Finite sample noise, model misspecification</td>
+</tr>
+<tr class="even">
+<td>Cured by</td>
+<td>More assumptions</td>
+<td>More data, better estimator</td>
+</tr>
+<tr class="odd">
+<td>Lives at</td>
+<td>Distributional level</td>
+<td>Observational level</td>
+</tr>
+<tr class="even">
+<td>Classical tool</td>
+<td>Pearl’s do-calculus, g-formula</td>
+<td>OLS, IPW, DML, matching</td>
+</tr>
+</tbody>
+</table>
+<p>A clear example: the ATE is <em>identified</em> in a randomized trial with no covariates and 20 units, but the estimate has wide confidence intervals. The ATE is <em>not identified</em> from observational data with unmeasured confounding, even at <span class="math inline">\(N = 10^9\)</span>, no amount of data fixes this.</p>
+<p>Hernán and Robins emphasize this distinction in their textbook <span class="citation" data-cites="hernan2020causal">[@hernan2020causal]</span>: even a perfect machine-learning estimator is useless if the identification is broken.</p>
+</section>
+<section id="sec-sensitivity" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-sensitivity"><span class="header-section-number">7</span> When unconfoundedness fails, sensitivity analysis</h2>
+<p>Unconfoundedness is an identifying assumption, and like all identifying assumptions, it is untestable. The researcher must reason about its plausibility. Sensitivity analysis asks: how wrong could unconfoundedness be before it changes our substantive conclusion?</p>
+<section id="rosenbaums-sensitivity-bounds" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="rosenbaums-sensitivity-bounds"><span class="header-section-number">7.1</span> Rosenbaum’s sensitivity bounds</h3>
+<p>Rosenbaum (2002) proposed a sensitivity parameter <span class="math inline">\(\Gamma \geq 1\)</span> that bounds how far the true treatment-assignment probabilities could deviate from those implied by the measured covariates:</p>
+<p><span class="math display">\[
+\frac{1}{\Gamma} \le \frac{P(D = 1 \mid X) / (1 - P(D = 1 \mid X))}{P^*(D = 1 \mid X) / (1 - P^*(D = 1 \mid X))} \le \Gamma,
+\]</span></p>
+<p>where <span class="math inline">\(P^*\)</span> is the true propensity score allowing for a hidden confounder. <span class="math inline">\(\Gamma = 1\)</span> means no unmeasured confounding; <span class="math inline">\(\Gamma = 2\)</span> means a hidden confounder could double the odds of treatment.</p>
+<p>Given <span class="math inline">\(\Gamma\)</span>, one computes worst-case <span class="math inline">\(p\)</span>-values and confidence intervals for the treatment effect. Reporting the critical value of <span class="math inline">\(\Gamma\)</span> at which the conclusion changes is a form of honest uncertainty quantification. The practical benchmark: in medical studies, conclusions that hold at <span class="math inline">\(\Gamma = 2\)</span> are considered reasonably robust.</p>
+</section>
+<section id="e-values" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="e-values"><span class="header-section-number">7.2</span> E-values</h3>
+<p>Vanderweele and Ding (2017) proposed the <strong>E-value</strong>, a simpler sensitivity bound expressible as a single number. The E-value is the minimum strength (on the risk ratio scale) of association that an unmeasured confounder would need to have with both the exposure and the outcome to fully explain away the observed association. E-values are standard in the epidemiology literature and straightforward to compute:</p>
+<p><span class="math display">\[
+\text{E} = \text{RR} + \sqrt{\text{RR} (\text{RR} - 1)},
+\]</span></p>
+<p>for a relative risk <span class="math inline">\(\text{RR} \geq 1\)</span>. An observed RR of 2.0 has E-value of 2.73, meaning a hidden confounder would need an RR of at least 2.73 with both exposure and outcome to explain the effect.</p>
+<p>Neither Rosenbaum bounds nor E-values “solve” unmeasured confounding. They quantify how fragile a conclusion is. Reporting them is standard practice in high-quality observational work.</p>
+</section>
+</section>
+<section id="sec-metrics" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="sec-metrics"><span class="header-section-number">8</span> Evaluation metrics for observational causal estimates</h2>
+<p>Beyond the point estimate, confidence interval, and p-value from Chapter 1, observational studies require additional diagnostics:</p>
+<ol type="1">
+<li><strong>Covariate balance.</strong> After adjustment, whether by matching, weighting, or regression, inspect whether the treated and control groups look similar on the covariates. Report the standardized mean difference (SMD) before and after adjustment. SMD below 0.1 on all covariates is a conventional target.</li>
+<li><strong>Propensity score overlap.</strong> Histogram of <span class="math inline">\(\hat e(X_i)\)</span> in each arm, overlaid. Regions where one arm has no density indicate positivity violations.</li>
+<li><strong>Sensitivity to unmeasured confounding.</strong> Report the Rosenbaum <span class="math inline">\(\Gamma\)</span> or E-value at which the result loses statistical significance.</li>
+<li><strong>Robustness across estimators.</strong> Compare regression adjustment, IPW, AIPW, matching. Consistency across methods is a weak but useful check.</li>
+<li><strong>Outcome model fit.</strong> Out-of-fold <span class="math inline">\(R^2\)</span> for <span class="math inline">\(\mu_0(X)\)</span> and <span class="math inline">\(\mu_1(X)\)</span>. A flagrantly bad fit means the regression estimator is not reliable.</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled" title="Causal inference is not prediction">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Causal inference is not prediction
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>An outcome model with <span class="math inline">\(R^2 = 0.9\)</span> can still give biased causal estimates if it misses interactions with <span class="math inline">\(D\)</span>. A model with <span class="math inline">\(R^2 = 0.5\)</span> can give accurate causal estimates if the bias from confounding has been correctly neutralized. <strong>Predictive performance is a necessary diagnostic but not a sufficient validation.</strong> This is the bridge to Chapter 10: DML’s Neyman orthogonality property makes the target insensitive to the predictive accuracy of the nuisance, within a rate condition.</p>
+</div>
+</div>
+</section>
+<section id="sec-identification-bib" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="sec-identification-bib"><span class="header-section-number">9</span> Bibliographic notes</h2>
+<section id="primary-sources" class="level3" data-number="9.1">
+<h3 data-number="9.1" class="anchored" data-anchor-id="primary-sources"><span class="header-section-number">9.1</span> Primary sources</h3>
+<p>Rosenbaum and Rubin (1983), “The Central Role of the Propensity Score in Observational Studies for Causal Effects,” <em>Biometrika</em> 70(1), 41–55, is the foundational paper. Read the first five pages for the balancing theorem and the last five for sample-size considerations.</p>
+<p>Robins (1986) introduced the g-formula in the context of time-varying treatments: “A New Approach to Causal Inference in Mortality Studies with a Sustained Exposure Period,” <em>Mathematical Modelling</em> 7(9–12), 1393–1512. This paper extends the one-period argument here to sequentially-assigned treatments.</p>
+<p>Hernán and Robins (2020), <em>Causal Inference: What If</em>, Chapman and Hall / CRC, is the accessible-yet-rigorous modern textbook treatment. Chapters 2–3 cover identification in detail with extensive applied examples.</p>
+</section>
+<section id="sensitivity-analysis" class="level3" data-number="9.2">
+<h3 data-number="9.2" class="anchored" data-anchor-id="sensitivity-analysis"><span class="header-section-number">9.2</span> Sensitivity analysis</h3>
+<p>Rosenbaum (2002), <em>Observational Studies</em>, Springer, is the canonical reference for sensitivity analysis via <span class="math inline">\(\Gamma\)</span>-bounds. VanderWeele and Ding (2017), “Sensitivity Analysis in Observational Research: Introducing the E-Value,” <em>Annals of Internal Medicine</em> 167(4), 268–274, introduced the E-value.</p>
+</section>
+<section id="software" class="level3" data-number="9.3">
+<h3 data-number="9.3" class="anchored" data-anchor-id="software"><span class="header-section-number">9.3</span> Software</h3>
+<p>The <code>dowhy</code> package (Microsoft, 2018+) implements the full identification-then-estimation workflow with pluggable backends. For propensity score methods, <code>causallib</code> and <code>econml</code> are widely used. <code>causalinference</code> (Python) provides a minimal implementation focused on Rubin-framework estimators.</p>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="exercises"><span class="header-section-number">10</span> Exercises</h2>
+<section id="theoretical-exercises" class="level3" data-number="10.1">
+<h3 data-number="10.1" class="anchored" data-anchor-id="theoretical-exercises"><span class="header-section-number">10.1</span> Theoretical exercises</h3>
+<p><strong>Exercise 2.1</strong> (<span class="math inline">\(\star\)</span>). State and prove the analog of the identification formula <a href="#eq-id-formula" class="quarto-xref">Equation&nbsp;3</a> for the ATT. Specifically, show that under unconfoundedness and positivity,</p>
+<p><span class="math display">\[
+\tau_{\text{ATT}} = \mathbb{E}_{X \mid D = 1}\left[\mathbb{E}[Y \mid D = 1, X] - \mathbb{E}[Y \mid D = 0, X]\right].
+\]</span></p>
+<p>Why does the outer expectation integrate against <span class="math inline">\(P(X \mid D = 1)\)</span> rather than <span class="math inline">\(P(X)\)</span>?</p>
+<p><strong>Exercise 2.2</strong> (<span class="math inline">\(\star\star\)</span>). Prove the inverse-probability-weighted identity:</p>
+<p><span class="math display">\[
+\mathbb{E}[Y(1)] = \mathbb{E}\left[\frac{D \cdot Y}{e(X)}\right],
+\]</span></p>
+<p>under unconfoundedness, positivity, and consistency. Hint: use <span class="math inline">\(Y = D Y(1) + (1 - D) Y(0)\)</span> and <span class="math inline">\(\mathbb{E}[D \mid X] = e(X)\)</span>.</p>
+<p><strong>Exercise 2.3</strong> (<span class="math inline">\(\star\star\)</span>). Suppose <span class="math inline">\(e(X)\)</span> is estimated by a logistic regression that is incorrectly specified: the true <span class="math inline">\(e(X)\)</span> depends on <span class="math inline">\(X^2\)</span> but the model only includes <span class="math inline">\(X\)</span>. Show that the IPW estimator from Exercise 2.2 is generally inconsistent for <span class="math inline">\(\mathbb{E}[Y(1)]\)</span> in this setting. What extra property would an augmented-IPW estimator provide to achieve “double robustness”?</p>
+<p><strong>Exercise 2.4</strong> (<span class="math inline">\(\star\star\star\)</span>). Prove Theorem 2.3 without using the definition of <span class="math inline">\(e(X)\)</span>. Specifically, given any balancing score <span class="math inline">\(b(X)\)</span> satisfying <span class="math inline">\(D \perp\!\!\!\perp X \mid b(X)\)</span> and unconfoundedness given <span class="math inline">\(X\)</span>, show that <span class="math inline">\(D \perp\!\!\!\perp (Y(0), Y(1)) \mid b(X)\)</span>.</p>
+</section>
+<section id="computational-exercises" class="level3" data-number="10.2">
+<h3 data-number="10.2" class="anchored" data-anchor-id="computational-exercises"><span class="header-section-number">10.2</span> Computational exercises</h3>
+<p><strong>Exercise 2.5</strong> (<span class="math inline">\(\star\)</span>). Extend the synthetic example in <a href="#sec-synthetic-full" class="quarto-xref">Section&nbsp;5</a>: what happens if you deliberately violate positivity by clipping <code>e</code> to be zero for <code>X1 &gt; 2</code>? Show that the regression adjustment fails predictably in this setting.</p>
+<p><strong>Exercise 2.6</strong> (<span class="math inline">\(\star\star\)</span>). Implement an IPW estimator for the ATE on the synthetic DGP. Compare its performance to the regression-adjustment estimator. Under what conditions does IPW outperform regression?</p>
+<p><strong>Exercise 2.7</strong> (<span class="math inline">\(\star\star\)</span>). Use the <code>dowhy</code> package to formally identify the ATE in the synthetic DGP from a DAG-based specification. Verify that <code>dowhy</code>’s automated identification procedure returns the same g-formula as your manual derivation.</p>
+<p><strong>Exercise 2.8</strong> (<span class="math inline">\(\star\star\star\)</span>). Simulate a confounding scenario where one confounder is observed (<span class="math inline">\(X\)</span>) and one is hidden (<span class="math inline">\(U\)</span>). Compute the Rosenbaum <span class="math inline">\(\Gamma\)</span> at which the regression-adjusted ATE becomes non-significant. Compare this to the computed E-value. When do the two sensitivity measures agree?</p>
+</section>
+<section id="discussion-exercises" class="level3" data-number="10.3">
+<h3 data-number="10.3" class="anchored" data-anchor-id="discussion-exercises"><span class="header-section-number">10.3</span> Discussion exercises</h3>
+<p><strong>Exercise 2.9</strong>. In a study of the effect of breastfeeding on child IQ, a researcher has data on mothers’ education, income, and age. Is unconfoundedness plausible? What specific confounders might remain hidden, and in which direction would they bias the estimated effect?</p>
+<p><strong>Exercise 2.10</strong>. A data scientist tells you: “I used a random forest to predict <span class="math inline">\(Y\)</span> from <span class="math inline">\((D, X)\)</span>, and I got 0.85 out-of-sample <span class="math inline">\(R^2\)</span>. The model says the treatment effect is 3.2.” Write a 200-word response explaining why this is not sufficient evidence of a causal effect of 3.2 and what the missing pieces are.</p>
+<hr>
+</section>
+</section>
+<section id="references" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="references"><span class="header-section-number">11</span> References</h2>
+<p>Hernán, M. A., and Robins, J. M. (2020). <em>Causal Inference: What If</em>. Chapman and Hall / CRC.</p>
+<p>Imbens, G. W., and Rubin, D. B. (2015). <em>Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction</em>. Cambridge University Press.</p>
+<p>Robins, J. M. (1986). “A New Approach to Causal Inference in Mortality Studies with a Sustained Exposure Period, Application to Control of the Healthy Worker Survivor Effect.” <em>Mathematical Modelling</em> 7(9–12), 1393–1512.</p>
+<p>Rosenbaum, P. R. (2002). <em>Observational Studies</em> (2nd ed.). Springer.</p>
+<p>Rosenbaum, P. R., and Rubin, D. B. (1983). “The Central Role of the Propensity Score in Observational Studies for Causal Effects.” <em>Biometrika</em> 70(1), 41–55.</p>
+<p>VanderWeele, T. J., and Ding, P. (2017). “Sensitivity Analysis in Observational Research: Introducing the E-Value.” <em>Annals of Internal Medicine</em> 167(4), 268–274.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

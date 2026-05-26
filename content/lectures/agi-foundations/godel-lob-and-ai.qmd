@@ -1,0 +1,148 @@
+---
+title: "Gödel, Löb, and self-referential AI"
+author: "Hovhannes Grigoryan"
+date: "2026-04-18"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **State** Gödel's first and second incompleteness theorems and their exact scopes.
+2. **Derive** Löb's theorem and explain its relevance to self-modifying AI systems.
+3. **Identify** the Löbian obstacle in a self-improving agent that reasons about its own correctness.
+4. **Refute** the Penrose argument that Gödel precludes mechanical intelligence.
+5. **Distinguish** what the incompleteness theorems do say about AI limits from what they do not.
+:::
+
+## Gödel's theorems {#sec-godel}
+
+In 1931 Kurt Gödel proved two theorems that permanently changed the foundations of mathematics. Both concern consistent, effectively axiomatized formal systems rich enough to express basic arithmetic.
+
+::: {.callout-important title="Theorem 1.1 — Gödel's first incompleteness theorem (1931)"}
+Any consistent formal system $F$ that is strong enough to express Peano arithmetic contains an arithmetic statement $G_F$ such that neither $G_F$ nor $\neg G_F$ is provable in $F$.
+:::
+
+The statement $G_F$ is constructed to assert, in its own formal language, "I am not provable in $F$." If $F$ proves $G_F$, then $G_F$ is true (because $G_F$ claims unprovability) and also provable, a contradiction with consistency. If $F$ proves $\neg G_F$, then $G_F$ is false, meaning $G_F$ *is* provable, again inconsistent. So neither is provable in $F$.
+
+::: {.callout-important title="Theorem 1.2 — Gödel's second incompleteness theorem (1931)"}
+Any consistent formal system $F$ strong enough to express Peano arithmetic cannot prove its own consistency: the statement $\text{Con}(F)$ is not a theorem of $F$.
+:::
+
+The implication: Peano arithmetic cannot establish, from within, that it is consistent. Neither can ZFC (Zermelo-Fraenkel set theory with choice). We believe ZFC is consistent, but this belief must be justified from outside the system, by metalogical argument rather than formal proof.
+
+## Löb's theorem {#sec-lob}
+
+Martin Löb's 1955 theorem sharpens the second incompleteness theorem and turns out to be crucial for AI.
+
+::: {.callout-note title="Theorem 1.3 — Löb's theorem"}
+For a consistent formal system $F$ and any arithmetic statement $P$:
+
+$$
+F \vdash (\Box_F P \to P) \iff F \vdash P,
+$$
+
+where $\Box_F P$ denotes "$P$ is provable in $F$."
+:::
+
+The left-to-right direction says: if $F$ can prove "if $P$ is provable then $P$ is true", then $F$ can prove $P$. The right-to-left is trivial.
+
+Löb is *stronger* than second incompleteness: setting $P = \bot$ (false) yields Gödel's second theorem as a corollary. But its shape, a conditional "I trust my own provability implies truth" implies actual truth, is what makes it relevant to AI.
+
+## The Löbian obstacle in self-modifying agents {#sec-lobian-obstacle}
+
+Consider an AI agent that wants to *improve itself*. Specifically, the agent designs a successor agent $A'$ and wants to verify, before running $A'$, that $A'$ will reliably pursue the agent's goals.
+
+A natural formal approach: the agent has a proof system $F$ encoding its reasoning. To build $A'$, the agent proves the statement
+
+$$
+S := \text{"Any action recommended by } A' \text{ is safe."}
+$$
+
+But $A'$, being a version of the agent, reasons in the same proof system $F$. So $S$ ultimately reduces to:
+
+$$
+F \vdash (\Box_F \text{"action is safe"} \to \text{"action is safe"}).
+$$
+
+By Löb's theorem, $F$ can prove this only if $F$ directly proves "action is safe", which is the thing the agent wanted to delegate to $A'$ in the first place. The verification collapses.
+
+This is the **Löbian obstacle** to self-modifying AI (Yudkowsky-Herreshoff 2013; Fallenstein-Soares 2015 [@fallenstein2015vingean]). An agent using standard mathematical logic cannot trust its own (or a successor's) future proofs without essentially reproving everything from scratch.
+
+### Proposed resolutions
+
+Several approaches attempt to route around the obstacle:
+
+- **Bounded proofs.** The agent proves "action is safe up to depth $k$" for concrete $k$. This avoids self-reference but fails at deep reasoning.
+- **Probabilistic logic.** Garrabrant et al. (2016) [@garrabrant2016logical] proposed "logical inductors", agents that form probabilistic beliefs about their own theorems, circumventing the binary-provability assumption.
+- **Cooperative agents without shared logic.** Agents treat one another as black boxes and reason about their *behavior* rather than their internal proofs.
+
+None of these fully resolve the obstacle; each makes a specific trade-off between self-trust and expressiveness.
+
+## What Gödel does not say about AI {#sec-penrose}
+
+Roger Penrose (1989, 1994) argued that Gödel's theorems show human intelligence cannot be mechanically reproduced: we "see" the Gödel sentence of any formal system is true, something no machine can do.
+
+This argument has been rejected by essentially the entire community of logicians, mathematicians, and philosophers working in the area. The flaws:
+
+1. **We do not "see" $G_F$ for our own formal system.** We only see $G_F$ for systems weaker than our own, specifically, systems we can describe from outside. If our own system is $H$, we cannot from inside $H$ verify that $G_H$ is true.
+
+2. **A sufficiently powerful machine can do what humans do.** A machine that can represent multiple formal systems and reason meta-theoretically can recognize the Gödel sentence of any system weaker than its own, just as humans do. There is no argument here against machine intelligence.
+
+3. **Penrose's conclusion requires that human reasoning is consistent and recursively enumerable**, a strong empirical claim that humans make mathematical errors and have biases argues against.
+
+Penrose's argument remains influential in popular discussions but is not a live claim in technical logic or AI research. Feferman (1995), Franzén (2005, *Gödel's Theorem: An Incomplete Guide to Its Use and Abuse*), and many others have thoroughly addressed the critique.
+
+## What Gödel does say about AI {#sec-what-godel-says}
+
+Despite Penrose being wrong, Gödel's theorems do have real implications for AI:
+
+1. **No AI can produce a complete and consistent formal theory of arithmetic.** This is a direct consequence of first incompleteness. The AI is a formal system (if precisely described), so it inherits the limitation.
+
+2. **AI cannot internally verify its own consistency.** By second incompleteness, any AI that uses a consistent formal reasoning system cannot, from within, prove that system consistent.
+
+3. **Self-improving AI faces the Löbian obstacle.** If an AI wants to rigorously verify that an improved version will pursue its goals, it cannot do so within the same formal system without essentially reproving everything.
+
+4. **Probabilistic and informal reasoning are required.** AI systems likely need the "logical inductor"–style approximate reasoning or similar probabilistic mechanisms to handle self-reference gracefully.
+
+The stronger take: Gödel tells us that **rigorous self-improvement with self-verification is mathematically difficult, not impossible but deeply constrained**.
+
+## Exercises
+
+**Exercise 1.1** ($\star\star$). Prove Löb's theorem starting from Gödel's diagonal lemma. Hint: let $L$ be the fixed point of $\Box_F X \to P$ and derive $F \vdash L \iff (\Box_F L \to P)$.
+
+**Exercise 1.2** ($\star\star\star$). Describe a formal setting in which the Löbian obstacle manifests concretely. For instance, specify an agent $A$, a successor $A'$, and a safety statement $S$, and trace through why the agent cannot prove $S$ about $A'$ without reproving $S$ directly.
+
+**Exercise 1.3** ($\star$). Write a one-paragraph refutation of Penrose's argument suitable for a popular-science article, clearly identifying the flawed inferential step.
+
+**Exercise 1.4** ($\star\star$). Read Garrabrant et al. (2016) on logical inductors. Explain in your own words how probabilistic reasoning about one's own theorems circumvents Löb's obstacle.
+
+---
+
+## References
+
+Fallenstein, B., and Soares, N. (2015). "Vingean Reflection: Reliable Reasoning for Self-Improving Agents." *MIRI Technical Report* 2015-2.
+
+Feferman, S. (1995). "Penrose's Gödelian Argument." *Psyche* 2, 21–32.
+
+Franzén, T. (2005). *Gödel's Theorem: An Incomplete Guide to Its Use and Abuse*. A K Peters.
+
+Garrabrant, S., Benson-Tilsen, T., Critch, A., Soares, N., and Taylor, J. (2016). "Logical Induction." *MIRI Technical Report*.
+
+Gödel, K. (1931). "Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme, I." *Monatshefte für Mathematik und Physik* 38, 173–198.
+
+Löb, M. H. (1955). "Solution of a Problem of Leon Henkin." *Journal of Symbolic Logic* 20(2), 115–118.
+
+Penrose, R. (1989). *The Emperor's New Mind*. Oxford University Press.
+
+Yudkowsky, E., and Herreshoff, M. (2013). "Tiling Agents for Self-Modifying AI, and the Löbian Obstacle." *MIRI Technical Report*.

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-03-21">
+
+<title>Potential outcomes and causal estimands</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="01-potential-outcomes_files/libs/clipboard/clipboard.min.js"></script>
+<script src="01-potential-outcomes_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="01-potential-outcomes_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="01-potential-outcomes_files/libs/quarto-html/popper.min.js"></script>
+<script src="01-potential-outcomes_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="01-potential-outcomes_files/libs/quarto-html/anchor.min.js"></script>
+<link href="01-potential-outcomes_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="01-potential-outcomes_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="01-potential-outcomes_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="01-potential-outcomes_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="01-potential-outcomes_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link active" data-scroll-target="#sec-motivation"><span class="header-section-number">1</span> Why correlation is not causation</a></li>
+  <li><a href="#sec-potential-outcomes" id="toc-sec-potential-outcomes" class="nav-link" data-scroll-target="#sec-potential-outcomes"><span class="header-section-number">2</span> The potential-outcomes model</a>
+  <ul class="collapse">
+  <li><a href="#definitions" id="toc-definitions" class="nav-link" data-scroll-target="#definitions"><span class="header-section-number">2.1</span> Definitions</a></li>
+  <li><a href="#the-fundamental-problem-of-causal-inference" id="toc-the-fundamental-problem-of-causal-inference" class="nav-link" data-scroll-target="#the-fundamental-problem-of-causal-inference"><span class="header-section-number">2.2</span> The fundamental problem of causal inference</a></li>
+  <li><a href="#three-population-estimands" id="toc-three-population-estimands" class="nav-link" data-scroll-target="#three-population-estimands"><span class="header-section-number">2.3</span> Three population estimands</a></li>
+  <li><a href="#sutva" id="toc-sutva" class="nav-link" data-scroll-target="#sutva"><span class="header-section-number">2.4</span> SUTVA</a></li>
+  </ul></li>
+  <li><a href="#sec-synthetic-demo" id="toc-sec-synthetic-demo" class="nav-link" data-scroll-target="#sec-synthetic-demo"><span class="header-section-number">3</span> The fundamental problem made concrete</a></li>
+  <li><a href="#sec-randomization" id="toc-sec-randomization" class="nav-link" data-scroll-target="#sec-randomization"><span class="header-section-number">4</span> Randomization as the identification device</a>
+  <ul class="collapse">
+  <li><a href="#random-assignment" id="toc-random-assignment" class="nav-link" data-scroll-target="#random-assignment"><span class="header-section-number">4.1</span> Random assignment</a></li>
+  <li><a href="#neymans-variance" id="toc-neymans-variance" class="nav-link" data-scroll-target="#neymans-variance"><span class="header-section-number">4.2</span> Neyman’s variance</a></li>
+  <li><a href="#a-monte-carlo-check" id="toc-a-monte-carlo-check" class="nav-link" data-scroll-target="#a-monte-carlo-check"><span class="header-section-number">4.3</span> A Monte Carlo check</a></li>
+  </ul></li>
+  <li><a href="#sec-fisher" id="toc-sec-fisher" class="nav-link" data-scroll-target="#sec-fisher"><span class="header-section-number">5</span> Fisher’s exact inference</a>
+  <ul class="collapse">
+  <li><a href="#the-sharp-null" id="toc-the-sharp-null" class="nav-link" data-scroll-target="#the-sharp-null"><span class="header-section-number">5.1</span> The sharp null</a></li>
+  <li><a href="#the-fisher-randomization-test" id="toc-the-fisher-randomization-test" class="nav-link" data-scroll-target="#the-fisher-randomization-test"><span class="header-section-number">5.2</span> The Fisher randomization test</a></li>
+  <li><a href="#when-fisher-and-neyman-disagree" id="toc-when-fisher-and-neyman-disagree" class="nav-link" data-scroll-target="#when-fisher-and-neyman-disagree"><span class="header-section-number">5.3</span> When Fisher and Neyman disagree</a></li>
+  </ul></li>
+  <li><a href="#sec-metrics" id="toc-sec-metrics" class="nav-link" data-scroll-target="#sec-metrics"><span class="header-section-number">6</span> Evaluation metrics and their interpretations</a></li>
+  <li><a href="#sec-potential-outcomes-bib" id="toc-sec-potential-outcomes-bib" class="nav-link" data-scroll-target="#sec-potential-outcomes-bib"><span class="header-section-number">7</span> Bibliographic notes</a>
+  <ul class="collapse">
+  <li><a href="#primary-sources" id="toc-primary-sources" class="nav-link" data-scroll-target="#primary-sources"><span class="header-section-number">7.1</span> Primary sources</a></li>
+  <li><a href="#textbooks" id="toc-textbooks" class="nav-link" data-scroll-target="#textbooks"><span class="header-section-number">7.2</span> Textbooks</a></li>
+  <li><a href="#sutva-violations" id="toc-sutva-violations" class="nav-link" data-scroll-target="#sutva-violations"><span class="header-section-number">7.3</span> SUTVA violations</a></li>
+  </ul></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">8</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#theoretical-exercises" id="toc-theoretical-exercises" class="nav-link" data-scroll-target="#theoretical-exercises"><span class="header-section-number">8.1</span> Theoretical exercises</a></li>
+  <li><a href="#computational-exercises" id="toc-computational-exercises" class="nav-link" data-scroll-target="#computational-exercises"><span class="header-section-number">8.2</span> Computational exercises</a></li>
+  <li><a href="#discussion-exercises" id="toc-discussion-exercises" class="nav-link" data-scroll-target="#discussion-exercises"><span class="header-section-number">8.3</span> Discussion exercises</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">9</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Potential outcomes and causal estimands</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 21, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>State</strong> the Neyman-Rubin potential-outcomes model and distinguish it from associational statistics.</li>
+<li><strong>Define</strong> the average treatment effect (ATE), average treatment effect on the treated (ATT), and conditional average treatment effect (CATE) formally as expectations over potential outcomes.</li>
+<li><strong>Explain</strong> the fundamental problem of causal inference and why it rules out per-unit treatment-effect estimation.</li>
+<li><strong>Derive</strong> the Neyman unbiasedness result for the difference-in-means under complete randomization and compute its variance.</li>
+<li><strong>Apply</strong> Fisher’s randomization test to construct an exact <span class="math inline">\(p\)</span>-value for a sharp null hypothesis in a small randomized trial.</li>
+<li><strong>Verify</strong> the Stable Unit Treatment Value Assumption (SUTVA) in a given study design and identify when it is violated.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This chapter covers approximately <strong>three lectures of 75–90 minutes each</strong>.</p>
+<p><strong>Lecture 1, Potential outcomes and estimands.</strong></p>
+<ul>
+<li>Why correlation is not causation (brief historical framing, 10 min)</li>
+<li>The Neyman-Rubin model: <span class="math inline">\(Y_i(0), Y_i(1)\)</span> and their observability (20 min)</li>
+<li>Average treatment effects: ATE, ATT, CATE (20 min)</li>
+<li>The fundamental problem of causal inference (15 min)</li>
+<li>Hands-on: code an ATE estimand on simulated data and inspect per-unit effects (15 min)</li>
+</ul>
+<p><strong>Lecture 2, Randomization as the identification device.</strong></p>
+<ul>
+<li>Physical vs.&nbsp;statistical randomization (10 min)</li>
+<li>Proof: randomization makes the difference-in-means unbiased for ATE (25 min)</li>
+<li>Neyman’s conservative variance formula and its derivation (20 min)</li>
+<li>Stratified and blocked designs (15 min)</li>
+<li>Hands-on: Monte Carlo confirmation of the Neyman bounds on a toy DGP (15 min)</li>
+</ul>
+<p><strong>Lecture 3, Fisher and exact inference.</strong></p>
+<ul>
+<li>The sharp null <span class="math inline">\(Y_i(0) = Y_i(1) \forall i\)</span> (10 min)</li>
+<li>Fisher’s randomization test: the permutation distribution (25 min)</li>
+<li>When Fisher disagrees with Neyman (20 min)</li>
+<li>SUTVA and its violations: interference, compound treatments (20 min)</li>
+<li>Hands-on: compute an exact <span class="math inline">\(p\)</span>-value on a 20-subject trial (15 min)</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Notation">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Notation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Throughout the series, <span class="math inline">\(N\)</span> denotes sample size, <span class="math inline">\(D_i \in \{0, 1\}\)</span> the binary treatment indicator for unit <span class="math inline">\(i\)</span>, and <span class="math inline">\(Y_i\)</span> the observed outcome. Potential outcomes are <span class="math inline">\(Y_i(0)\)</span> and <span class="math inline">\(Y_i(1)\)</span> with the consistency link <span class="math inline">\(Y_i = D_i Y_i(1) + (1 - D_i) Y_i(0)\)</span>. Covariates are <span class="math inline">\(X_i \in \mathbb{R}^p\)</span>. Target estimands are denoted <span class="math inline">\(\tau\)</span> (ATE), <span class="math inline">\(\tau_{\text{ATT}}\)</span> (ATT), <span class="math inline">\(\tau(x)\)</span> (CATE). Probability of treatment conditional on covariates is the propensity score <span class="math inline">\(e(x) = P(D = 1 \mid X = x)\)</span>.</p>
+</div>
+</div>
+<section id="sec-motivation" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-motivation"><span class="header-section-number">1</span> Why correlation is not causation</h2>
+<p>A 1975 study of hormone replacement therapy reported that women on HRT had a 35 percent <em>lower</em> risk of coronary heart disease compared with women not taking HRT. For twenty-five years the finding was the basis of clinical guidelines. In 2002 the Women’s Health Initiative, a large randomized trial, reported the opposite: women randomized to HRT had a 29 percent <em>higher</em> risk of heart disease <span class="citation" data-cites="manson2003estrogen">[@manson2003estrogen]</span>. The earlier observational finding was not a statistical fluke. It was the correct answer to the wrong question.</p>
+<p>The observational studies measured the conditional expectation <span class="math inline">\(\mathbb{E}[Y \mid D = 1] - \mathbb{E}[Y \mid D = 0]\)</span>, where <span class="math inline">\(Y\)</span> is heart-disease risk and <span class="math inline">\(D\)</span> is HRT use. This is an <em>associational</em> quantity: it asks what average outcome we see among women who chose to take HRT, compared with what we see among women who did not. The women on HRT had been prescribed it by their physicians; they tended to be healthier, wealthier, better-educated, and more attentive to their own health than the comparison group. The 35 percent lower risk was partly due to HRT and largely due to the selection that assigned women to HRT in the first place.</p>
+<p>What the clinicians needed was <span class="math inline">\(\mathbb{E}[Y(1)] - \mathbb{E}[Y(0)]\)</span>, the expected outcome if we intervened and put every woman on HRT, minus the expected outcome if we intervened and put every woman on placebo. This is a <em>causal</em> quantity, defined in terms of counterfactual outcomes. Associational and causal quantities coincide under precise conditions that observational data on HRT did not satisfy.</p>
+<p>The Neyman-Rubin potential outcomes framework is the language for making this distinction precise. It originates with Jerzy Neyman’s 1923 doctoral dissertation on agricultural field trials <span class="citation" data-cites="splawa1990application">[@splawa1990application]</span> and was extended to observational data by Donald Rubin in a series of papers beginning in the 1970s <span class="citation" data-cites="rubin1974estimating">[@rubin1974estimating]</span>. The framework is not the only way to formalize causality, Judea Pearl’s structural causal models (Chapter 3) take a different approach, but for the estimation problems that dominate applied work, potential outcomes are the cleanest starting point.</p>
+</section>
+<section id="sec-potential-outcomes" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-potential-outcomes"><span class="header-section-number">2</span> The potential-outcomes model</h2>
+<section id="definitions" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="definitions"><span class="header-section-number">2.1</span> Definitions</h3>
+<p>Consider <span class="math inline">\(N\)</span> units, indexed <span class="math inline">\(i = 1, \ldots, N\)</span>, and a binary treatment <span class="math inline">\(D \in \{0, 1\}\)</span>. The treatment <span class="math inline">\(D = 1\)</span> might mean “taking aspirin for ten years,” “enrolling in a job-training program,” “exposure to a minimum-wage increase,” or any other manipulable intervention.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: Potential outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: Potential outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For each unit <span class="math inline">\(i\)</span>, we posit the existence of two <strong>potential outcomes</strong>:</p>
+<ul>
+<li><span class="math inline">\(Y_i(1)\)</span>, the outcome unit <span class="math inline">\(i\)</span> would exhibit if assigned <span class="math inline">\(D_i = 1\)</span>.</li>
+<li><span class="math inline">\(Y_i(0)\)</span>, the outcome unit <span class="math inline">\(i\)</span> would exhibit if assigned <span class="math inline">\(D_i = 0\)</span>.</li>
+</ul>
+<p>The pair <span class="math inline">\((Y_i(0), Y_i(1))\)</span> is a fixed but unknown property of unit <span class="math inline">\(i\)</span>. Only one component of the pair is ever observed, specifically the one corresponding to the realized treatment <span class="math inline">\(D_i\)</span>.</p>
+</div>
+</div>
+<p>The observed outcome is linked to potential outcomes by the <strong>consistency</strong> condition:</p>
+<p><span id="eq-consistency"><span class="math display">\[
+Y_i = D_i \cdot Y_i(1) + (1 - D_i) \cdot Y_i(0).
+\tag{1}\]</span></span></p>
+<p>Equation <a href="#eq-consistency" class="quarto-xref">Equation&nbsp;1</a> is not an assumption about the world, it is a definition of what we mean by “observed” given the potential-outcomes framework. It becomes substantive when combined with SUTVA (below), which enforces that unit <span class="math inline">\(i\)</span>’s observed outcome depends only on <span class="math inline">\(D_i\)</span> and not on the treatment assignment of other units.</p>
+</section>
+<section id="the-fundamental-problem-of-causal-inference" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="the-fundamental-problem-of-causal-inference"><span class="header-section-number">2.2</span> The fundamental problem of causal inference</h3>
+<p>Paul Holland <span class="citation" data-cites="holland1986statistics">[@holland1986statistics]</span> named the following observation:</p>
+<div class="callout callout-style-default callout-important callout-titled" title="The fundamental problem of causal inference (Holland 1986)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The fundamental problem of causal inference (Holland 1986)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For any unit <span class="math inline">\(i\)</span> and any realized treatment <span class="math inline">\(D_i \in \{0, 1\}\)</span>, we observe <span class="math inline">\(Y_i = Y_i(D_i)\)</span>. The counterfactual <span class="math inline">\(Y_i(1 - D_i)\)</span> is never observed. Therefore the unit-level treatment effect <span class="math inline">\(\delta_i = Y_i(1) - Y_i(0)\)</span> is never directly observed.</p>
+</div>
+</div>
+<p>This is not a statistical problem in the sampling-noise sense. It is an identification problem: for each unit, one of the two potential outcomes is by definition unobservable. Treatment effects at the individual level cannot be learned from the data alone without external assumptions.</p>
+<p>The response is to shift attention from individual treatment effects to <em>population</em> treatment effects. Individual effects are not identifiable, but averages over a large population are, under the right conditions.</p>
+</section>
+<section id="three-population-estimands" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="three-population-estimands"><span class="header-section-number">2.3</span> Three population estimands</h3>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: Average Treatment Effect (ATE)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: Average Treatment Effect (ATE)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>average treatment effect</strong> is the expected difference in potential outcomes across the population:</p>
+<p><span id="eq-ate"><span class="math display">\[
+\tau := \mathbb{E}[Y(1) - Y(0)] = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)].
+\tag{2}\]</span></span></p>
+</div>
+</div>
+<p>The ATE answers the question “if we intervened and assigned treatment to everyone in the population versus assigning to no one, what would be the expected difference in average outcome?” This is the estimand a policymaker considering a universal program would target.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: Average Treatment Effect on the Treated (ATT)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: Average Treatment Effect on the Treated (ATT)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>average treatment effect on the treated</strong> is the expected effect conditional on being treated:</p>
+<p><span id="eq-att"><span class="math display">\[
+\tau_{\text{ATT}} := \mathbb{E}[Y(1) - Y(0) \mid D = 1].
+\tag{3}\]</span></span></p>
+</div>
+</div>
+<p>The ATT answers a different question: “for those who actually received the treatment in our sample, what was the average effect on them?” In a voluntary program, the ATT is often what the program administrator cares about. ATE and ATT coincide when treatment is randomized; they can differ arbitrarily when treatment is self-selected.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: Conditional Average Treatment Effect (CATE)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: Conditional Average Treatment Effect (CATE)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>conditional average treatment effect</strong> at covariate value <span class="math inline">\(x\)</span> is the expected effect within the subpopulation with <span class="math inline">\(X = x\)</span>:</p>
+<p><span id="eq-cate"><span class="math display">\[
+\tau(x) := \mathbb{E}[Y(1) - Y(0) \mid X = x].
+\tag{4}\]</span></span></p>
+</div>
+</div>
+<p>CATE is the building block of heterogeneous treatment effect estimation (Chapter 11). By the tower property of conditional expectation, the ATE and ATT are marginals of CATE: <span class="math inline">\(\tau = \mathbb{E}[\tau(X)]\)</span> and <span class="math inline">\(\tau_{\text{ATT}} = \mathbb{E}[\tau(X) \mid D = 1]\)</span>.</p>
+</section>
+<section id="sutva" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="sutva"><span class="header-section-number">2.4</span> SUTVA</h3>
+<p>Everything above relied on the notation <span class="math inline">\(Y_i(d)\)</span> being well-defined. For this to make sense, the treatment assigned to unit <span class="math inline">\(i\)</span> must not affect the outcome of any other unit <span class="math inline">\(j\)</span>.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Definition: SUTVA (Rubin 1980)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Definition: SUTVA (Rubin 1980)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>Stable Unit Treatment Value Assumption</strong> comprises two parts:</p>
+<ol type="1">
+<li><strong>No interference.</strong> The potential outcome <span class="math inline">\(Y_i(d)\)</span> depends only on unit <span class="math inline">\(i\)</span>’s own treatment <span class="math inline">\(d\)</span>, not on the treatments of other units.</li>
+<li><strong>No hidden versions of treatment.</strong> There is only one form of treatment <span class="math inline">\(D = 1\)</span> that is consistent across all units; if “taking aspirin” sometimes means 100 mg and sometimes 500 mg, SUTVA is violated unless these are modeled as different treatments.</li>
+</ol>
+</div>
+</div>
+<p>SUTVA violations are common and usually unavoidable. A vaccine trial has interference because an unvaccinated person in a heavily-vaccinated neighborhood has a different risk than one in an unvaccinated neighborhood. Education interventions have interference because classmates learn from each other. Social-media feature rollouts have interference through network effects.</p>
+<p>The literature on causal inference under interference is extensive and technical <span class="citation" data-cites="hudgens2008 aronow2017">[@hudgens2008; @aronow2017]</span>. For the remainder of this series we will assume SUTVA holds. The reader should understand that this is an approximation of variable accuracy.</p>
+</section>
+</section>
+<section id="sec-synthetic-demo" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-synthetic-demo"><span class="header-section-number">3</span> The fundamental problem made concrete</h2>
+<p>A synthetic example makes the fundamental problem tangible. Consider a DGP where both potential outcomes and the treatment assignment are explicitly simulated.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Covariates: age and a "pre-existing risk" score</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>X_age <span class="op">=</span> rng.uniform(<span class="dv">40</span>, <span class="dv">70</span>, N)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X_risk <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Potential outcomes: Y(0) depends on X, Y(1) adds a heterogeneous effect</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Y0 <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X_age <span class="op">+</span> <span class="dv">3</span> <span class="op">*</span> X_risk <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">5</span>, N)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>Y1 <span class="op">=</span> Y0 <span class="op">+</span> <span class="dv">10</span> <span class="op">-</span> <span class="fl">0.2</span> <span class="op">*</span> (X_age <span class="op">-</span> <span class="dv">55</span>)  <span class="co"># ATE ≈ 10, smaller for older</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># True unit-level treatment effect and ATE</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>delta <span class="op">=</span> Y1 <span class="op">-</span> Y0</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>ate_true <span class="op">=</span> delta.mean()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># In the real world, a physician's treatment decision is NOT random:</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># older and higher-risk patients are more likely to be treated</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>prop_score <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span>(<span class="fl">0.08</span> <span class="op">*</span> (X_age <span class="op">-</span> <span class="dv">55</span>) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X_risk)))</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (rng.uniform(size<span class="op">=</span>N) <span class="op">&lt;</span> prop_score).astype(<span class="bu">int</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># The observed outcome is consistency-defined</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> D <span class="op">*</span> Y1 <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y0</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># The naive difference-in-means (wrong answer in this setup)</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>dim <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"True ATE:                         </span><span class="sc">{</span>ate_true<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Naive difference in means:        </span><span class="sc">{</span>dim<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Bias from selection:              </span><span class="sc">{</span>dim <span class="op">-</span> ate_true<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Running this code produces an ATE around 10.0 but a naive difference-in-means that substantially exceeds it. The bias arises because the treated group has systematically higher <code>X_age</code> and <code>X_risk</code>, both of which increase <code>Y0</code>. Looking only at observed <span class="math inline">\(Y\)</span>, we cannot tell how much of the difference is the treatment effect and how much is selection.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="What this example does and does not show">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>What this example does and does not show
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The synthetic DGP has a known ATE of 10 because we constructed it with one. In a real study we would not know the true <span class="math inline">\(Y(0)\)</span> for treated units or <span class="math inline">\(Y(1)\)</span> for untreated units. The point of the simulation is to demonstrate that the naive difference-in-means gives a biased answer when the treatment is not randomly assigned, something that cannot be shown on real data.</p>
+</div>
+</div>
+</section>
+<section id="sec-randomization" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-randomization"><span class="header-section-number">4</span> Randomization as the identification device</h2>
+<p>If the DGP assigns treatment <em>independently</em> of potential outcomes, the problem disappears. Randomization is the most reliable way to enforce this independence.</p>
+<section id="random-assignment" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="random-assignment"><span class="header-section-number">4.1</span> Random assignment</h3>
+<p>Consider a physical randomization procedure that assigns each unit to <span class="math inline">\(D = 1\)</span> with probability <span class="math inline">\(p \in (0, 1)\)</span> independently of everything else. Then <span class="math inline">\(D \perp\!\!\!\perp (Y(0), Y(1))\)</span>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 1.1 — Unbiasedness of the difference-in-means under randomization">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 1.1 — Unbiasedness of the difference-in-means under randomization
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Under complete randomization (independent Bernoulli assignment), the difference-in-means estimator</p>
+<p><span id="eq-dim"><span class="math display">\[
+\hat\tau := \frac{1}{N_1} \sum_{i: D_i = 1} Y_i - \frac{1}{N_0} \sum_{i: D_i = 0} Y_i,
+\tag{5}\]</span></span></p>
+<p>where <span class="math inline">\(N_d = \#\{i : D_i = d\}\)</span>, is conditionally unbiased for the ATE given <span class="math inline">\(N_1 &gt; 0, N_0 &gt; 0\)</span>:</p>
+<p><span class="math display">\[
+\mathbb{E}[\hat\tau \mid N_0 &gt; 0, N_1 &gt; 0] = \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)] = \tau.
+\]</span></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Proof">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Proof
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider a single unit <span class="math inline">\(i\)</span>. Under randomization,</p>
+<p><span class="math display">\[
+\mathbb{E}[D_i Y_i] = \mathbb{E}[D_i Y_i(1)] \stackrel{\text{indep}}{=} \mathbb{E}[D_i] \mathbb{E}[Y_i(1)] = p \cdot \mathbb{E}[Y_i(1)],
+\]</span></p>
+<p>and similarly <span class="math inline">\(\mathbb{E}[(1 - D_i) Y_i] = (1 - p) \mathbb{E}[Y_i(0)]\)</span>. Therefore</p>
+<p><span class="math display">\[
+\mathbb{E}\left[\frac{Y_i D_i}{p}\right] = \mathbb{E}[Y_i(1)], \qquad \mathbb{E}\left[\frac{Y_i (1 - D_i)}{1 - p}\right] = \mathbb{E}[Y_i(0)].
+\]</span></p>
+<p>The difference-in-means estimator in <a href="#eq-dim" class="quarto-xref">Equation&nbsp;5</a> divides by sample counts <span class="math inline">\(N_1, N_0\)</span> rather than by <span class="math inline">\(Np, N(1-p)\)</span>. Conditioning on <span class="math inline">\(N_1 &gt; 0, N_0 &gt; 0\)</span>, the averages are unbiased for the corresponding conditional expectations, yielding <span class="math inline">\(\mathbb{E}[\hat\tau \mid N_1, N_0] \to \mathbb{E}[Y(1)] - \mathbb{E}[Y(0)]\)</span> as <span class="math inline">\(N \to \infty\)</span>. A direct argument using the hypergeometric sampling distribution gives the finite-sample unbiasedness. <span class="math inline">\(\square\)</span></p>
+</div>
+</div>
+<p>Crucially, the proof does <strong>not</strong> require the covariates <span class="math inline">\(X\)</span> to be balanced in expectation (although randomization makes this approximately true for large <span class="math inline">\(N\)</span>). Randomization enforces independence between <span class="math inline">\(D\)</span> and <span class="math inline">\((Y(0), Y(1))\)</span> at the DGP level, which is exactly what we need.</p>
+</section>
+<section id="neymans-variance" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="neymans-variance"><span class="header-section-number">4.2</span> Neyman’s variance</h3>
+<p>How noisy is <span class="math inline">\(\hat\tau\)</span>? Neyman’s 1923 paper gave the answer for completely randomized experiments. The derivation uses the finite-population variance framework and assumes a fixed set of <span class="math inline">\(N\)</span> units with fixed pairs <span class="math inline">\((Y_i(0), Y_i(1))\)</span>.</p>
+<p>Let <span class="math inline">\(S_1^2, S_0^2\)</span> be the unit-variance of potential outcomes across the population:</p>
+<p><span class="math display">\[
+S_d^2 := \frac{1}{N - 1} \sum_{i=1}^N (Y_i(d) - \bar Y(d))^2, \quad d \in \{0, 1\},
+\]</span></p>
+<p>and <span class="math inline">\(S_{01}^2\)</span> the unit-variance of the treatment effect:</p>
+<p><span class="math display">\[
+S_{01}^2 := \frac{1}{N - 1} \sum_{i=1}^N (\delta_i - \tau)^2.
+\]</span></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Theorem 1.2 — Neyman's variance of $\hat\tau$ (1923)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Theorem 1.2 — Neyman’s variance of <span class="math inline">\(\hat\tau\)</span> (1923)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Under complete randomization with fixed counts <span class="math inline">\(N_1\)</span> treated and <span class="math inline">\(N_0\)</span> control (<span class="math inline">\(N = N_0 + N_1\)</span>),</p>
+<p><span id="eq-neyman-var"><span class="math display">\[
+\text{Var}(\hat\tau) = \frac{S_1^2}{N_1} + \frac{S_0^2}{N_0} - \frac{S_{01}^2}{N}.
+\tag{6}\]</span></span></p>
+</div>
+</div>
+<p>The first two terms on the right of <a href="#eq-neyman-var" class="quarto-xref">Equation&nbsp;6</a> are observable from the data, <span class="math inline">\(\hat S_1^2\)</span> and <span class="math inline">\(\hat S_0^2\)</span> can be computed from the treated and control outcome samples. The third term <span class="math inline">\(S_{01}^2\)</span> is the variance of unit-level treatment effects, which is never observable (fundamental problem). Dropping the third term gives an <strong>upper bound</strong> on <span class="math inline">\(\text{Var}(\hat\tau)\)</span>:</p>
+<p><span id="eq-neyman-conservative"><span class="math display">\[
+\widehat{\text{Var}}(\hat\tau) \le \frac{\hat S_1^2}{N_1} + \frac{\hat S_0^2}{N_0}.
+\tag{7}\]</span></span></p>
+<p>This is the <strong>Neyman conservative variance estimator</strong>. Its confidence intervals have coverage <span class="math inline">\(\ge 1 - \alpha\)</span> in large samples, with equality only when <span class="math inline">\(\delta_i\)</span> is constant across units (no effect heterogeneity).</p>
+</section>
+<section id="a-monte-carlo-check" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="a-monte-carlo-check"><span class="header-section-number">4.3</span> A Monte Carlo check</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neyman_experiment(N<span class="op">=</span><span class="dv">100</span>, tau<span class="op">=</span><span class="fl">1.0</span>, hetero<span class="op">=</span><span class="fl">0.5</span>, n_sims<span class="op">=</span><span class="dv">5000</span>, rng<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> rng <span class="kw">or</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    biases, covers <span class="op">=</span> [], []</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_sims):</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Fixed potential outcomes for this trial</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        Y0 <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        delta <span class="op">=</span> tau <span class="op">+</span> hetero <span class="op">*</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)  <span class="co"># heterogeneous effects</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        Y1 <span class="op">=</span> Y0 <span class="op">+</span> delta</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Random assignment, half-and-half</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        D <span class="op">=</span> np.zeros(N, dtype<span class="op">=</span><span class="bu">int</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        D[rng.choice(N, N <span class="op">//</span> <span class="dv">2</span>, replace<span class="op">=</span><span class="va">False</span>)] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        Y <span class="op">=</span> D <span class="op">*</span> Y1 <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y0</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Estimator and conservative variance</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        tau_hat <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        var_hat <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">1</span>).<span class="bu">sum</span>() <span class="op">\</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                <span class="op">+</span> Y[D <span class="op">==</span> <span class="dv">0</span>].var(ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> (D <span class="op">==</span> <span class="dv">0</span>).<span class="bu">sum</span>()</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        ci_lo <span class="op">=</span> tau_hat <span class="op">-</span> <span class="fl">1.96</span> <span class="op">*</span> var_hat <span class="op">**</span> <span class="fl">0.5</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        ci_hi <span class="op">=</span> tau_hat <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> var_hat <span class="op">**</span> <span class="fl">0.5</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        biases.append(tau_hat <span class="op">-</span> delta.mean())</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        covers.append(ci_lo <span class="op">&lt;=</span> delta.mean() <span class="op">&lt;=</span> ci_hi)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.mean(biases), np.mean(covers)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>bias, cov <span class="op">=</span> neyman_experiment()</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean bias:                </span><span class="sc">{</span>bias<span class="sc">:+.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Empirical CI coverage:    </span><span class="sc">{</span>cov<span class="sc">:.3f}</span><span class="ss">  (nominal 95%)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Running this confirms two predictions of the theory: the mean bias is approximately zero (unbiasedness of <span class="math inline">\(\hat\tau\)</span>), and coverage of the Neyman 95 percent confidence interval is close to or exceeds 0.95 (conservativeness when effects are heterogeneous). Try setting <code>hetero = 0</code> and coverage approaches exactly 0.95; with large <code>hetero</code>, coverage rises toward 1.0 and intervals are unnecessarily wide.</p>
+</section>
+</section>
+<section id="sec-fisher" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-fisher"><span class="header-section-number">5</span> Fisher’s exact inference</h2>
+<p>Ronald Fisher’s approach to inference in randomized experiments is fundamentally different from Neyman’s. Fisher tests a <em>sharp</em> null hypothesis, that treatment has zero effect for every unit, using only the physical randomization as the source of probability.</p>
+<section id="the-sharp-null" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="the-sharp-null"><span class="header-section-number">5.1</span> The sharp null</h3>
+<div class="callout callout-style-default callout-note callout-titled" title="Definition: The sharp null hypothesis">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Definition: The sharp null hypothesis
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>sharp null of no effect</strong> is</p>
+<p><span id="eq-sharp-null"><span class="math display">\[
+H_0^{\text{sharp}}: Y_i(1) = Y_i(0) \quad \text{for all } i = 1, \ldots, N.
+\tag{8}\]</span></span></p>
+</div>
+</div>
+<p>Under <a href="#eq-sharp-null" class="quarto-xref">Equation&nbsp;8</a>, every unit’s observed outcome <span class="math inline">\(Y_i\)</span> equals both <span class="math inline">\(Y_i(0)\)</span> and <span class="math inline">\(Y_i(1)\)</span>. Consequently, under the sharp null, the observed outcomes are <strong>invariant to a reassignment of treatment</strong>. If we shuffle the treatment labels <span class="math inline">\(D_i\)</span> arbitrarily, the observed <span class="math inline">\(Y_i\)</span> values stay the same, but <span class="math inline">\(\hat\tau\)</span> changes.</p>
+</section>
+<section id="the-fisher-randomization-test" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="the-fisher-randomization-test"><span class="header-section-number">5.2</span> The Fisher randomization test</h3>
+<p>The randomization procedure itself determines a distribution over <span class="math inline">\(\hat\tau\)</span> under the sharp null: we imagine every possible assignment vector <span class="math inline">\(d^* \in \mathcal{D}\)</span> that the randomization could have produced, compute <span class="math inline">\(\hat\tau(d^*)\)</span> for each, and compare the observed <span class="math inline">\(\hat\tau\)</span> against this distribution.</p>
+<p>The exact <span class="math inline">\(p\)</span>-value for a two-sided test is</p>
+<p><span id="eq-fisher-pval"><span class="math display">\[
+p_{\text{Fisher}} = \frac{1}{|\mathcal{D}|} \sum_{d^* \in \mathcal{D}} \mathbf{1}\{|\hat\tau(d^*)| \ge |\hat\tau_{\text{obs}}|\}.
+\tag{9}\]</span></span></p>
+<p>For moderate <span class="math inline">\(N\)</span>, enumerating all <span class="math inline">\(|\mathcal{D}| = \binom{N}{N_1}\)</span> assignments is infeasible. Monte Carlo sampling of assignments gives an approximate test:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fisher_test(Y, D, n_permutations<span class="op">=</span><span class="dv">10000</span>, rng<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Fisher randomization test for a two-sided sharp null."""</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    rng <span class="op">=</span> rng <span class="kw">or</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    tau_obs <span class="op">=</span> Y[D <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[D <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    N <span class="op">=</span> <span class="bu">len</span>(Y)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    N1 <span class="op">=</span> D.<span class="bu">sum</span>()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Monte Carlo over random reassignments</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    count_extreme <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_permutations):</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        perm <span class="op">=</span> rng.permutation(N)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        d_star <span class="op">=</span> np.zeros(N, dtype<span class="op">=</span><span class="bu">int</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        d_star[perm[:N1]] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        tau_star <span class="op">=</span> Y[d_star <span class="op">==</span> <span class="dv">1</span>].mean() <span class="op">-</span> Y[d_star <span class="op">==</span> <span class="dv">0</span>].mean()</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">abs</span>(tau_star) <span class="op">&gt;=</span> <span class="bu">abs</span>(tau_obs):</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            count_extreme <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tau_obs, count_extreme <span class="op">/</span> n_permutations</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate a 20-unit trial with a small true effect</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">20</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>Y0 <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>Y1 <span class="op">=</span> Y0 <span class="op">+</span> <span class="fl">0.8</span>  <span class="co"># True ATE = 0.8</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> np.zeros(N, dtype<span class="op">=</span><span class="bu">int</span>)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>D[rng.choice(N, N <span class="op">//</span> <span class="dv">2</span>, replace<span class="op">=</span><span class="va">False</span>)] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> D <span class="op">*</span> Y1 <span class="op">+</span> (<span class="dv">1</span> <span class="op">-</span> D) <span class="op">*</span> Y0</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>tau_obs, p_value <span class="op">=</span> fisher_test(Y, D, n_permutations<span class="op">=</span><span class="dv">20000</span>)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Observed τ̂:    </span><span class="sc">{</span>tau_obs<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Fisher p-value: </span><span class="sc">{</span>p_value<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For a trial of this size, the Fisher test is exact up to Monte Carlo error. Its advantage over Neyman’s confidence interval is finite-sample validity: no appeal to asymptotic normality, no plug-in variance estimator, no assumptions about the outcome distribution beyond what the physical randomization implies.</p>
+</section>
+<section id="when-fisher-and-neyman-disagree" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="when-fisher-and-neyman-disagree"><span class="header-section-number">5.3</span> When Fisher and Neyman disagree</h3>
+<p>Fisher tests the sharp null <span class="math inline">\(Y(1) = Y(0) \forall i\)</span>. Neyman tests (implicitly) the weak null <span class="math inline">\(\mathbb{E}[Y(1)] = \mathbb{E}[Y(0)]\)</span>. The weak null is implied by the sharp null but not vice versa: if individual effects are positive and negative in equal measure and sum to zero, the weak null holds but the sharp null does not.</p>
+<p>In this setting Fisher’s test can reject when Neyman’s does not, and vice versa. The tests answer different questions. In most applied settings Fisher’s sharp null is implausible (effects are rarely exactly zero for every unit) but can be a useful sanity check.</p>
+</section>
+</section>
+<section id="sec-metrics" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-metrics"><span class="header-section-number">6</span> Evaluation metrics and their interpretations</h2>
+<p>When reporting a randomized experiment, the minimum reporting set is:</p>
+<ol type="1">
+<li><strong>Point estimate of <span class="math inline">\(\tau\)</span></strong>, typically <span class="math inline">\(\hat\tau\)</span> from <a href="#eq-dim" class="quarto-xref">Equation&nbsp;5</a>.</li>
+<li><strong>Standard error</strong>, typically <span class="math inline">\(\sqrt{\hat{\text{Var}}(\hat\tau)}\)</span> from <a href="#eq-neyman-conservative" class="quarto-xref">Equation&nbsp;7</a>.</li>
+<li><strong>95 percent confidence interval</strong>, <span class="math inline">\(\hat\tau \pm 1.96 \cdot \text{SE}\)</span> for asymptotic inference, or the Fisher interval for exact inference.</li>
+<li><strong>A <span class="math inline">\(p\)</span>-value for <span class="math inline">\(H_0: \tau = 0\)</span></strong>, from Neyman’s <span class="math inline">\(z\)</span>-test or Fisher’s randomization test.</li>
+<li><strong>Sample sizes and balance diagnostics</strong>, <span class="math inline">\(N_0, N_1\)</span> and the means of covariates in each arm.</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled" title="Beware of interpretation pitfalls">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Beware of interpretation pitfalls
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The confidence interval is for the <strong>population ATE</strong>, not for any individual’s treatment effect. It does <em>not</em> say “95% of units have a treatment effect in this range.” That claim would require identifying the <em>distribution</em> of <span class="math inline">\(\delta_i\)</span>, which requires additional assumptions beyond what randomization provides.</p>
+<p>A <span class="math inline">\(p\)</span>-value of 0.03 means: under the null that the treatment has no effect, a result this extreme or more extreme would occur with probability 0.03. It does <em>not</em> mean: the probability that the treatment has zero effect is 0.03.</p>
+</div>
+</div>
+<p>The <em>effective sample size</em> in a randomized trial depends on the balance ratio. With <span class="math inline">\(N_0, N_1 \to \infty\)</span> and <span class="math inline">\(N_1 / N_0 \to r\)</span>, the asymptotic variance of <span class="math inline">\(\hat\tau\)</span> is minimized at <span class="math inline">\(r = \sigma_1 / \sigma_0\)</span>, the ratio of outcome standard deviations. For equal variances this is <span class="math inline">\(r = 1\)</span> (half-and-half assignment). For unequal variances, the optimal allocation is skewed, a result sometimes called Neyman allocation.</p>
+</section>
+<section id="sec-potential-outcomes-bib" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-potential-outcomes-bib"><span class="header-section-number">7</span> Bibliographic notes</h2>
+<section id="primary-sources" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="primary-sources"><span class="header-section-number">7.1</span> Primary sources</h3>
+<p>Spława-Neyman (1923, translated and reprinted in Dabrowska and Speed 1990, <em>Statistical Science</em>) introduced potential outcomes in the context of agricultural experiments and derived <a href="#eq-neyman-var" class="quarto-xref">Equation&nbsp;6</a>. Rubin (1974, <em>Journal of Educational Psychology</em> 66, 688–701) generalized the framework to observational studies and defined the average treatment effect as we now know it.</p>
+<p>Holland (1986, <em>JASA</em> 81(396), 945–960) gave a clear philosophical exposition of the fundamental problem and the requirement of manipulability for causal claims. The slogan “no causation without manipulation” originates in this paper.</p>
+</section>
+<section id="textbooks" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="textbooks"><span class="header-section-number">7.2</span> Textbooks</h3>
+<p>Imbens and Rubin (2015), <em>Causal Inference for Statistics, Social, and Biomedical Sciences</em>, Cambridge University Press, is the definitive textbook treatment of the Neyman-Rubin framework with detailed proofs.</p>
+<p>Hernán and Robins (2020), <em>Causal Inference: What If</em>, Chapman and Hall / CRC, is freely available online and gives a more applied perspective with emphasis on epidemiological examples.</p>
+<p>Rosenbaum (2010), <em>Design of Observational Studies</em>, Springer, treats randomization inference and sensitivity analysis at the graduate level.</p>
+</section>
+<section id="sutva-violations" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="sutva-violations"><span class="header-section-number">7.3</span> SUTVA violations</h3>
+<p>Hudgens and Halloran (2008, <em>JASA</em> 103(482), 832–842) formalized causal inference under interference and introduced indirect and total-effect estimands for vaccine studies. Aronow and Samii (2017, <em>Annals of Applied Statistics</em> 11(4), 1912–1947) extended this to general network interference.</p>
+</section>
+</section>
+<section id="exercises" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="exercises"><span class="header-section-number">8</span> Exercises</h2>
+<section id="theoretical-exercises" class="level3" data-number="8.1">
+<h3 data-number="8.1" class="anchored" data-anchor-id="theoretical-exercises"><span class="header-section-number">8.1</span> Theoretical exercises</h3>
+<p><strong>Exercise 1.1</strong> (<span class="math inline">\(\star\)</span>). Show that the ATE can be written as the marginal expectation of the CATE: <span class="math inline">\(\tau = \mathbb{E}[\tau(X)]\)</span>. State the analog for the ATT.</p>
+<p><strong>Exercise 1.2</strong> (<span class="math inline">\(\star\star\)</span>). Prove <a href="#eq-neyman-var" class="quarto-xref">Equation&nbsp;6</a> starting from the definition of the variance of a random sample, and identify the step at which the finite-population correction appears.</p>
+<p><strong>Exercise 1.3</strong> (<span class="math inline">\(\star\star\)</span>). Suppose in a randomized trial the treatment effect is constant across units (<span class="math inline">\(\delta_i = \tau\)</span> for all <span class="math inline">\(i\)</span>). Show that the Neyman variance in <a href="#eq-neyman-var" class="quarto-xref">Equation&nbsp;6</a> reduces to <span class="math inline">\(S_1^2 / N_1 + S_0^2 / N_0 - \tau^2 / (N - 1)\)</span> and that the conservative variance <a href="#eq-neyman-conservative" class="quarto-xref">Equation&nbsp;7</a> overstates the true variance by a factor that vanishes as <span class="math inline">\(N \to \infty\)</span>.</p>
+<p><strong>Exercise 1.4</strong> (<span class="math inline">\(\star\star\star\)</span>). A researcher proposes the following “super-clever” estimator: <span class="math inline">\(\hat\tau_{\text{clever}} := (1/N) \sum_i (2 D_i - 1) Y_i\)</span>, designed to be unbiased when <span class="math inline">\(D_i \in \{0,1\}\)</span> is symmetric around <span class="math inline">\(1/2\)</span>. Show that this estimator is unbiased for the ATE under complete randomization with <span class="math inline">\(p = 1/2\)</span> but has higher variance than the difference-in-means. Why would an analyst still sometimes prefer it? Hint: think about what happens when <span class="math inline">\(N_0\)</span> and <span class="math inline">\(N_1\)</span> are random, not fixed.</p>
+</section>
+<section id="computational-exercises" class="level3" data-number="8.2">
+<h3 data-number="8.2" class="anchored" data-anchor-id="computational-exercises"><span class="header-section-number">8.2</span> Computational exercises</h3>
+<p><strong>Exercise 1.5</strong> (<span class="math inline">\(\star\)</span>). Using the synthetic DGP in <a href="#sec-synthetic-demo" class="quarto-xref">Section&nbsp;3</a>, compute the ATE, the ATT, and the CATE at several values of <code>X_age</code>. Confirm numerically that the ATE is the expectation of the CATE and that the ATT differs from the ATE because the treated group is not representative of the whole population.</p>
+<p><strong>Exercise 1.6</strong> (<span class="math inline">\(\star\star\)</span>). Extend the Monte Carlo study in <a href="#sec-randomization" class="quarto-xref">Section&nbsp;4</a> to compare the Neyman variance estimator against the true variance of <span class="math inline">\(\hat\tau\)</span>, computed by repeated simulation. Study how the gap changes as you vary the heterogeneity of treatment effects. Does the gap match the <span class="math inline">\(S_{01}^2 / N\)</span> term?</p>
+<p><strong>Exercise 1.7</strong> (<span class="math inline">\(\star\star\)</span>). Implement Fisher’s randomization test both exactly (by enumeration) for <span class="math inline">\(N = 12\)</span> and via Monte Carlo for <span class="math inline">\(N = 1000\)</span>. Compare run times and verify that the Monte Carlo approximation matches the exact result within Monte Carlo error.</p>
+<p><strong>Exercise 1.8</strong> (<span class="math inline">\(\star\star\star\)</span>). Design a small simulation study of SUTVA violation: construct a DGP where unit <span class="math inline">\(i\)</span>’s potential outcome depends not only on <span class="math inline">\(D_i\)</span> but on the average treatment rate among its “neighbors.” Show that standard randomization inference gives biased ATE estimates, and sketch how indirect-effects estimands from Hudgens-Halloran can be recovered instead.</p>
+</section>
+<section id="discussion-exercises" class="level3" data-number="8.3">
+<h3 data-number="8.3" class="anchored" data-anchor-id="discussion-exercises"><span class="header-section-number">8.3</span> Discussion exercises</h3>
+<p><strong>Exercise 1.9</strong>. A colleague says that “observational data is just data with a more complicated treatment assignment rule.” Under what conditions is this characterization technically correct? What additional quantity needs to be modeled in observational data that does not arise in a randomized experiment?</p>
+<p><strong>Exercise 1.10</strong>. The HRT-heart-disease example in <a href="#sec-motivation" class="quarto-xref">Section&nbsp;1</a> is an instance where a long-running clinical practice was reversed by a randomized trial. List three other cases where observational findings were overturned by subsequent randomized evidence. For each, identify the specific confounder or selection mechanism most likely responsible for the earlier bias.</p>
+<hr>
+</section>
+</section>
+<section id="references" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="references"><span class="header-section-number">9</span> References</h2>
+<p>Aronow, P. M., and Samii, C. (2017). “Estimating Average Causal Effects Under General Interference.” <em>Annals of Applied Statistics</em> 11(4), 1912–1947.</p>
+<p>Holland, P. W. (1986). “Statistics and Causal Inference.” <em>Journal of the American Statistical Association</em> 81(396), 945–960.</p>
+<p>Hudgens, M. G., and Halloran, M. E. (2008). “Toward Causal Inference with Interference.” <em>Journal of the American Statistical Association</em> 103(482), 832–842.</p>
+<p>Imbens, G. W., and Rubin, D. B. (2015). <em>Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction</em>. Cambridge University Press.</p>
+<p>Manson, J. E., et al.&nbsp;(2003). “Estrogen Plus Progestin and the Risk of Coronary Heart Disease.” <em>New England Journal of Medicine</em> 349(6), 523–534.</p>
+<p>Neyman, J. (Spława-Neyman, J., Dabrowska, D. M., and Speed, T. P., trans., 1990). “On the Application of Probability Theory to Agricultural Experiments. Essay on Principles. Section 9.” <em>Statistical Science</em> 5(4), 465–472. Original published 1923.</p>
+<p>Rubin, D. B. (1974). “Estimating Causal Effects of Treatments in Randomized and Nonrandomized Studies.” <em>Journal of Educational Psychology</em> 66(5), 688–701.</p>
+<p>Rubin, D. B. (1980). “Comment on Basu: Randomization Analysis of Experimental Data.” <em>Journal of the American Statistical Association</em> 75(371), 591–593.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

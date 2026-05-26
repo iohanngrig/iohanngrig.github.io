@@ -1,0 +1,111 @@
+---
+title: "AIXI and universal intelligence"
+author: "Hovhannes Grigoryan"
+date: "2026-04-19"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Define** Solomonoff induction as a formalization of Occam's razor and explain its uncomputability.
+2. **Construct** Hutter's AIXI by combining Solomonoff prediction with Bellman-optimal planning.
+3. **State** the Legg-Hutter universal intelligence measure and its properties.
+4. **Recognize** practical approximations (AIXI-tl, Monte Carlo AIXI) and their limits.
+5. **Distinguish** theoretical universal intelligence from empirical progress in deep learning.
+:::
+
+## Occam's razor, formalized {#sec-solomonoff}
+
+Ray Solomonoff's 1964 formalization of inductive inference takes the following form. Given a sequence of observations $x_{1:t} = (x_1, \ldots, x_t)$, the probability of the next observation $x_{t+1}$ is
+
+$$
+M(x_{t+1} \mid x_{1:t}) := \sum_{p : U(p) = x_{1:t+1}} 2^{-|p|},
+$$
+
+where $U$ is a universal Turing machine and $|p|$ is the length of program $p$. The sum is over all programs that produce the observed sequence. Short programs are weighted more heavily, this is Occam's razor formalized.
+
+Solomonoff induction is **dominant**: for any computable sequence $x_{1:\infty}$ and any computable prior, $M$ converges to the true distribution in the mean-log-loss sense. The cost: $M$ is uncomputable, computing it requires running all Turing machines in parallel forever.
+
+## AIXI {#sec-aixi}
+
+Marcus Hutter (2000, 2005) combined Solomonoff induction with Bellman-optimal decision theory to define **AIXI**, a mathematical specification of a universally intelligent agent.
+
+For an agent interacting with an environment through actions $a_1, a_2, \ldots$ and observations $o_1, o_2, \ldots$ with rewards $r_1, r_2, \ldots$, AIXI chooses actions to maximize the expected sum of future rewards under the Solomonoff prior over environments:
+
+$$
+a_t^{\text{AIXI}} := \arg\max_{a_t} \sum_{o_t, r_t} \ldots \max_{a_T} \sum_{o_T, r_T} \left(\sum_{k=t}^T r_k\right) \prod_{k=t}^T M(o_k, r_k \mid a_{\leq k}, o_{< k}, r_{< k}),
+$$
+
+where the horizon $T$ is finite but arbitrarily large.
+
+AIXI is provably "universally optimal" in the sense of Hutter 2005 Theorem 5.30: for any computable environment, AIXI's per-step regret approaches zero. It is also uncomputable for the same reason Solomonoff induction is.
+
+## The Legg-Hutter intelligence measure {#sec-legg-hutter}
+
+Legg and Hutter (2007) proposed a definition of **universal intelligence**:
+
+$$
+\Upsilon(\pi) := \sum_{\mu \in \mathcal{E}} 2^{-K(\mu)} V^\pi_\mu,
+$$
+
+where $\pi$ is an agent policy, $\mathcal{E}$ is the set of all computable reward-summable environments, $K(\mu)$ is the Kolmogorov complexity of environment $\mu$, and $V^\pi_\mu$ is the expected return of $\pi$ in $\mu$. The sum is over all environments, weighted by their Kolmogorov simplicity.
+
+Intuitively, an agent is intelligent to the extent it performs well across all simple environments. AIXI achieves the maximum $\Upsilon$. Random agents achieve $\Upsilon \approx 0$ on most environments. Human-level intelligence falls somewhere in between, though the measure is too abstract to directly compute.
+
+## Practical approximations {#sec-aixi-approximations}
+
+AIXI is uncomputable, but approximations exist:
+
+### AIXI-tl
+
+Hutter's AIXI-tl bounds runtime to $t$ and program length to $l$. The resulting agent is computable and converges to AIXI as $t, l \to \infty$. Runtime is $O(2^l t)$, impractical for nontrivial $l$.
+
+### Monte Carlo AIXI
+
+Veness, Ng, Hutter, and Silver (2011) [@veness2011mcaixi] proposed **MC-AIXI-CTW**: a tractable approximation using a Context Tree Weighting (CTW) distribution over environments and Monte Carlo Tree Search (MCTS) for planning. On small domains (Pac-Man variants, grid worlds, simple puzzle games), MC-AIXI-CTW performs competitively with hand-engineered agents.
+
+MC-AIXI-CTW has not scaled to large domains. The CTW prior, while universal in the binary-tree class, lacks the inductive biases of modern deep-learning-based world models (Chapter 3 of this series).
+
+## AIXI and contemporary AI {#sec-aixi-vs-dl}
+
+A persistent tension: AIXI is the "correct" specification of universal intelligence, but practical progress has come from different directions. Deep reinforcement learning, large language models, and world models (DreamerV3, JEPA) are not approximations of AIXI in any direct sense.
+
+Two ways to interpret this:
+
+1. **AIXI is a theoretical upper bound.** It defines what "optimal" means; all practical AI is a lower-bound approximation by specific inductive biases and computational tricks. The gap between AIXI and current deep learning is the "intelligence gap."
+2. **AIXI is the wrong abstraction.** The uncomputability of the Solomonoff prior implies that real intelligence must exploit domain structure, compositionality, causal regularities, physical priors, that AIXI discards by ranging over all programs.
+
+Both views have merit. AIXI remains useful as a clarifying framework ("here is what optimal means") and as a benchmark for ablation arguments ("why isn't this agent more like AIXI?"). But mainstream AI practice has moved toward *structured* approximations of intelligence rather than AIXI-style universal ones.
+
+## Exercises
+
+**Exercise 2.1** ($\star\star$). Prove Solomonoff's dominance theorem for a binary sequence: $M(x_{1:t}) \geq 2^{-K(p_\mu)} \mu(x_{1:t})$ for any computable distribution $\mu$ with generating program $p_\mu$.
+
+**Exercise 2.2** ($\star\star\star$). Derive the Legg-Hutter measure from first principles: why does the $2^{-K(\mu)}$ weighting emerge from the uniform prior over programs under a universal Turing machine?
+
+**Exercise 2.3** ($\star\star$). Implement a toy AIXI-tl in Python with $l \leq 15$ and $t \leq 50$. Apply to a $3 \times 3$ grid-world reward problem. Compare its performance to tabular Q-learning and policy iteration.
+
+**Exercise 2.4** ($\star$). Explain why an AIXI-based agent would perform poorly on the Atari benchmark, even in principle. What specific computational limitation does it face?
+
+---
+
+## References
+
+Hutter, M. (2005). *Universal Artificial Intelligence: Sequential Decisions Based on Algorithmic Probability*. Springer.
+
+Legg, S., and Hutter, M. (2007). "Universal Intelligence: A Definition of Machine Intelligence." *Minds and Machines* 17(4), 391–444.
+
+Solomonoff, R. J. (1964). "A Formal Theory of Inductive Inference, Parts I and II." *Information and Control* 7(1–2), 1–22, 224–254.
+
+Veness, J., Ng, K. S., Hutter, M., Uther, W., and Silver, D. (2011). "A Monte-Carlo AIXI Approximation." *Journal of Artificial Intelligence Research* 40, 95–142.

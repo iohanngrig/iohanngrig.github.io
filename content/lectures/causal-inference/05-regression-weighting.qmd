@@ -1,0 +1,332 @@
+---
+title: "Regression adjustment and weighting"
+author: "Hovhannes Grigoryan"
+date: "2026-04-04"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Derive** the regression-adjusted ATE estimator and state the conditions under which it is consistent.
+2. **Construct** the inverse probability weighting (IPW) estimator and prove its Horvitz-Thompson-style unbiasedness.
+3. **Explain** the double-robustness property of the augmented IPW (AIPW) estimator: consistency under correct specification of either the outcome model or the propensity model.
+4. **Execute** a matching estimator (nearest-neighbor, caliper, kernel) and compare its bias-variance tradeoff to weighting.
+5. **Diagnose** overlap violations and assess whether an estimator is extrapolating beyond the common support.
+6. **Apply** all four estimators to a single synthetic dataset and explain their agreement or disagreement.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three lectures of 75–90 minutes.
+
+**Lecture 1, Regression adjustment.**
+
+- Outcome regression: OLS with treatment and covariates (15 min)
+- The g-computation estimator (20 min)
+- Semiparametric efficiency bound (Hahn 1998) (20 min)
+- Why OLS alone fails with heterogeneous effects (15 min)
+- Hands-on: fit regression adjustment on synthetic confounded DGP (15 min)
+
+**Lecture 2, Propensity-score weighting.**
+
+- Horvitz-Thompson IPW estimator (20 min)
+- Hajek variant and stabilized weights (15 min)
+- Overlap diagnostics: propensity histogram, effective sample size (20 min)
+- Weight trimming and clipping (15 min)
+- Hands-on: IPW with and without trimming, compare to regression (20 min)
+
+**Lecture 3, Double robustness and matching.**
+
+- AIPW and the semiparametric efficiency argument (20 min)
+- Double-robustness theorem (20 min)
+- Matching: nearest neighbor, caliper, propensity-score matching (20 min)
+- Empirical comparison: regression vs IPW vs AIPW vs matching (20 min)
+- Hands-on: apply econml's `DoublyRobust` to the chapter DGP (10 min)
+:::
+
+## Three families of observational estimators {#sec-three-families}
+
+Chapter 2 proved that under strong ignorability the ATE is identified by the g-formula @eq-id-formula. Translating identification into estimation spawns three families of estimators:
+
+1. **Outcome regression**, fit $\hat \mu_0, \hat \mu_1$ by regression and plug into the g-formula.
+2. **Inverse probability weighting**, weight each unit by $1 / e(X)$ or $1 / (1 - e(X))$ and take weighted means.
+3. **Matching**, for each treated unit find a "similar" control and compare.
+
+Each family has distinct bias-variance tradeoffs, distinct failure modes, and distinct model-specification sensitivity. A fourth family, **augmented IPW**, combines outcome regression and weighting to achieve *double robustness*: consistency when either but not necessarily both of the nuisance models is correctly specified. This is the conceptual precursor to DML (Chapter 10).
+
+## Regression adjustment {#sec-regression}
+
+### The g-computation estimator
+
+By the identification formula @eq-id-formula, the ATE is
+
+$$
+\tau = \mathbb{E}_X[\mu_1(X) - \mu_0(X)].
+$$
+
+The **g-computation** (or *regression imputation*) estimator replaces each nuisance by an estimate:
+
+$$
+\hat\tau^{\text{g-comp}} = \frac{1}{N} \sum_{i=1}^N \left(\hat\mu_1(X_i) - \hat\mu_0(X_i)\right).
+$$ {#eq-g-comp}
+
+Implementation: fit two separate regressions, one on the treated sample and one on the control sample, then evaluate both on every unit's covariates and average the difference. This is sometimes called the **T-learner** [@kunzel2019meta] because it fits two separate learners.
+
+### Consistency and convergence rate
+
+::: {.callout-note title="Theorem 5.1 — Consistency of g-computation"}
+Under strong ignorability (Chapter 2) and if $\hat\mu_d \to \mu_d$ in $L_2$ probability at rate $n^{-\alpha}$ for some $\alpha > 0$, then
+
+$$
+\hat\tau^{\text{g-comp}} \xrightarrow{p} \tau.
+$$
+
+If $\alpha > 1/4$, the estimator is $\sqrt n$-consistent and asymptotically normal with variance given by the semiparametric efficiency bound [@hahn1998role].
+:::
+
+The key requirement is that the outcome regression be estimated at rate $n^{-1/4}$ or faster. OLS with a correctly specified parametric model reaches $n^{-1/2}$. Lasso, random forests, and boosting reach $n^{-\alpha}$ for $\alpha \in (1/4, 1/2)$ under smoothness assumptions.
+
+### Why simple OLS can fail
+
+A common practice is to estimate $\tau$ by running OLS of $Y$ on $D, X$ jointly:
+
+$$
+Y_i = \alpha + \tau D_i + \beta^\top X_i + \varepsilon_i.
+$$
+
+This is consistent for the ATE **only when** the treatment-covariate interactions are absent, i.e., when $\mu_1(X) - \mu_0(X)$ is a constant. With heterogeneous effects the simple OLS gives a weighted average of treatment effects that does not equal the ATE in general, a point emphasized by Angrist and Pischke [@angrist2009mostly] and sharpened in the recent DiD literature (Chapter 7).
+
+The g-computation estimator @eq-g-comp handles heterogeneity correctly by fitting the two outcome regressions separately and averaging over the *marginal* distribution of $X$.
+
+## Inverse probability weighting {#sec-ipw}
+
+### The Horvitz-Thompson estimator
+
+Exercise 2.2 showed that under strong ignorability,
+
+$$
+\mathbb{E}[Y(1)] = \mathbb{E}\left[\frac{D Y}{e(X)}\right], \quad \mathbb{E}[Y(0)] = \mathbb{E}\left[\frac{(1 - D) Y}{1 - e(X)}\right].
+$$
+
+The **inverse probability weighting** (IPW) estimator plugs in an estimated propensity score $\hat e$:
+
+$$
+\hat\tau^{\text{IPW}} = \frac{1}{N} \sum_{i=1}^N \left(\frac{D_i Y_i}{\hat e(X_i)} - \frac{(1 - D_i) Y_i}{1 - \hat e(X_i)}\right).
+$$ {#eq-ipw}
+
+### Bias and variance
+
+IPW is unbiased when $\hat e = e$ exactly. In practice $\hat e$ is estimated, usually by logistic regression:
+
+$$
+\hat e(X) = \frac{1}{1 + \exp(-X^\top \hat\beta)},
+$$
+
+with $\hat\beta$ estimated by maximum likelihood on the treatment indicator.
+
+IPW has high variance when some $\hat e(X_i)$ are close to 0 or 1, a single outlier weight of $1 / \hat e(X_i) = 100$ can dominate the estimator. Two practical fixes:
+
+- **Weight trimming:** discard units with $\hat e$ outside $(\epsilon, 1 - \epsilon)$ for some $\epsilon > 0$.
+- **Weight clipping:** replace $\hat e(X_i) < \epsilon$ with $\epsilon$.
+
+Both introduce bias but reduce variance. The tradeoff is quantified in Crump, Hotz, Imbens, and Mitnik (2009) [@crump2009dealing].
+
+### Hájek estimator
+
+The IPW estimator as defined has weights that do not average to 1. The **Hájek normalization** divides by the sum of weights:
+
+$$
+\hat\tau^{\text{Hajek}} = \frac{\sum_i D_i Y_i / \hat e(X_i)}{\sum_i D_i / \hat e(X_i)} - \frac{\sum_i (1 - D_i) Y_i / (1 - \hat e(X_i))}{\sum_i (1 - D_i) / (1 - \hat e(X_i))}.
+$$ {#eq-hajek}
+
+The Hájek estimator is biased in finite samples (due to the ratio-of-averages) but has lower variance than the Horvitz-Thompson form, especially with extreme weights.
+
+### Overlap diagnostics
+
+Before running IPW, plot a histogram of $\hat e(X_i)$ in each arm. Regions with few observations in one arm indicate **positivity violation**: the identification assumption is failing on those covariate values. A common heuristic is to report the **effective sample size**
+
+$$
+N_{\text{eff}} = \frac{\left(\sum_i w_i\right)^2}{\sum_i w_i^2},
+$$
+
+where $w_i$ are the IPW weights. When $N_{\text{eff}} \ll N$, a few units dominate.
+
+## Augmented IPW and double robustness {#sec-aipw}
+
+Combining outcome regression with IPW gives the **augmented IPW** (AIPW) estimator:
+
+$$
+\hat\tau^{\text{AIPW}} = \frac{1}{N} \sum_{i=1}^N \left\{\hat\mu_1(X_i) - \hat\mu_0(X_i) + \frac{D_i (Y_i - \hat\mu_1(X_i))}{\hat e(X_i)} - \frac{(1 - D_i)(Y_i - \hat\mu_0(X_i))}{1 - \hat e(X_i)}\right\}.
+$$ {#eq-aipw}
+
+The first term is the g-computation estimator. The second is a residual correction weighted by the inverse propensity. The residual correction is exactly zero in expectation when $\hat\mu = \mu$, so if the outcome regression is correct, the IPW piece does not introduce bias. Conversely, if $\hat e = e$, the outcome residuals are weighted correctly and any bias from $\hat\mu$ is absorbed into the residual term's correction.
+
+::: {.callout-important title="Theorem 5.2 — Double robustness of AIPW (Robins, Rotnitzky, Zhao 1994)"}
+$\hat\tau^{\text{AIPW}}$ is consistent for $\tau$ if **either** $\hat\mu_d \to \mu_d$ **or** $\hat e \to e$ (at any rate). If both converge at rate $n^{-1/4}$, the estimator is $\sqrt n$-consistent and asymptotically efficient.
+:::
+
+::: {.callout-tip title="Proof sketch"}
+Write AIPW as $\hat\tau^{\text{AIPW}} = \hat\mu_1 - \hat\mu_0 + \mathbb{E}[\text{residual correction}]$ where the residual correction is
+
+$$
+\frac{D(Y - \hat\mu_1)}{\hat e} - \frac{(1-D)(Y - \hat\mu_0)}{1 - \hat e}.
+$$
+
+If $\hat\mu = \mu$, the correction has mean zero by unconfoundedness. If $\hat e = e$, the correction has mean $\mu_1 - \hat\mu_1 - (\mu_0 - \hat\mu_0) = -(\hat\mu_1 - \hat\mu_0) + (\mu_1 - \mu_0)$, so adding it to $\hat\mu_1 - \hat\mu_0$ gives $\mu_1 - \mu_0 = \tau$. Either way, bias is zero in the limit.
+
+The rate condition for $\sqrt n$-consistency is $\|\hat\mu - \mu\|_2 \cdot \|\hat e - e\|_2 = o(n^{-1/2})$, achievable when both rates are $n^{-1/4}$. This is identical to the DML rate condition (Chapter 10). $\square$
+:::
+
+AIPW is the foundation of all modern doubly-robust causal ML estimators. DML extends AIPW to non-standard estimands (partially linear models, IV, panel) and makes the rate condition explicit.
+
+## Matching {#sec-matching}
+
+Matching estimators sidestep the propensity and outcome models by pairing each treated unit with one or more similar controls directly.
+
+### Nearest-neighbor matching
+
+For each treated unit $i$, find the control $j$ minimizing some distance $\|X_i - X_j\|$. Estimate the treatment effect for $i$ as $Y_i - Y_{j(i)}$, and the ATT as the average:
+
+$$
+\hat\tau^{\text{NN}}_{\text{ATT}} = \frac{1}{N_1} \sum_{i: D_i = 1} \left(Y_i - \frac{1}{M} \sum_{j \in \text{NN}_M(i)} Y_j\right),
+$$ {#eq-nn-matching}
+
+where $\text{NN}_M(i)$ is the set of $M$ nearest control neighbors. Typical choice is $M \in \{1, 3, 5\}$.
+
+Common distances: Mahalanobis $\|X_i - X_j\|_{\Sigma^{-1}}$ with covariance $\Sigma$; Euclidean on standardized covariates; propensity-score distance $|\hat e(X_i) - \hat e(X_j)|$.
+
+### Caliper matching
+
+To avoid matching across unrepresentative pairs, impose a maximum allowed distance (caliper) $c$. Treated units without a control within the caliper are dropped. This helps enforce positivity but reduces the sample.
+
+### Propensity-score matching
+
+Rosenbaum and Rubin (1983) showed that matching on the scalar propensity score $\hat e$ alone is sufficient under the balancing-score property (Chapter 2 Theorem 2.2). Propensity-score matching is historically popular because it reduces the dimensionality of the matching problem from $p$ to 1.
+
+Abadie and Imbens (2006) [@abadie2006large] showed that matching estimators are $\sqrt n$-consistent for continuous covariates only when the number of matching variables is at most 2. For higher-dimensional $X$, matching has a slower rate, and regression or AIPW is preferred.
+
+## A head-to-head comparison on synthetic data {#sec-comparison}
+
+```python
+import numpy as np
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neighbors import NearestNeighbors
+
+rng = np.random.default_rng(42)
+N = 2000
+
+# Confounded DGP with heterogeneous effects
+X = rng.normal(0, 1, (N, 5))
+e = 1 / (1 + np.exp(-(0.5 * X[:, 0] + 0.3 * X[:, 1])))
+D = (rng.uniform(size=N) < e).astype(int)
+Y0 = 2 * X[:, 0] + X[:, 1] ** 2 + rng.normal(0, 1, N)
+Y1 = Y0 + 3 + 0.5 * X[:, 0]   # ATE ≈ 3 plus heterogeneity
+Y = D * Y1 + (1 - D) * Y0
+ate_true = (Y1 - Y0).mean()
+
+# Estimators
+e_hat = LogisticRegression().fit(X, D).predict_proba(X)[:, 1]
+mu1 = LinearRegression().fit(X[D == 1], Y[D == 1]).predict(X)
+mu0 = LinearRegression().fit(X[D == 0], Y[D == 0]).predict(X)
+
+tau_naive = Y[D == 1].mean() - Y[D == 0].mean()
+tau_gcomp = (mu1 - mu0).mean()
+tau_ipw   = np.mean(D * Y / e_hat - (1 - D) * Y / (1 - e_hat))
+tau_aipw  = (mu1 - mu0).mean() + np.mean(D * (Y - mu1) / e_hat - (1 - D) * (Y - mu0) / (1 - e_hat))
+
+# Matching: 1-NN on propensity score
+nn0 = NearestNeighbors(n_neighbors=1).fit(e_hat[D == 0].reshape(-1, 1))
+nn1 = NearestNeighbors(n_neighbors=1).fit(e_hat[D == 1].reshape(-1, 1))
+Y0_sorted = Y[D == 0]
+Y1_sorted = Y[D == 1]
+match0 = Y0_sorted[nn0.kneighbors(e_hat[D == 1].reshape(-1, 1), return_distance=False).flatten()]
+match1 = Y1_sorted[nn1.kneighbors(e_hat[D == 0].reshape(-1, 1), return_distance=False).flatten()]
+tau_match = ((Y[D == 1] - match0).sum() + (match1 - Y[D == 0]).sum()) / N
+
+print(f"True ATE:              {ate_true:.3f}")
+print(f"Naive:                 {tau_naive:.3f}   bias = {tau_naive - ate_true:+.3f}")
+print(f"G-computation:         {tau_gcomp:.3f}   bias = {tau_gcomp - ate_true:+.3f}")
+print(f"IPW:                   {tau_ipw:.3f}   bias = {tau_ipw - ate_true:+.3f}")
+print(f"AIPW:                  {tau_aipw:.3f}   bias = {tau_aipw - ate_true:+.3f}")
+print(f"Propensity matching:   {tau_match:.3f}   bias = {tau_match - ate_true:+.3f}")
+```
+
+On this DGP, AIPW typically has the smallest bias and variance, g-computation is close behind, IPW has highest variance (extreme weights), and matching is roughly tied with g-computation. The naive estimator is badly biased.
+
+## Evaluation metrics {#sec-reg-metrics}
+
+1. **Overlap**, propensity histogram, effective sample size.
+2. **Bias from specification**, compare regression and IPW estimates; large disagreement suggests misspecification.
+3. **Sensitivity to unmeasured confounding**, Rosenbaum $\Gamma$, E-values as in Chapter 2.
+4. **Calibration of propensity model**, reliability diagram or Brier score. Miscalibrated propensities amplify IPW bias.
+5. **Cross-validated outcome model fit**, $R^2$ for each nuisance, out-of-fold.
+
+## Bibliographic notes {#sec-reg-bib}
+
+Hirano, Imbens, and Ridder (2003), "Efficient Estimation of Average Treatment Effects Using the Estimated Propensity Score," *Econometrica* 71, 1161–1189, proved that nonparametrically estimating the propensity score yields a semiparametrically efficient IPW estimator, a surprising and important result.
+
+Robins, Rotnitzky, and Zhao (1994), "Estimation of Regression Coefficients When Some Regressors Are Not Always Observed," *JASA* 89, 846–866, is the foundational AIPW paper.
+
+Bang and Robins (2005), "Doubly Robust Estimation in Missing Data and Causal Inference Models," *Biometrics* 61, 962–973, gives the cleanest statement of double robustness.
+
+Abadie and Imbens (2006), "Large Sample Properties of Matching Estimators for Average Treatment Effects," *Econometrica* 74, 235–267, provides the definitive asymptotic theory of matching.
+
+Künzel, Sekhon, Bickel, and Yu (2019), "Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning," *PNAS* 116, 4156–4165, introduces and compares S-, T-, X-, and R-learners.
+
+## Exercises
+
+### Theoretical exercises
+
+**Exercise 5.1** ($\star\star$). Prove that the Horvitz-Thompson estimator @eq-ipw is unbiased when $\hat e = e$. Use the potential-outcomes expression from Exercise 2.2.
+
+**Exercise 5.2** ($\star\star$). Derive the AIPW efficient influence function and verify that its variance equals the semiparametric efficiency bound of Hahn (1998).
+
+**Exercise 5.3** ($\star\star\star$). Show that if the logistic propensity model is misspecified, the IPW estimator can have bias of order $\sqrt n$, i.e., it fails to be $\sqrt n$-consistent. What does this imply about the role of AIPW's double robustness?
+
+### Computational exercises
+
+**Exercise 5.4** ($\star$). Replicate the comparison in §@sec-comparison with an alternative DGP where $e(X)$ is bimodal (some units have $e$ near 0.01, some near 0.99). Show that IPW fails catastrophically and that weight trimming partially repairs it.
+
+**Exercise 5.5** ($\star\star$). Implement matching with a caliper of 0.1 standard deviations of the propensity score. Compare to unconstrained NN matching on the synthetic DGP.
+
+**Exercise 5.6** ($\star\star$). Use `econml`'s `DoublyRobustLearner` with a random forest outcome model and a gradient-boosted propensity model. Compare with the hand-coded AIPW in §@sec-comparison.
+
+**Exercise 5.7** ($\star\star\star$). Design a DGP where the outcome regression is correctly specified but the propensity model is not. Verify that AIPW is consistent while naive IPW is not.
+
+### Discussion exercises
+
+**Exercise 5.8**. In a health insurance claims analysis, a colleague applies IPW but reports an effective sample size of $N_{\text{eff}} \approx 50$ out of $N = 10000$. What should you recommend they do?
+
+**Exercise 5.9**. Why would a regulator prefer a matching estimate over an IPW estimate for a pharmaceutical effectiveness claim? What aspects of matching are easier to audit?
+
+---
+
+## References
+
+Abadie, A., and Imbens, G. W. (2006). "Large Sample Properties of Matching Estimators for Average Treatment Effects." *Econometrica* 74(1), 235–267.
+
+Bang, H., and Robins, J. M. (2005). "Doubly Robust Estimation in Missing Data and Causal Inference Models." *Biometrics* 61(4), 962–973.
+
+Crump, R. K., Hotz, V. J., Imbens, G. W., and Mitnik, O. A. (2009). "Dealing with Limited Overlap in Estimation of Average Treatment Effects." *Biometrika* 96(1), 187–199.
+
+Hahn, J. (1998). "On the Role of the Propensity Score in Efficient Semiparametric Estimation of Average Treatment Effects." *Econometrica* 66(2), 315–331.
+
+Hirano, K., Imbens, G. W., and Ridder, G. (2003). "Efficient Estimation of Average Treatment Effects Using the Estimated Propensity Score." *Econometrica* 71(4), 1161–1189.
+
+Künzel, S. R., Sekhon, J. S., Bickel, P. J., and Yu, B. (2019). "Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning." *Proceedings of the National Academy of Sciences* 116(10), 4156–4165.
+
+Robins, J. M., Rotnitzky, A., and Zhao, L. P. (1994). "Estimation of Regression Coefficients When Some Regressors Are Not Always Observed." *Journal of the American Statistical Association* 89(427), 846–866.

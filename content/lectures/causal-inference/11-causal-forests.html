@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-04-25">
+
+<title>Causal forests and heterogeneous treatment effects</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="11-causal-forests_files/libs/clipboard/clipboard.min.js"></script>
+<script src="11-causal-forests_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="11-causal-forests_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="11-causal-forests_files/libs/quarto-html/popper.min.js"></script>
+<script src="11-causal-forests_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="11-causal-forests_files/libs/quarto-html/anchor.min.js"></script>
+<link href="11-causal-forests_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="11-causal-forests_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="11-causal-forests_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="11-causal-forests_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="11-causal-forests_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-ate-to-cate" id="toc-sec-ate-to-cate" class="nav-link active" data-scroll-target="#sec-ate-to-cate"><span class="header-section-number">1</span> From ATE to CATE</a></li>
+  <li><a href="#sec-honest" id="toc-sec-honest" class="nav-link" data-scroll-target="#sec-honest"><span class="header-section-number">2</span> The honest-split idea</a></li>
+  <li><a href="#sec-wager-athey" id="toc-sec-wager-athey" class="nav-link" data-scroll-target="#sec-wager-athey"><span class="header-section-number">3</span> The Wager-Athey consistency theorem</a></li>
+  <li><a href="#sec-grf" id="toc-sec-grf" class="nav-link" data-scroll-target="#sec-grf"><span class="header-section-number">4</span> Generalized random forests</a></li>
+  <li><a href="#sec-econml-cf" id="toc-sec-econml-cf" class="nav-link" data-scroll-target="#sec-econml-cf"><span class="header-section-number">5</span> Practical workflow with <code>econml</code></a></li>
+  <li><a href="#sec-policy" id="toc-sec-policy" class="nav-link" data-scroll-target="#sec-policy"><span class="header-section-number">6</span> Policy learning</a></li>
+  <li><a href="#bibliographic-notes" id="toc-bibliographic-notes" class="nav-link" data-scroll-target="#bibliographic-notes"><span class="header-section-number">7</span> Bibliographic notes</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">8</span> Exercises</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">9</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Causal forests and heterogeneous treatment effects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 25, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Distinguish</strong> the ATE from the conditional average treatment effect (CATE) and understand why CATE estimation is a separate statistical problem.</li>
+<li><strong>Construct</strong> a causal forest using honest-split trees and explain the role of the honest-split property.</li>
+<li><strong>State and interpret</strong> the Wager-Athey consistency and asymptotic normality theorem for causal forests.</li>
+<li><strong>Apply</strong> the generalized random forest framework to quantile treatment effects and policy evaluation.</li>
+<li><strong>Implement</strong> a causal forest using <code>econml.CausalForestDML</code> and interpret its pointwise confidence intervals.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three 75–90 min lectures: (1) why heterogeneity matters, honest splitting, bias-variance tradeoff for ML on causal problems; (2) the Wager-Athey theorem, consistency proof sketch, pointwise CIs; (3) Generalized Random Forests, policy learning, hands-on with econml.</p>
+</div>
+</div>
+</div>
+<section id="sec-ate-to-cate" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-ate-to-cate"><span class="header-section-number">1</span> From ATE to CATE</h2>
+<p>The ATE summarizes the effect over an entire population. It can be small, statistically significant, and entirely uninformative about policy: a drug that doubles survival for 30 percent of patients but kills 25 percent has an ATE near zero. Policy makers care about for whom the intervention works. This is the <strong>conditional average treatment effect</strong> (CATE):</p>
+<p><span class="math display">\[
+\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x].
+\]</span></p>
+<p>CATE estimation is fundamentally harder than ATE. ATE is a scalar; CATE is an infinite-dimensional object. Without pooling, some assumption that units with similar <span class="math inline">\(x\)</span> have similar <span class="math inline">\(\tau(x)\)</span>, we cannot estimate CATE. Random forests provide that pooling automatically through the tree structure.</p>
+</section>
+<section id="sec-honest" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-honest"><span class="header-section-number">2</span> The honest-split idea</h2>
+<p>Ordinary random forests use the same data for both tree structure selection and leaf-value estimation. For causal inference, this creates a subtle bias: the data that determined a leaf’s composition are also the data whose average is used as the leaf’s estimate. Wager and Athey (2018) <span class="citation" data-cites="wager2018estimation">[@wager2018estimation]</span> proposed splitting the sample into two halves:</p>
+<ul>
+<li><strong>Structure half.</strong> Used only to choose tree splits.</li>
+<li><strong>Estimation half.</strong> Used only to compute leaf averages.</li>
+</ul>
+<p>This <strong>honest splitting</strong> eliminates the own-observation bias and makes asymptotic inference well-defined.</p>
+<p>The honest causal forest estimator of the CATE is</p>
+<p><span id="eq-cf-estimator"><span class="math display">\[
+\hat\tau(x) = \frac{1}{B} \sum_{b=1}^B \left(\bar Y_{b, 1}(x) - \bar Y_{b, 0}(x)\right),
+\tag{1}\]</span></span></p>
+<p>where <span class="math inline">\(\bar Y_{b, d}(x)\)</span> is the average of <span class="math inline">\(Y\)</span> on the estimation-half units in the leaf containing <span class="math inline">\(x\)</span> in tree <span class="math inline">\(b\)</span> with treatment <span class="math inline">\(d\)</span>, and <span class="math inline">\(B\)</span> is the number of trees.</p>
+</section>
+<section id="sec-wager-athey" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-wager-athey"><span class="header-section-number">3</span> The Wager-Athey consistency theorem</h2>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 11.1 — Consistency and asymptotic normality of honest causal forests (Wager-Athey 2018)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 11.1 — Consistency and asymptotic normality of honest causal forests (Wager-Athey 2018)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Assume:</p>
+<ol type="1">
+<li>Unconfoundedness: <span class="math inline">\((Y(0), Y(1)) \perp\!\!\!\perp D \mid X\)</span>.</li>
+<li>Honest splitting.</li>
+<li>Minimum leaf size <span class="math inline">\(\geq k_{\min}\)</span> with <span class="math inline">\(k_{\min} \to \infty\)</span> slower than <span class="math inline">\(n\)</span>.</li>
+<li>Subsampling with subsample size <span class="math inline">\(s_n = O(n^\beta)\)</span> for <span class="math inline">\(\beta \in (0, 1)\)</span>.</li>
+<li>Regularity: Lipschitz continuity of <span class="math inline">\(\tau(x)\)</span> and bounded moments of <span class="math inline">\(Y\)</span>.</li>
+</ol>
+<p>Then for any <span class="math inline">\(x\)</span> in the interior of the support of <span class="math inline">\(X\)</span>,</p>
+<p><span class="math display">\[
+\sqrt n \left(\hat\tau(x) - \tau(x)\right) \xrightarrow{d} \mathcal{N}(0, \sigma^2(x)),
+\]</span></p>
+<p>with consistent variance estimator <span class="math inline">\(\hat\sigma^2(x)\)</span> from the infinitesimal jackknife.</p>
+</div>
+</div>
+<p>The theorem provides <strong>pointwise confidence intervals</strong> for <span class="math inline">\(\tau(x)\)</span> at any target <span class="math inline">\(x\)</span>. The bound <span class="math inline">\(\sigma^2(x)\)</span> depends on the conditional outcome variances, the propensity score, and the tree structure; it is estimable from the data.</p>
+<p>Proof sketch: honest splitting decorrelates the leaf structure from the leaf estimates, rendering the forest estimator a U-statistic of appropriate order. Asymptotic normality follows from the subsampling-based CLT <span class="citation" data-cites="mentch2016quantifying">[@mentch2016quantifying]</span>.</p>
+</section>
+<section id="sec-grf" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-grf"><span class="header-section-number">4</span> Generalized random forests</h2>
+<p>Athey, Tibshirani, and Wager (2019) <span class="citation" data-cites="athey2019generalized">[@athey2019generalized]</span> generalized causal forests to estimate any target defined by a moment condition:</p>
+<p><span class="math display">\[
+\mathbb{E}[\psi(O_i; \theta(x)) \mid X_i = x] = 0,
+\]</span></p>
+<p>for some score function <span class="math inline">\(\psi\)</span> and target parameter <span class="math inline">\(\theta(x)\)</span>. Special cases:</p>
+<ul>
+<li>CATE (<span class="math inline">\(\psi\)</span> is the DML orthogonal score; <span class="math inline">\(\theta(x) = \tau(x)\)</span>).</li>
+<li>Quantile treatment effects (<span class="math inline">\(\psi\)</span> is the check-loss subgradient).</li>
+<li>Instrumental-variable treatment effects (<span class="math inline">\(\psi\)</span> incorporates an instrument).</li>
+<li>Policy-learning objectives.</li>
+</ul>
+<p>The GRF framework implements all of these with the same honest-forest machinery. The <code>grf</code> R package (Athey et al.) and <code>econml.CausalForestDML</code> (Python) provide efficient implementations.</p>
+</section>
+<section id="sec-econml-cf" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-econml-cf"><span class="header-section-number">5</span> Practical workflow with <code>econml</code></h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.dml <span class="im">import</span> CausalForestDML</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> GradientBoostingRegressor</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>N, P <span class="op">=</span> <span class="dv">5000</span>, <span class="dv">10</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, (N, P))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> <span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> X[:, <span class="dv">0</span>]))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> (rng.uniform(size<span class="op">=</span>N) <span class="op">&lt;</span> e).astype(<span class="bu">int</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>tau_true <span class="op">=</span> <span class="dv">2</span> <span class="op">+</span> X[:, <span class="dv">0</span>] <span class="op">-</span> <span class="fl">0.5</span> <span class="op">*</span> X[:, <span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span>   <span class="co"># heterogeneous CATE</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>Y0 <span class="op">=</span> X[:, <span class="dv">0</span>] <span class="op">+</span> X[:, <span class="dv">2</span>] <span class="op">+</span> rng.normal(<span class="dv">0</span>, <span class="dv">1</span>, N)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Y <span class="op">=</span> Y0 <span class="op">+</span> D <span class="op">*</span> tau_true</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>cf <span class="op">=</span> CausalForestDML(</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    model_y<span class="op">=</span>GradientBoostingRegressor(),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    model_t<span class="op">=</span>LogisticRegression(),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    discrete_treatment<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    n_estimators<span class="op">=</span><span class="dv">500</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>cf.fit(Y, D, X<span class="op">=</span>X)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>tau_hat <span class="op">=</span> cf.effect(X)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>ci_lower, ci_upper <span class="op">=</span> cf.effect_interval(X)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>rmse <span class="op">=</span> np.sqrt(np.mean((tau_hat <span class="op">-</span> tau_true) <span class="op">**</span> <span class="dv">2</span>))</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CATE RMSE: </span><span class="sc">{</span>rmse<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>coverage <span class="op">=</span> np.mean((ci_lower <span class="op">&lt;=</span> tau_true) <span class="op">&amp;</span> (tau_true <span class="op">&lt;=</span> ci_upper))</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"95% CI coverage: </span><span class="sc">{</span>coverage<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A well-tuned causal forest on a moderate-sized dataset typically achieves CATE RMSE within 10–20 percent of the true heterogeneity variation and CI coverage near 95 percent.</p>
+</section>
+<section id="sec-policy" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-policy"><span class="header-section-number">6</span> Policy learning</h2>
+<p>Beyond estimation, a natural question is: <em>given an estimate of <span class="math inline">\(\tau(x)\)</span>, which units should we treat?</em> The <strong>optimal policy</strong> targets units with <span class="math inline">\(\tau(x) &gt; 0\)</span>. Athey and Wager (2021) <span class="citation" data-cites="athey2021policy">[@athey2021policy]</span> analyze statistical properties of learned policies, proving regret bounds in terms of the Rademacher complexity of the policy class.</p>
+<p>Operationally, <code>econml.policy</code> and <code>grf::policy_tree</code> learn interpretable (tree-based) policies that approximate the optimal rule subject to policy-class constraints.</p>
+</section>
+<section id="bibliographic-notes" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="bibliographic-notes"><span class="header-section-number">7</span> Bibliographic notes</h2>
+<p>Wager and Athey (2018), “Estimation and Inference of Heterogeneous Treatment Effects Using Random Forests,” <em>JASA</em> 113, is the foundational paper.</p>
+<p>Athey, Tibshirani, and Wager (2019), “Generalized Random Forests,” <em>Annals of Statistics</em> 47, extends the framework.</p>
+<p>Künzel, Sekhon, Bickel, and Yu (2019), “Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning,” <em>PNAS</em> 116, compares S-, T-, X-, and R-learners for CATE.</p>
+<p>Chernozhukov et al.&nbsp;2018 (DML), the orthogonalization step in <code>CausalForestDML</code> is identical to Chapter 10’s machinery.</p>
+</section>
+<section id="exercises" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="exercises"><span class="header-section-number">8</span> Exercises</h2>
+<p><strong>Exercise 11.1</strong> (<span class="math inline">\(\star\star\)</span>). Prove that without honest splitting, the causal tree estimator has bias of order 1/(leaf size), which does not vanish even asymptotically when leaf size is held fixed.</p>
+<p><strong>Exercise 11.2</strong> (<span class="math inline">\(\star\star\)</span>). Derive the DML score function that <code>CausalForestDML</code> uses and show it satisfies Neyman orthogonality.</p>
+<p><strong>Exercise 11.3</strong> (<span class="math inline">\(\star\)</span>). Replicate the synthetic example. Study how CATE RMSE varies with (a) sample size, (b) number of trees, (c) dimensionality of <span class="math inline">\(X\)</span>.</p>
+<p><strong>Exercise 11.4</strong> (<span class="math inline">\(\star\star\star\)</span>). Implement honest splitting by hand in a single tree and verify by simulation that the leaf estimates are unbiased for the true CATE.</p>
+<hr>
+</section>
+<section id="references" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="references"><span class="header-section-number">9</span> References</h2>
+<p>Athey, S., Tibshirani, J., and Wager, S. (2019). “Generalized Random Forests.” <em>Annals of Statistics</em> 47(2), 1148–1178.</p>
+<p>Athey, S., and Wager, S. (2021). “Policy Learning with Observational Data.” <em>Econometrica</em> 89(1), 133–161.</p>
+<p>Künzel, S. R., Sekhon, J. S., Bickel, P. J., and Yu, B. (2019). “Metalearners for Estimating Heterogeneous Treatment Effects Using Machine Learning.” <em>Proceedings of the National Academy of Sciences</em> 116(10), 4156–4165.</p>
+<p>Mentch, L., and Hooker, G. (2016). “Quantifying Uncertainty in Random Forests via Confidence Intervals and Hypothesis Tests.” <em>Journal of Machine Learning Research</em> 17(1), 841–881.</p>
+<p>Wager, S., and Athey, S. (2018). “Estimation and Inference of Heterogeneous Treatment Effects Using Random Forests.” <em>Journal of the American Statistical Association</em> 113(523), 1228–1242.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

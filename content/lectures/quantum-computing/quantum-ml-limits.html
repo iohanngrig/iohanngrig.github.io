@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hovhannes Grigoryan">
+<meta name="dcterms.date" content="2026-04-26">
+
+<title>Quantum machine learning — limits and honest prospects</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="quantum-ml-limits_files/libs/clipboard/clipboard.min.js"></script>
+<script src="quantum-ml-limits_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="quantum-ml-limits_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="quantum-ml-limits_files/libs/quarto-html/popper.min.js"></script>
+<script src="quantum-ml-limits_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="quantum-ml-limits_files/libs/quarto-html/anchor.min.js"></script>
+<link href="quantum-ml-limits_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="quantum-ml-limits_files/libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="quantum-ml-limits_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="quantum-ml-limits_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="quantum-ml-limits_files/libs/bootstrap/bootstrap-3152c9551fac0c7477723795aa00f90a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-vqe" id="toc-sec-vqe" class="nav-link active" data-scroll-target="#sec-vqe"><span class="header-section-number">1</span> VQE and variational quantum circuits</a>
+  <ul class="collapse">
+  <li><a href="#the-barren-plateau-problem" id="toc-the-barren-plateau-problem" class="nav-link" data-scroll-target="#the-barren-plateau-problem"><span class="header-section-number">1.1</span> The barren-plateau problem</a></li>
+  </ul></li>
+  <li><a href="#sec-qmc" id="toc-sec-qmc" class="nav-link" data-scroll-target="#sec-qmc"><span class="header-section-number">2</span> The Monte Carlo speedup</a>
+  <ul class="collapse">
+  <li><a href="#financial-applications" id="toc-financial-applications" class="nav-link" data-scroll-target="#financial-applications"><span class="header-section-number">2.1</span> Financial applications</a></li>
+  </ul></li>
+  <li><a href="#sec-bqp" id="toc-sec-bqp" class="nav-link" data-scroll-target="#sec-bqp"><span class="header-section-number">3</span> BQP and the complexity landscape</a>
+  <ul class="collapse">
+  <li><a href="#sampling-complexity" id="toc-sampling-complexity" class="nav-link" data-scroll-target="#sampling-complexity"><span class="header-section-number">3.1</span> Sampling complexity</a></li>
+  <li><a href="#the-oracle-separation" id="toc-the-oracle-separation" class="nav-link" data-scroll-target="#the-oracle-separation"><span class="header-section-number">3.2</span> The oracle separation</a></li>
+  </ul></li>
+  <li><a href="#sec-tang" id="toc-sec-tang" class="nav-link" data-scroll-target="#sec-tang"><span class="header-section-number">4</span> Dequantization, the Aaronson litmus test</a></li>
+  <li><a href="#sec-ft" id="toc-sec-ft" class="nav-link" data-scroll-target="#sec-ft"><span class="header-section-number">5</span> The error-correction horizon</a></li>
+  <li><a href="#sec-synthesis" id="toc-sec-synthesis" class="nav-link" data-scroll-target="#sec-synthesis"><span class="header-section-number">6</span> Synthesis</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">7</span> Exercises</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">8</span> References</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Quantum machine learning — limits and honest prospects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hovhannes Grigoryan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 26, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Intended learning outcomes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Intended learning outcomes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>By the end of this chapter, you will be able to:</p>
+<ol type="1">
+<li><strong>Construct</strong> a Variational Quantum Eigensolver (VQE) for a small chemistry Hamiltonian and understand its hybrid classical-quantum loop.</li>
+<li><strong>Diagnose</strong> the barren-plateau problem in deep parameterized quantum circuits and explain when it renders gradient descent useless.</li>
+<li><strong>Apply</strong> the quadratic Monte Carlo speedup (Montanaro 2015) to a financial derivative pricing problem.</li>
+<li><strong>State</strong> the complexity class BQP’s relationship to BPP, NP, and PSPACE, and the implications for quantum ML claims.</li>
+<li><strong>Evaluate</strong> a candidate quantum-ML algorithm for dequantization resistance using the Aaronson litmus test.</li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Suggested lecture plan">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Suggested lecture plan
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Three 75–90 min lectures: (1) VQE and the barren plateau; (2) quantum Monte Carlo and amplitude estimation for finance; (3) BQP, dequantization, and the error-correction horizon.</p>
+</div>
+</div>
+</div>
+<section id="sec-vqe" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="sec-vqe"><span class="header-section-number">1</span> VQE and variational quantum circuits</h2>
+<p>Peruzzo, McClean, and collaborators (2013) introduced the Variational Quantum Eigensolver. Given a Hamiltonian <span class="math inline">\(H\)</span>, the variational principle states</p>
+<p><span id="eq-variational"><span class="math display">\[
+E_0 \leq \langle \psi | H | \psi \rangle \quad \forall |\psi\rangle,
+\tag{1}\]</span></span></p>
+<p>with equality at the ground state. VQE parameterizes <span class="math inline">\(|\psi(\boldsymbol\theta)\rangle\)</span> via a shallow quantum circuit <span class="math inline">\(U(\boldsymbol\theta)\)</span>, then classically minimizes <span class="math inline">\(\langle \psi(\boldsymbol\theta) | H | \psi(\boldsymbol\theta) \rangle\)</span>.</p>
+<p>The algorithm is hybrid: the quantum computer prepares <span class="math inline">\(|\psi(\boldsymbol\theta)\rangle\)</span> and estimates the expectation via Pauli-decomposition sampling; the classical computer runs the outer optimization loop. Hardware-efficient ansätze use layers of single-qubit rotations and entangling CNOTs; chemistry-inspired ansätze (Unitary Coupled Cluster, UCCSD) have classical-theoretical foundations but grow deep with problem size.</p>
+<section id="the-barren-plateau-problem" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="the-barren-plateau-problem"><span class="header-section-number">1.1</span> The barren-plateau problem</h3>
+<p>McClean, Boixo, Smelyanskiy, Babbush, and Neven (2018) proved a result that significantly shaped the field.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Theorem 3.1 — Barren plateaus in VQE (McClean et al. 2018)">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Theorem 3.1 — Barren plateaus in VQE (McClean et al.&nbsp;2018)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For random parameterized quantum circuits of depth <span class="math inline">\(\geq O(\log n)\)</span> on <span class="math inline">\(n\)</span> qubits, the gradient of the VQE cost function is exponentially concentrated near zero:</p>
+<p><span class="math display">\[
+\mathbb{E}\left[\frac{\partial E}{\partial \theta}\right] = 0, \quad \mathrm{Var}\left[\frac{\partial E}{\partial \theta}\right] = O(2^{-2n}).
+\]</span></p>
+<p>Gradient descent from a random initialization sees zero signal; training cannot make progress.</p>
+</div>
+</div>
+<p>This has deep practical implications. Randomly-initialized deep ansätze are untrainable. Structured initialization (near Hartree-Fock for chemistry, near-adiabatic path for optimization) is essential. QAOA’s Trotterized adiabatic ansatz sidesteps the plateau because the initialization is structured, not random.</p>
+</section>
+</section>
+<section id="sec-qmc" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-qmc"><span class="header-section-number">2</span> The Monte Carlo speedup</h2>
+<p>Classical Monte Carlo estimates an expectation <span class="math inline">\(\mu = \mathbb{E}[f(X)]\)</span> to accuracy <span class="math inline">\(\varepsilon\)</span> using <span class="math inline">\(O(1/\varepsilon^2)\)</span> samples. Montanaro (2015) showed quantum amplitude estimation achieves the same accuracy with <span class="math inline">\(O(1/\varepsilon)\)</span> amplitude-estimation queries. This is the cleanest quantum-ML advantage that survives dequantization attacks.</p>
+<section id="financial-applications" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="financial-applications"><span class="header-section-number">2.1</span> Financial applications</h3>
+<p>For a derivative with payoff <span class="math inline">\(f\)</span> on underlying <span class="math inline">\(X\)</span> and expiration <span class="math inline">\(T\)</span>,</p>
+<p><span class="math display">\[
+\text{Price} = e^{-rT} \mathbb{E}[f(X_T)].
+\]</span></p>
+<p>Classical Monte Carlo with <span class="math inline">\(M\)</span> paths gives an estimate with variance <span class="math inline">\(\sigma^2 / M\)</span>. Quantum amplitude estimation gives the same accuracy with <span class="math inline">\(\sqrt M\)</span> queries. Stamatopoulos et al.&nbsp;(2020, <em>Quantum</em>) applied this to European, Asian, and structured products.</p>
+<p>The practical catch: coherence time scales with <span class="math inline">\(1/\varepsilon\)</span>. For <span class="math inline">\(\varepsilon = 10^{-4}\)</span> (a basis point of accuracy), circuit depth is <span class="math inline">\(\sim 10^4\)</span>. At NISQ per-gate error <span class="math inline">\(10^{-3}\)</span>, fidelity falls below <span class="math inline">\(e^{-10}\)</span>. Quantum Monte Carlo is a fault-tolerance advantage; NISQ hardware delivers only loose approximations.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="When the quadratic speedup is competitive">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>When the quadratic speedup is competitive
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A 100× quadratic speedup matters only if classical variance reduction (control variates, importance sampling, quasi-Monte Carlo) has already been exhausted. For vanilla options with good classical variance reduction, quantum’s 100× becomes less compelling. For rare-event estimation or deep tail risks, where classical variance reduction fails, quantum Monte Carlo’s quadratic edge is the cleanest remaining pure advantage.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-bqp" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-bqp"><span class="header-section-number">3</span> BQP and the complexity landscape</h2>
+<p><strong>BQP</strong> (bounded-error quantum polynomial time) is the class of decision problems solvable in polynomial time on a quantum computer with bounded error. The containments are proven:</p>
+<p><span class="math display">\[
+\text{P} \subseteq \text{BPP} \subseteq \text{BQP} \subseteq \text{PSPACE}.
+\]</span></p>
+<p>The first two are trivial. The third comes from Bernstein-Vazirani (1993), who simulated quantum computation in polynomial space via path-sum formulas.</p>
+<p>Widely believed but unproven:</p>
+<ul>
+<li><span class="math inline">\(\text{P} \neq \text{NP}\)</span> (the million-dollar conjecture).</li>
+<li><span class="math inline">\(\text{BQP} \supsetneq \text{BPP}\)</span> (quantum strictly stronger than classical randomized), with Shor’s speedup as the best evidence.</li>
+<li><span class="math inline">\(\text{NP} \not\subseteq \text{BQP}\)</span> (quantum computers do not efficiently solve NP-hard problems in general). Grover’s quadratic bound is the black-box limit.</li>
+</ul>
+<section id="sampling-complexity" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="sampling-complexity"><span class="header-section-number">3.1</span> Sampling complexity</h3>
+<p>For sampling problems (producing random outputs from a target distribution), a parallel hierarchy exists. <strong>Aaronson-Arkhipov (2011)</strong> showed that <span class="math inline">\(\text{SampBQP} \not\subseteq \text{SampBPP}\)</span> assuming the polynomial hierarchy is infinite. This foundation supports boson-sampling supremacy claims.</p>
+</section>
+<section id="the-oracle-separation" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="the-oracle-separation"><span class="header-section-number">3.2</span> The oracle separation</h3>
+<p>Raz and Tal (2019) proved: relative to an oracle, there is a problem in BQP outside the polynomial hierarchy. Without oracles, the corresponding unrelativized claim is open, this is a deep open problem of theoretical computer science.</p>
+</section>
+</section>
+<section id="sec-tang" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-tang"><span class="header-section-number">4</span> Dequantization, the Aaronson litmus test</h2>
+<p>Tang’s 2018 dequantization of the Kerenidis-Prakash quantum recommender system launched a program. A proposed quantum-ML algorithm is worth scrutiny by the following criteria (Aaronson 2015):</p>
+<ol type="1">
+<li>Is <span class="math inline">\(|b\rangle\)</span> efficiently quantum-preparable, or does it require reading all <span class="math inline">\(N\)</span> classical entries?</li>
+<li>Is <span class="math inline">\(A\)</span> efficiently quantum-accessible via QRAM or sparse oracle, versus “just” stored in classical memory?</li>
+<li>Does the output require only a <em>global</em> property of <span class="math inline">\(|x\rangle\)</span>, or every entry?</li>
+<li>Is the condition number <span class="math inline">\(\kappa\)</span> polynomial or polylogarithmic in <span class="math inline">\(n\)</span>?</li>
+</ol>
+<p>Failure on any one criterion means classical algorithms (with <span class="math inline">\(\ell_2\)</span>-norm sampling access as the analog of QRAM) can match or beat the quantum method within polynomial overhead. Tang’s recommender-system, PCA, SVM, and clustering dequantizations all exploit this.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="The survivor list">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>The survivor list
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Quantum ML speedups that <em>have not</em> been dequantized (as of 2025):</p>
+<ul>
+<li>Quantum Monte Carlo (amplitude estimation): quadratic, provably optimal, fault-tolerance-bound.</li>
+<li>Certain quantum simulation problems (ground-state chemistry, dynamics): exponential in restricted problem classes.</li>
+<li>Shor-style algorithms (factoring, discrete log): exponential, not an ML task per se.</li>
+</ul>
+<p>Most other “exponential quantum ML” claims from 2013–2017 have been dequantized or remain conditional on unrealistic input access.</p>
+</div>
+</div>
+</section>
+<section id="sec-ft" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-ft"><span class="header-section-number">5</span> The error-correction horizon</h2>
+<p>Every quantum algorithm with non-trivial depth ultimately depends on fault tolerance. Preskill’s 2025 “Beyond NISQ” essay names the next benchmark: the <strong>Megaquop machine</strong>, a device performing <span class="math inline">\(\geq 10^6\)</span> logical operations with error correction.</p>
+<p>Recent progress:</p>
+<ul>
+<li><strong>Google Willow (2024)</strong>: demonstrated below-threshold error correction at distances 5 and 7, with logical error rate decreasing as distance increases.</li>
+<li><strong>Quantinuum H2 (2024)</strong>: 56 trapped-ion qubits with 99.99% two-qubit gate fidelity.</li>
+<li><strong>IBM Heron (2024)</strong>: 133 qubits targeting early fault-tolerant demonstrations.</li>
+</ul>
+<p>The Megaquop era is credibly 5–10 years out. CRQC (Shor-capable) is 10–20 years. For applications like quantum Monte Carlo option pricing, the practical deployment timeline is the 2030s or later.</p>
+</section>
+<section id="sec-synthesis" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-synthesis"><span class="header-section-number">6</span> Synthesis</h2>
+<p>Quantum computing’s near-term relevance depends on the problem. For:</p>
+<ul>
+<li><strong>Cryptography.</strong> Shor guarantees an exponential attack on RSA and ECC given fault-tolerant hardware. Post-quantum cryptography (NIST’s ML-KEM, ML-DSA) is the policy response. Real threat horizon: 10–20 years.</li>
+<li><strong>Chemistry and simulation.</strong> VQE and phase estimation are the primary candidates. Barren plateaus and fidelity constraints limit NISQ. Error-corrected devices will enable simulation of small molecules classical methods cannot reach.</li>
+<li><strong>Optimization.</strong> QAOA, adiabatic annealing, D-Wave. No proven asymptotic advantage. Specific structured problems may benefit; general combinatorial optimization will not.</li>
+<li><strong>Machine learning.</strong> Quantum Monte Carlo for financial-risk applications has a clean quadratic speedup. Most other “quantum ML” claims have been dequantized or require unrealistic input access.</li>
+</ul>
+<p>Honest appraisal: quantum computing is a real technology with real advantages, but the advantages are narrower and later than advertised. The careful researcher reads fine print before building business plans.</p>
+</section>
+<section id="exercises" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="exercises"><span class="header-section-number">7</span> Exercises</h2>
+<p><strong>Exercise 3.1</strong> (<span class="math inline">\(\star\star\)</span>). Prove the variational principle <a href="#eq-variational" class="quarto-xref">Equation&nbsp;1</a> by decomposing <span class="math inline">\(|\psi\rangle\)</span> in the eigenbasis of <span class="math inline">\(H\)</span>.</p>
+<p><strong>Exercise 3.2</strong> (<span class="math inline">\(\star\star\star\)</span>). Prove Theorem 3.1 (barren plateaus) using the unitary-invariance properties of the Haar measure. Cite Brandão-Harrow-Horodecki 2016 as a key lemma.</p>
+<p><strong>Exercise 3.3</strong> (<span class="math inline">\(\star\star\)</span>). Implement amplitude estimation at <span class="math inline">\(\varepsilon = 0.01\)</span> for an option pricing problem. Compare with classical Monte Carlo at <span class="math inline">\(\varepsilon = 0.01\)</span>; verify the quadratic advantage in sample complexity.</p>
+<p><strong>Exercise 3.4</strong> (<span class="math inline">\(\star\)</span>). Apply the Aaronson litmus test to a recently-published quantum ML algorithm. Identify which criterion fails, if any, and what the resulting classical lower bound is.</p>
+<hr>
+</section>
+<section id="references" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="references"><span class="header-section-number">8</span> References</h2>
+<p>Aaronson, S. (2015). “Read the Fine Print.” <em>Nature Physics</em> 11, 291–293.</p>
+<p>Aaronson, S., and Arkhipov, A. (2011). “The Computational Complexity of Linear Optics.” <em>STOC 2011</em>, 333–342.</p>
+<p>Bernstein, E., and Vazirani, U. (1993/1997). “Quantum Complexity Theory.” <em>SIAM Journal on Computing</em> 26(5), 1411–1473.</p>
+<p>McClean, J. R., Boixo, S., Smelyanskiy, V. N., Babbush, R., and Neven, H. (2018). “Barren Plateaus in Quantum Neural Network Training Landscapes.” <em>Nature Communications</em> 9, 4812.</p>
+<p>Montanaro, A. (2015). “Quantum Speedup of Monte Carlo Methods.” <em>Proceedings of the Royal Society A</em> 471, 20150301.</p>
+<p>Peruzzo, A., McClean, J., Shadbolt, P., et al.&nbsp;(2013). “A Variational Eigenvalue Solver on a Photonic Quantum Processor.” <em>Nature Communications</em> 5, 4213.</p>
+<p>Preskill, J. (2025). “Beyond NISQ: The Megaquop Machine.” <em>ACM Transactions on Quantum Computing</em> 6(3).</p>
+<p>Raz, R., and Tal, A. (2019). “Oracle Separation of BQP and PH.” <em>STOC 2019</em>, 13–23.</p>
+<p>Stamatopoulos, N., Egger, D. J., Sun, Y., et al.&nbsp;(2020). “Option Pricing Using Quantum Computers.” <em>Quantum</em> 4, 291.</p>
+<p>Tang, E. (2018/2019). “A Quantum-Inspired Classical Algorithm for Recommendation Systems.” <em>STOC 2019</em>, 217–228.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

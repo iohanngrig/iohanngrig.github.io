@@ -1,0 +1,160 @@
+---
+title: "Quantum algorithms with provable speedup"
+author: "Hovhannes Grigoryan"
+date: "2026-04-25"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Derive** Shor's algorithm by reducing factoring to period-finding via the Quantum Fourier Transform.
+2. **State and prove the optimality** of Grover's quadratic speedup via the BBBV lower bound.
+3. **Explain** how HHL solves sparse linear systems in polylog time and why Aaronson's fine-print limits its practical scope.
+4. **Distinguish** algorithms with exponential, quadratic, and no asymptotic speedup and map each to its complexity-theoretic foundation.
+5. **Estimate** the qubit resources required to run Shor on RSA-2048 using the Gidney-Ekerå 2021 analysis.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures: (1) QFT and Shor's algorithm; (2) Grover's algorithm, optimality proof, amplitude amplification; (3) HHL, its fine print, and the boundary between provable and advertised speedups.
+:::
+
+## Shor's algorithm {#sec-shor}
+
+Shor's 1995 algorithm is the quantum speedup most responsible for post-quantum cryptography as a research field. It factors an $N$-bit integer in $O((\log N)^3)$ quantum operations, exponentially faster than the best classical algorithm, the general number field sieve at $\exp(O((\log N)^{1/3} (\log \log N)^{2/3}))$.
+
+### Reduction to period finding
+
+For $a$ coprime to $N$, the multiplicative order $r$ of $a$ modulo $N$ satisfies $a^r \equiv 1 \pmod N$. If $r$ is even and $a^{r/2} \not\equiv \pm 1$, then $\gcd(a^{r/2} - 1, N)$ is a nontrivial factor. Period finding is the hard part; once $r$ is known, factoring follows in classical polynomial time.
+
+### The Quantum Fourier Transform
+
+The QFT on $n$ qubits is
+
+$$
+|x\rangle \mapsto \frac{1}{\sqrt{2^n}} \sum_{y=0}^{2^n - 1} e^{2\pi i x y / 2^n} |y\rangle.
+$$
+
+It can be implemented with $O(n^2)$ gates using Hadamards and controlled phase rotations. The classical Fast Fourier Transform on a vector of length $2^n$ requires $O(n \cdot 2^n)$ operations. The QFT's exponential advantage is real and rests on the tensor-product structure of quantum states.
+
+### The algorithm
+
+1. Prepare $\frac{1}{\sqrt{Q}} \sum_{x=0}^{Q-1} |x\rangle |0\rangle$ with $Q \approx N^2$.
+2. Apply modular exponentiation to compute $|x\rangle |a^x \bmod N\rangle$.
+3. Measure the second register. The first collapses to a superposition over $x$ sharing the same $a^x \bmod N$, an arithmetic progression with period $r$.
+4. Apply QFT to the first register. Output concentrates near multiples of $Q / r$.
+5. Measure and classically post-process via continued fractions to recover $r$.
+
+::: {.callout-important title="Theorem 2.1 — Shor's complexity"}
+Shor's algorithm factors an $N$-bit integer in $O(n^3)$ quantum gates with success probability $\Omega(1/\log n)$, boosted to $1 - \epsilon$ by $O(\log(1/\epsilon))$ repetitions.
+:::
+
+### Resource estimate for RSA-2048
+
+Gidney-Ekerå (2021) carefully analyzed Shor with surface-code error correction. Their estimate: **20 million physical qubits** running for 8 hours, assuming physical error rate $10^{-3}$. Current hardware has $\sim 10^3$ physical qubits. The resource gap is four orders of magnitude in qubits and significant in error rates.
+
+## Grover's algorithm {#sec-grover}
+
+Grover's algorithm solves unstructured search in $O(\sqrt N)$ quantum queries where $N = 2^n$. Classically this requires $\Theta(N)$ queries.
+
+### The Grover iteration
+
+Start in the uniform superposition $|s\rangle = \frac{1}{\sqrt N} \sum_x |x\rangle$. Apply the iteration
+
+$$
+G = (2|s\rangle \langle s| - I)(I - 2 |x^*\rangle \langle x^*|)
+$$
+
+a total of $k = \lfloor \pi \sqrt{N} / 4 \rfloor$ times, then measure. Geometric interpretation: the state rotates by angle $2\theta$ per iteration in the 2D plane spanned by $|x^*\rangle$ and the uniform superposition of non-marked states, where $\sin\theta = 1/\sqrt N$. After $k$ iterations the amplitude on $|x^*\rangle$ is $\sin((2k+1)\theta) \approx 1$.
+
+### Optimality
+
+::: {.callout-important title="Theorem 2.2 — Grover is optimal (BBBV 1997)"}
+Any quantum algorithm for unstructured search requires $\Omega(\sqrt N)$ queries. Grover achieves this rate up to a constant factor.
+:::
+
+This is one of the cleanest lower bounds in quantum complexity. The proof, due to Bennett-Bernstein-Brassard-Vazirani, proceeds by adversary argument on the pattern of queries that a correct algorithm must make to distinguish one oracle from another.
+
+### Amplitude amplification
+
+Brassard-Høyer-Mosca-Tapp (2002) generalize Grover: for any state-preparation procedure $\mathcal{A}$ with initial success probability $p$, amplitude amplification achieves amplified probability in $O(1 / \sqrt p)$ calls to $\mathcal{A}$. This replaces $\sqrt N$ with $\sqrt{1/p}$ in a wide range of estimation problems and underlies many quantum subroutines, including the Monte Carlo speedup of Chapter 3 in this series.
+
+### Implications for optimization
+
+Grover provides a *generic* quadratic speedup on brute-force enumeration: NP-hard problems with $2^n$ search space admit Grover-based enumeration in $2^{n/2}$. This is mathematically elegant but practically limited: classical heuristics (branch and bound, SDP, local search) already exponentially beat $2^n$ on structured instances. Grover on top of brute force is not the competitive baseline.
+
+## HHL, linear systems in polylog time {#sec-hhl}
+
+Harrow, Hassidim, and Lloyd (2009) showed: given a sparse $N \times N$ matrix $A$ with condition number $\kappa$ and a quantum state $|b\rangle$, produce a state $|x\rangle \propto A^{-1}|b\rangle$ in time $O(s^2 \kappa^2 \log N / \epsilon)$. Classical conjugate gradient is $O(N s \sqrt\kappa \log(1/\epsilon))$. At first glance, exponential speedup.
+
+### The three asterisks
+
+Aaronson (2015) articulated the fine print:
+
+1. **State preparation.** HHL assumes $|b\rangle$ is already prepared. Preparing an arbitrary $N$-entry classical vector as a quantum state takes $\Omega(N)$ time, erasing the exponential speedup. Only if $b$ arises from a quantum circuit (e.g., another simulation) does the input cost not dominate.
+2. **Output extraction.** We get the state $|x\rangle$, not its classical components. Extracting a single entry requires $\Omega(1/\epsilon)$ amplitude-estimation samples; extracting all $N$ entries is $\Omega(N)$.
+3. **Condition number.** If $\kappa = \Omega(N)$, the algorithm is no faster than classical. Real-world matrices often have poor conditioning.
+
+### When the speedup is real
+
+HHL is an exponential speedup under Aaronson's four criteria: $|b\rangle$ is efficiently quantum-preparable; $A$ is efficiently quantum-accessible (sparse or QRAM); only global properties of $|x\rangle$ are needed; and $\kappa$ is polylogarithmic or polynomial in problem parameters. Such settings exist in computational physics and quantum chemistry but are rare in mainstream operations research.
+
+### Dequantization
+
+Tang (2018) dequantized an HHL-derived quantum recommender system, showing that under classical $\ell_2$-sampling access to the input, a classical algorithm achieves the same polylog scaling with polynomial overhead. A cascade of similar results followed for PCA, SVMs, and linear regression. The lesson: many claimed HHL-based quantum ML speedups were illusory, a consequence of unequal input access rather than quantum-physical advantage.
+
+## Summary, what is and is not speedable {#sec-summary}
+
+| Problem | Speedup | Status |
+|---|---|---|
+| Factoring, discrete log | Exponential (Shor) | Provable against best classical known |
+| Unstructured search | Quadratic (Grover) | Provably optimal in query model |
+| Sparse linear systems with QRAM | Exponential (HHL) | Subject to fine-print criteria |
+| Amplitude estimation / Monte Carlo | Quadratic (Brassard et al.) | Provably optimal, fault-tolerance-limited |
+| NP-hard optimization | None proven | Heuristic approaches only (QAOA, adiabatic) |
+| General quantum ML | Not guaranteed | Dequantization attacks have rescinded many claims |
+
+## Exercises
+
+**Exercise 2.1** ($\star\star$). Derive the QFT's $O(n^2)$ gate count by constructing it from Hadamards and controlled phase rotations.
+
+**Exercise 2.2** ($\star\star\star$). Prove Grover's $\pi\sqrt N / 4$ iteration count by tracking the state vector in the $(|x^*\rangle, |s'\rangle)$ plane and applying the rotation identity for $k$ iterations.
+
+**Exercise 2.3** ($\star\star$). For a 2048-bit RSA modulus, estimate the physical-qubit resources required for Shor using the Gidney-Ekerå framework. Compare to the largest currently deployed quantum hardware.
+
+**Exercise 2.4** ($\star\star\star$). Implement Grover's algorithm in Qiskit for $n = 4, 6, 8$. Measure the probability of success vs. number of iterations and compare to the analytical formula.
+
+**Exercise 2.5** ($\star$). Read Aaronson's 2015 "Read the Fine Print" *Nature Physics* commentary. Identify one HHL application in the current literature that does or does not satisfy all four criteria.
+
+---
+
+## References
+
+Bennett, C. H., Bernstein, E., Brassard, G., and Vazirani, U. (1997). "Strengths and Weaknesses of Quantum Computing." *SIAM Journal on Computing* 26(5), 1510–1523.
+
+Brassard, G., Høyer, P., Mosca, M., and Tapp, A. (2002). "Quantum Amplitude Amplification and Estimation." *Contemporary Mathematics* 305, 53–74.
+
+Gidney, C., and Ekerå, M. (2021). "How to Factor 2048-bit RSA Integers in 8 Hours Using 20 Million Noisy Qubits." *Quantum* 5, 433.
+
+Grover, L. K. (1996). "A Fast Quantum Mechanical Algorithm for Database Search." *Proceedings of the 28th STOC*, 212–219.
+
+Harrow, A. W., Hassidim, A., and Lloyd, S. (2009). "Quantum Algorithm for Linear Systems of Equations." *Physical Review Letters* 103, 150502.
+
+Aaronson, S. (2015). "Read the Fine Print." *Nature Physics* 11, 291–293.
+
+Shor, P. W. (1995/1999). "Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer." *SIAM Journal on Computing* 26(5), 1484–1509.
+
+Tang, E. (2018/2019). "A Quantum-Inspired Classical Algorithm for Recommendation Systems." *Proceedings of STOC 2019*, 217–228.

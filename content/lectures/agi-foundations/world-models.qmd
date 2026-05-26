@@ -1,0 +1,128 @@
+---
+title: "World models and planning-by-imagination"
+author: "Hovhannes Grigoryan"
+date: "2026-04-25"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Explain** the rationale for agents that learn compact internal models of their environment rather than direct policies.
+2. **Describe** the Ha-Schmidhuber world-models architecture and its MDN-RNN dreamer component.
+3. **Identify** the improvements DreamerV3 (Hafner et al. 2023) brings over earlier world-model architectures.
+4. **Evaluate** the claim that LLMs implicitly contain world models, and distinguish it from explicit world-model architectures.
+5. **Compare** LeCun's JEPA (Joint Embedding Predictive Architecture) proposal to generative world models.
+:::
+
+## Why world models? {#sec-why-world-models}
+
+Standard reinforcement-learning agents map observations to actions through a policy $\pi(a | o)$. This is *model-free*: the agent does not maintain an explicit representation of how the environment will respond to its actions. Policy gradient, Q-learning, and actor-critic methods all fall into this category.
+
+**Model-based reinforcement learning** takes a different approach: learn a model $p(o' | o, a)$ of state-transition dynamics, and *plan* using the model by imagining rollouts. Advantages include (a) sample efficiency, because imaginary rollouts reduce the need for real environment interactions; (b) interpretability, because the model can be inspected; (c) transferability, because the same world model supports multiple tasks.
+
+Schmidhuber's group has developed this approach for decades; the Ha-Schmidhuber 2018 "World Models" paper crystallized it for modern deep learning.
+
+## The Ha-Schmidhuber architecture {#sec-ha-schmidhuber}
+
+Ha and Schmidhuber (2018) proposed a three-module agent:
+
+1. **Vision (V).** A variational autoencoder encodes observations $o_t$ into latent $z_t$.
+2. **Memory (M).** A mixture-density-network RNN (MDN-RNN) models $p(z_{t+1} \mid z_t, a_t, h_t)$, where $h_t$ is the RNN hidden state. This is the "dreamer", given the current latent state and action, it predicts a distribution over next latent states.
+3. **Controller (C).** A tiny linear policy maps $(z_t, h_t)$ to actions $a_t$.
+
+Training proceeds in stages: V learns observations, M learns dynamics given V's encodings, C is optimized (often via evolution strategies or direct gradient descent) to maximize reward in the *dreamed* rollouts.
+
+On CarRacing and Doom, this architecture trained a competent policy using only a small fraction of the real environment interactions a model-free agent needs. The world model does the heavy lifting; the controller is tiny.
+
+## DreamerV3 {#sec-dreamerv3}
+
+Hafner et al. (2023) [@hafner2023mastering] published **DreamerV3**, generalizing the Ha-Schmidhuber pattern to 150 environments including Atari, MuJoCo, DMLab, and Minecraft. Improvements over the 2018 architecture:
+
+- **Latent dynamics in a categorical latent space.** DreamerV3 uses a categorical VAE with 32 classes × 32 categories, replacing the continuous latent used earlier. This gives the dynamics model better expressiveness.
+- **Recurrent State-Space Model (RSSM).** The memory combines deterministic and stochastic components, allowing both precise prediction (deterministic $h_t$) and uncertainty modeling (stochastic $z_t$).
+- **Twohot reward prediction.** Reward prediction uses a discretized distribution over buckets; this stabilizes learning across the huge range of reward scales.
+- **Single hyperparameter configuration.** DreamerV3 solves all 150 environments with a single setting, a rare achievement that suggests the architecture captures something domain-general.
+
+### Minecraft diamonds
+
+The headline DreamerV3 result: the agent obtained a diamond in Minecraft from scratch, the first model-based agent to do so without human demonstrations. Collecting diamonds requires a 12-step tool-progression hierarchy spanning many game minutes. The world model enables planning across this hierarchy by dreaming through candidate action sequences.
+
+## Implicit world models in LLMs {#sec-llm-world-models}
+
+A contested claim: large language models trained on next-token prediction implicitly learn world models, representations of physics, causality, and entities that support reasoning.
+
+Arguments in favor:
+
+- LLMs display coherent physical reasoning (objects fall, liquids pour, fire burns).
+- Probing experiments (Meng et al. 2022, "Locating and Editing Factual Associations in GPT") find that specific entities and properties are represented in specific MLP layers.
+- Chain-of-thought prompting improves LLM reasoning, suggesting the model can simulate consequences of claims.
+
+Arguments against:
+
+- LLMs confabulate confidently when the context is ambiguous.
+- Their implicit representations do not support explicit planning; they do next-token generation, not dreaming-through-alternatives.
+- Explicit world models (DreamerV3) outperform prompt-engineered LLMs on sample-efficient learning.
+
+Mitchell and Krakauer (2023) argue that LLMs lack the core feature of a world model, grounded representations of objects persisting across time, and thus cannot do the kind of planning DreamerV3 does.
+
+Current consensus: LLMs have *some* implicit world-modeling, sufficient for many conversational tasks, but falling short of the explicit-simulation capability that planning-by-imagination requires.
+
+## LeCun's JEPA proposal {#sec-jepa}
+
+Yann LeCun (2022) proposed the **Joint Embedding Predictive Architecture** (JEPA) as an alternative to generative world models [@lecun2022path]. Rather than reconstructing observations pixel-by-pixel, JEPA predicts *embeddings* of future observations given current embeddings and an action or context.
+
+The argument: reconstruction of high-dimensional sensory data is wasteful. A world model that predicts the abstract structure of the future, at the level of semantic embeddings, captures what matters for planning and discards irrelevant visual detail.
+
+I-JEPA (Image JEPA) and V-JEPA (Video JEPA) have demonstrated the pattern on self-supervised representation learning and video prediction. Whether JEPA scales to full agent training and can match DreamerV3 on sample efficiency remains an open question as of 2025.
+
+## Sample efficiency and transfer {#sec-sample-efficiency}
+
+The central empirical claim of world-model-based RL: sample efficiency improves by an order of magnitude or more compared to model-free RL.
+
+- Atari: DreamerV3 achieves human-level play in ~2 billion environment steps; earlier model-free methods required ~10 billion.
+- Real-world robotics: learning a grasping policy via world-model rollouts reduces real-robot interaction from tens of thousands of episodes to hundreds.
+- Transfer: a world model learned on one task can be fine-tuned for a related task with minimal additional data.
+
+These advantages come at a cost: the world model must be *accurate enough* that planning inside it gives useful results. On domains with complex dynamics (physics simulations, open-ended games), world-model error compounds across the planning horizon.
+
+## Open questions
+
+- **How deep can we plan?** Current world models reliably predict 10–50 steps; multi-minute planning horizons remain hard.
+- **Do agents need generative or embedding-based models?** JEPA vs. DreamerV3 is an unresolved architectural debate.
+- **Are LLMs sufficient world models for AGI?** Evidence is mixed; likely insufficient without explicit planning mechanisms.
+- **Can world models be certified?** Safety concerns require reasoning about where the model's predictions are unreliable.
+
+## Exercises
+
+**Exercise 3.1** ($\star\star$). Implement a small world model on MNIST-trajectory data: a VAE encodes frames, an LSTM predicts the next latent given the current latent and an "action" (e.g., digit identity), and a decoder reconstructs. Train end-to-end. Evaluate prediction quality at 1, 5, 20 steps.
+
+**Exercise 3.2** ($\star\star\star$). Design an experiment to test whether an LLM has a world model: construct a physical scenario (e.g., stacking blocks) and query the LLM about counterfactual outcomes. Report the failure modes.
+
+**Exercise 3.3** ($\star\star$). Read Hafner et al. DreamerV3 (2023). Write a critique of the twohot reward prediction: why does it stabilize training across reward scales?
+
+**Exercise 3.4** ($\star$). Compare LeCun's JEPA approach to DreamerV3's generative world model. Under what conditions would you expect each to succeed?
+
+---
+
+## References
+
+Ha, D., and Schmidhuber, J. (2018). "World Models." [arXiv:1803.10122](https://arxiv.org/abs/1803.10122).
+
+Hafner, D., Pasukonis, J., Ba, J., and Lillicrap, T. (2023). "Mastering Diverse Domains through World Models." *arXiv preprint* [arXiv:2301.04104](https://arxiv.org/abs/2301.04104).
+
+LeCun, Y. (2022). "A Path Towards Autonomous Machine Intelligence." *OpenReview preprint*.
+
+Meng, K., Bau, D., Andonian, A., and Belinkov, Y. (2022). "Locating and Editing Factual Associations in GPT." *NeurIPS 2022*.
+
+Mitchell, M., and Krakauer, D. C. (2023). "The Debate Over Understanding in AI's Large Language Models." *PNAS* 120(13), e2215907120.

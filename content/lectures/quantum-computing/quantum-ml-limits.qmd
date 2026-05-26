@@ -1,0 +1,183 @@
+---
+title: "Quantum machine learning — limits and honest prospects"
+author: "Hovhannes Grigoryan"
+date: "2026-04-26"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Construct** a Variational Quantum Eigensolver (VQE) for a small chemistry Hamiltonian and understand its hybrid classical-quantum loop.
+2. **Diagnose** the barren-plateau problem in deep parameterized quantum circuits and explain when it renders gradient descent useless.
+3. **Apply** the quadratic Monte Carlo speedup (Montanaro 2015) to a financial derivative pricing problem.
+4. **State** the complexity class BQP's relationship to BPP, NP, and PSPACE, and the implications for quantum ML claims.
+5. **Evaluate** a candidate quantum-ML algorithm for dequantization resistance using the Aaronson litmus test.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures: (1) VQE and the barren plateau; (2) quantum Monte Carlo and amplitude estimation for finance; (3) BQP, dequantization, and the error-correction horizon.
+:::
+
+## VQE and variational quantum circuits {#sec-vqe}
+
+Peruzzo, McClean, and collaborators (2013) introduced the Variational Quantum Eigensolver. Given a Hamiltonian $H$, the variational principle states
+
+$$
+E_0 \leq \langle \psi | H | \psi \rangle \quad \forall |\psi\rangle,
+$$ {#eq-variational}
+
+with equality at the ground state. VQE parameterizes $|\psi(\boldsymbol\theta)\rangle$ via a shallow quantum circuit $U(\boldsymbol\theta)$, then classically minimizes $\langle \psi(\boldsymbol\theta) | H | \psi(\boldsymbol\theta) \rangle$.
+
+The algorithm is hybrid: the quantum computer prepares $|\psi(\boldsymbol\theta)\rangle$ and estimates the expectation via Pauli-decomposition sampling; the classical computer runs the outer optimization loop. Hardware-efficient ansätze use layers of single-qubit rotations and entangling CNOTs; chemistry-inspired ansätze (Unitary Coupled Cluster, UCCSD) have classical-theoretical foundations but grow deep with problem size.
+
+### The barren-plateau problem
+
+McClean, Boixo, Smelyanskiy, Babbush, and Neven (2018) proved a result that significantly shaped the field.
+
+::: {.callout-important title="Theorem 3.1 — Barren plateaus in VQE (McClean et al. 2018)"}
+For random parameterized quantum circuits of depth $\geq O(\log n)$ on $n$ qubits, the gradient of the VQE cost function is exponentially concentrated near zero:
+
+$$
+\mathbb{E}\left[\frac{\partial E}{\partial \theta}\right] = 0, \quad \mathrm{Var}\left[\frac{\partial E}{\partial \theta}\right] = O(2^{-2n}).
+$$
+
+Gradient descent from a random initialization sees zero signal; training cannot make progress.
+:::
+
+This has deep practical implications. Randomly-initialized deep ansätze are untrainable. Structured initialization (near Hartree-Fock for chemistry, near-adiabatic path for optimization) is essential. QAOA's Trotterized adiabatic ansatz sidesteps the plateau because the initialization is structured, not random.
+
+## The Monte Carlo speedup {#sec-qmc}
+
+Classical Monte Carlo estimates an expectation $\mu = \mathbb{E}[f(X)]$ to accuracy $\varepsilon$ using $O(1/\varepsilon^2)$ samples. Montanaro (2015) showed quantum amplitude estimation achieves the same accuracy with $O(1/\varepsilon)$ amplitude-estimation queries. This is the cleanest quantum-ML advantage that survives dequantization attacks.
+
+### Financial applications
+
+For a derivative with payoff $f$ on underlying $X$ and expiration $T$,
+
+$$
+\text{Price} = e^{-rT} \mathbb{E}[f(X_T)].
+$$
+
+Classical Monte Carlo with $M$ paths gives an estimate with variance $\sigma^2 / M$. Quantum amplitude estimation gives the same accuracy with $\sqrt M$ queries. Stamatopoulos et al. (2020, *Quantum*) applied this to European, Asian, and structured products.
+
+The practical catch: coherence time scales with $1/\varepsilon$. For $\varepsilon = 10^{-4}$ (a basis point of accuracy), circuit depth is $\sim 10^4$. At NISQ per-gate error $10^{-3}$, fidelity falls below $e^{-10}$. Quantum Monte Carlo is a fault-tolerance advantage; NISQ hardware delivers only loose approximations.
+
+::: {.callout-warning title="When the quadratic speedup is competitive"}
+A 100× quadratic speedup matters only if classical variance reduction (control variates, importance sampling, quasi-Monte Carlo) has already been exhausted. For vanilla options with good classical variance reduction, quantum's 100× becomes less compelling. For rare-event estimation or deep tail risks, where classical variance reduction fails, quantum Monte Carlo's quadratic edge is the cleanest remaining pure advantage.
+:::
+
+## BQP and the complexity landscape {#sec-bqp}
+
+**BQP** (bounded-error quantum polynomial time) is the class of decision problems solvable in polynomial time on a quantum computer with bounded error. The containments are proven:
+
+$$
+\text{P} \subseteq \text{BPP} \subseteq \text{BQP} \subseteq \text{PSPACE}.
+$$
+
+The first two are trivial. The third comes from Bernstein-Vazirani (1993), who simulated quantum computation in polynomial space via path-sum formulas.
+
+Widely believed but unproven:
+
+- $\text{P} \neq \text{NP}$ (the million-dollar conjecture).
+- $\text{BQP} \supsetneq \text{BPP}$ (quantum strictly stronger than classical randomized), with Shor's speedup as the best evidence.
+- $\text{NP} \not\subseteq \text{BQP}$ (quantum computers do not efficiently solve NP-hard problems in general). Grover's quadratic bound is the black-box limit.
+
+### Sampling complexity
+
+For sampling problems (producing random outputs from a target distribution), a parallel hierarchy exists. **Aaronson-Arkhipov (2011)** showed that $\text{SampBQP} \not\subseteq \text{SampBPP}$ assuming the polynomial hierarchy is infinite. This foundation supports boson-sampling supremacy claims.
+
+### The oracle separation
+
+Raz and Tal (2019) proved: relative to an oracle, there is a problem in BQP outside the polynomial hierarchy. Without oracles, the corresponding unrelativized claim is open, this is a deep open problem of theoretical computer science.
+
+## Dequantization, the Aaronson litmus test {#sec-tang}
+
+Tang's 2018 dequantization of the Kerenidis-Prakash quantum recommender system launched a program. A proposed quantum-ML algorithm is worth scrutiny by the following criteria (Aaronson 2015):
+
+1. Is $|b\rangle$ efficiently quantum-preparable, or does it require reading all $N$ classical entries?
+2. Is $A$ efficiently quantum-accessible via QRAM or sparse oracle, versus "just" stored in classical memory?
+3. Does the output require only a *global* property of $|x\rangle$, or every entry?
+4. Is the condition number $\kappa$ polynomial or polylogarithmic in $n$?
+
+Failure on any one criterion means classical algorithms (with $\ell_2$-norm sampling access as the analog of QRAM) can match or beat the quantum method within polynomial overhead. Tang's recommender-system, PCA, SVM, and clustering dequantizations all exploit this.
+
+::: {.callout-note title="The survivor list"}
+Quantum ML speedups that *have not* been dequantized (as of 2025):
+
+- Quantum Monte Carlo (amplitude estimation): quadratic, provably optimal, fault-tolerance-bound.
+- Certain quantum simulation problems (ground-state chemistry, dynamics): exponential in restricted problem classes.
+- Shor-style algorithms (factoring, discrete log): exponential, not an ML task per se.
+
+Most other "exponential quantum ML" claims from 2013–2017 have been dequantized or remain conditional on unrealistic input access.
+:::
+
+## The error-correction horizon {#sec-ft}
+
+Every quantum algorithm with non-trivial depth ultimately depends on fault tolerance. Preskill's 2025 "Beyond NISQ" essay names the next benchmark: the **Megaquop machine**, a device performing $\geq 10^6$ logical operations with error correction.
+
+Recent progress:
+
+- **Google Willow (2024)**: demonstrated below-threshold error correction at distances 5 and 7, with logical error rate decreasing as distance increases.
+- **Quantinuum H2 (2024)**: 56 trapped-ion qubits with 99.99% two-qubit gate fidelity.
+- **IBM Heron (2024)**: 133 qubits targeting early fault-tolerant demonstrations.
+
+The Megaquop era is credibly 5–10 years out. CRQC (Shor-capable) is 10–20 years. For applications like quantum Monte Carlo option pricing, the practical deployment timeline is the 2030s or later.
+
+## Synthesis {#sec-synthesis}
+
+Quantum computing's near-term relevance depends on the problem. For:
+
+- **Cryptography.** Shor guarantees an exponential attack on RSA and ECC given fault-tolerant hardware. Post-quantum cryptography (NIST's ML-KEM, ML-DSA) is the policy response. Real threat horizon: 10–20 years.
+- **Chemistry and simulation.** VQE and phase estimation are the primary candidates. Barren plateaus and fidelity constraints limit NISQ. Error-corrected devices will enable simulation of small molecules classical methods cannot reach.
+- **Optimization.** QAOA, adiabatic annealing, D-Wave. No proven asymptotic advantage. Specific structured problems may benefit; general combinatorial optimization will not.
+- **Machine learning.** Quantum Monte Carlo for financial-risk applications has a clean quadratic speedup. Most other "quantum ML" claims have been dequantized or require unrealistic input access.
+
+Honest appraisal: quantum computing is a real technology with real advantages, but the advantages are narrower and later than advertised. The careful researcher reads fine print before building business plans.
+
+## Exercises
+
+**Exercise 3.1** ($\star\star$). Prove the variational principle @eq-variational by decomposing $|\psi\rangle$ in the eigenbasis of $H$.
+
+**Exercise 3.2** ($\star\star\star$). Prove Theorem 3.1 (barren plateaus) using the unitary-invariance properties of the Haar measure. Cite Brandão-Harrow-Horodecki 2016 as a key lemma.
+
+**Exercise 3.3** ($\star\star$). Implement amplitude estimation at $\varepsilon = 0.01$ for an option pricing problem. Compare with classical Monte Carlo at $\varepsilon = 0.01$; verify the quadratic advantage in sample complexity.
+
+**Exercise 3.4** ($\star$). Apply the Aaronson litmus test to a recently-published quantum ML algorithm. Identify which criterion fails, if any, and what the resulting classical lower bound is.
+
+---
+
+## References
+
+Aaronson, S. (2015). "Read the Fine Print." *Nature Physics* 11, 291–293.
+
+Aaronson, S., and Arkhipov, A. (2011). "The Computational Complexity of Linear Optics." *STOC 2011*, 333–342.
+
+Bernstein, E., and Vazirani, U. (1993/1997). "Quantum Complexity Theory." *SIAM Journal on Computing* 26(5), 1411–1473.
+
+McClean, J. R., Boixo, S., Smelyanskiy, V. N., Babbush, R., and Neven, H. (2018). "Barren Plateaus in Quantum Neural Network Training Landscapes." *Nature Communications* 9, 4812.
+
+Montanaro, A. (2015). "Quantum Speedup of Monte Carlo Methods." *Proceedings of the Royal Society A* 471, 20150301.
+
+Peruzzo, A., McClean, J., Shadbolt, P., et al. (2013). "A Variational Eigenvalue Solver on a Photonic Quantum Processor." *Nature Communications* 5, 4213.
+
+Preskill, J. (2025). "Beyond NISQ: The Megaquop Machine." *ACM Transactions on Quantum Computing* 6(3).
+
+Raz, R., and Tal, A. (2019). "Oracle Separation of BQP and PH." *STOC 2019*, 13–23.
+
+Stamatopoulos, N., Egger, D. J., Sun, Y., et al. (2020). "Option Pricing Using Quantum Computers." *Quantum* 4, 291.
+
+Tang, E. (2018/2019). "A Quantum-Inspired Classical Algorithm for Recommendation Systems." *STOC 2019*, 217–228.

@@ -1,0 +1,329 @@
+---
+title: "Randomized experiments"
+author: "Hovhannes Grigoryan"
+date: "2026-03-29"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Design** a completely randomized experiment, a stratified design, a blocked design, and a clustered design, and choose among them based on the variance structure of the outcome.
+2. **Analyze** the resulting data using the Neyman unbiased estimator and Fisher's exact test.
+3. **Compute** the sample size required to detect an effect of given magnitude at specified power.
+4. **Apply** CUPED-style variance reduction using pre-experiment covariates to tighten confidence intervals without biasing estimates.
+5. **Identify** when cluster-randomized designs require the cluster-robust variance estimator and derive that estimator.
+6. **Evaluate** the treatment effect on the treated in a noncompliance setting via the intent-to-treat versus per-protocol analyses.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three lectures of 75–90 minutes each.
+
+**Lecture 1, Design choices.**
+
+- Completely randomized design (10 min)
+- Stratification and blocking: when to use each (25 min)
+- Clustered randomization: variance inflation and power loss (25 min)
+- Factorial and sequential designs (brief, 15 min)
+- Hands-on: simulate a blocked trial vs completely randomized, compare variances (15 min)
+
+**Lecture 2, Power and sample size.**
+
+- Neyman formula for minimum detectable effect (15 min)
+- Power calculations: two-tailed test at 80% power (25 min)
+- Unequal-variance allocation (Neyman allocation) (20 min)
+- Multiple-hypothesis adjustment: Bonferroni, BH (20 min)
+- Hands-on: power analysis for a 2×2 factorial design (10 min)
+
+**Lecture 3, Variance reduction and noncompliance.**
+
+- CUPED and related post-stratification (Deng-Xu-Kohavi 2013) (25 min)
+- The CUPED identity and its zero-bias guarantee (20 min)
+- Intent-to-treat vs per-protocol (20 min)
+- Wald estimator for noncompliance and instrumental-variable bridge (15 min)
+- Hands-on: CUPED on simulated AB test data (10 min)
+:::
+
+## Design as the source of identification {#sec-design-identification}
+
+In Chapter 1 we proved that randomization eliminates confounding: $D \perp\!\!\!\perp (Y(0), Y(1))$ by construction, so the difference-in-means is unbiased for the ATE. This chapter asks a different question: given that we can randomize, *how should* we randomize to maximize statistical efficiency?
+
+The answer is that the design of the experiment determines the variance of the estimator, even when every design is unbiased. A well-designed trial can achieve the same statistical precision as a poorly-designed one at a fraction of the sample size. In an era of A/B testing at global tech companies, where each percentage point of precision translates to millions in operational value, experimental design is a practical discipline with substantial economic stakes.
+
+## Completely randomized designs {#sec-crd}
+
+### Definition and properties
+
+In a **completely randomized design** (CRD) with $N$ units and target treated count $N_1$, the treated set is a simple random sample of size $N_1$ drawn without replacement from the $N$ units. The remaining $N_0 = N - N_1$ units are controls.
+
+The CRD is the simplest experimental design. Its variance, from Chapter 1 Theorem 1.2, is
+
+$$
+\text{Var}(\hat\tau) = \frac{S_1^2}{N_1} + \frac{S_0^2}{N_0} - \frac{S_{01}^2}{N},
+$$ {#eq-crd-var}
+
+where $S_d^2$ is the population variance of $Y(d)$ and $S_{01}^2$ is the population variance of $\delta_i = Y_i(1) - Y_i(0)$.
+
+### Optimal allocation
+
+For a total budget $N = N_0 + N_1$ and known $S_0, S_1$, the allocation minimizing @eq-crd-var is
+
+$$
+\frac{N_1}{N} = \frac{S_1}{S_0 + S_1}.
+$$ {#eq-neyman-allocation}
+
+This is the **Neyman allocation**. For equal variances $S_0 = S_1$, the optimum is $N_1 = N / 2$, the familiar half-and-half. For unequal variances, common in experiments where the treatment group exhibits more dispersion, the optimum is skewed toward the higher-variance arm.
+
+Neyman allocation is derived by minimizing $S_1^2 / N_1 + S_0^2 / (N - N_1)$ subject to $N_1 + N_0 = N$ via Lagrangian, yielding $N_1 / N_0 = S_1 / S_0$.
+
+### Sample size
+
+To detect a minimum effect $\tau^*$ with power $1 - \beta$ at significance level $\alpha$, assuming $\sigma_0 = \sigma_1 = \sigma$ and equal allocation,
+
+$$
+N = 4 \sigma^2 \frac{(z_{1-\alpha/2} + z_{1-\beta})^2}{(\tau^*)^2}.
+$$ {#eq-sample-size}
+
+For $\alpha = 0.05, 1 - \beta = 0.80$, the factor $(z_{1-\alpha/2} + z_{1-\beta})^2 = (1.96 + 0.84)^2 \approx 7.85$. A researcher targeting $\tau^* = 0.2\sigma$ (small-effect Cohen's $d$) needs $N \ge 4 \cdot 1 \cdot 7.85 / 0.04 = 785$. For $\tau^* = 0.5\sigma$ (medium effect), $N \ge 126$.
+
+## Stratified and blocked designs {#sec-stratified}
+
+Suppose the outcome depends substantially on a pre-experiment covariate $X$, age in a medical trial, prior spending in a marketing experiment. A CRD will sometimes, by chance, assign all the old patients to one arm, creating a noisy estimate. Stratification removes this risk.
+
+### Stratified CRD
+
+Partition the $N$ units into $K$ strata by $X$ (e.g., age quintiles). Within each stratum $k$, independently apply a CRD with strata-specific sample sizes $(N_{0k}, N_{1k})$. The overall estimator is the weighted average:
+
+$$
+\hat\tau_{\text{strat}} = \sum_{k=1}^K \frac{N_k}{N} (\bar Y_{1k} - \bar Y_{0k}).
+$$ {#eq-strat-estimator}
+
+### Variance reduction
+
+The variance of $\hat\tau_{\text{strat}}$ is a weighted sum of within-stratum variances. A standard ANOVA decomposition gives
+
+$$
+\text{Var}(\hat\tau_{\text{strat}}) = \sum_k \left(\frac{N_k}{N}\right)^2 \text{Var}(\hat\tau_k) = \sum_k \left(\frac{N_k}{N}\right)^2 \left(\frac{S_{1k}^2}{N_{1k}} + \frac{S_{0k}^2}{N_{0k}} - \frac{S_{01,k}^2}{N_k}\right).
+$$
+
+::: {.callout-important title="Theorem 4.1 — Stratification reduces variance (Cochran 1977)"}
+If the strata are formed by a pre-experiment covariate $X$ that predicts the outcome, then
+
+$$
+\text{Var}(\hat\tau_{\text{strat}}) \le \text{Var}(\hat\tau_{\text{CRD}}),
+$$
+
+with strict inequality when $\text{Var}(\mathbb{E}[Y(d) \mid X]) > 0$.
+:::
+
+::: {.callout-tip title="Proof sketch"}
+The total variance of $Y(d)$ decomposes as
+
+$$
+\text{Var}(Y(d)) = \mathbb{E}[\text{Var}(Y(d) \mid X)] + \text{Var}(\mathbb{E}[Y(d) \mid X]).
+$$
+
+Stratifying by $X$ averages over the *within-stratum* variance $\mathbb{E}[\text{Var}(Y(d) \mid X)]$. The between-stratum variance $\text{Var}(\mathbb{E}[Y(d) \mid X])$ is removed from the estimator's variance because each stratum's ATE is estimated separately and then weighted. The difference is the variance reduction. $\square$
+:::
+
+### Blocking
+
+A **block** is a stratum of size $M$ with exactly $M / 2$ treated and $M / 2$ control (for a balanced block of even size). Blocking is stratification taken to the limit of small strata. The most extreme case is matched pairs: $M = 2$, with one treated and one control per pair.
+
+Blocking maximally removes between-stratum variance at the cost of design flexibility. A matched-pairs design can achieve a variance reduction of 2–10× over a CRD when blocks are well-matched on predictive covariates.
+
+## CUPED and variance reduction {#sec-cuped}
+
+The most widely deployed variance-reduction technique in industry A/B testing is **CUPED** (Controlled-experiment Using Pre-Experiment Data), introduced by Deng, Xu, and Kohavi (2013) [@deng2013improving] and now standard at Microsoft, Google, Netflix, Booking, and many others.
+
+### The CUPED identity
+
+Suppose we observe a pre-experiment covariate $X$ for each unit. Define
+
+$$
+Y^{\text{CUPED}}_i := Y_i - \theta (X_i - \bar X),
+$$ {#eq-cuped-def}
+
+for some constant $\theta$. Then the CUPED-adjusted estimator is
+
+$$
+\hat\tau^{\text{CUPED}} = \bar Y_1^{\text{CUPED}} - \bar Y_0^{\text{CUPED}}.
+$$
+
+::: {.callout-important title="Theorem 4.2 — CUPED is unbiased and has lower variance (Deng-Xu-Kohavi 2013)"}
+For any $\theta \in \mathbb{R}$,
+
+(a) $\mathbb{E}[\hat\tau^{\text{CUPED}}] = \tau$ (unbiasedness is preserved).
+
+(b) The variance is minimized at $\theta^* = \text{Cov}(Y, X) / \text{Var}(X)$, yielding
+
+$$
+\text{Var}(\hat\tau^{\text{CUPED}}) = \text{Var}(\hat\tau) \cdot (1 - \rho_{Y, X}^2),
+$$
+
+where $\rho_{Y, X}$ is the correlation between the outcome and the pre-experiment covariate.
+:::
+
+A pre-experiment covariate with correlation 0.5 with the outcome yields a 25% variance reduction. At correlation 0.7, a 50% reduction. For e-commerce A/B tests where last-month's spend correlates 0.8 with this-month's spend, CUPED routinely achieves 60%+ variance reduction.
+
+::: {.callout-tip title="Proof"}
+Unbiasedness: under randomization $D \perp\!\!\!\perp X$, so subtracting a function of $X$ has zero average effect on the treatment-control contrast.
+
+Variance minimization: $\text{Var}(\hat\tau^{\text{CUPED}}) = \text{Var}(\bar Y_1 - \theta \bar X_1) + \text{Var}(\bar Y_0 - \theta \bar X_0) - 2\text{Cov}(\cdot, \cdot)$. Minimize with respect to $\theta$ by setting the derivative to zero. The result is $\theta^* = \text{Cov}(Y, X) / \text{Var}(X)$, which is the OLS coefficient of $Y$ on $X$. Substituting, variance becomes $\text{Var}(\hat\tau)(1 - \rho^2)$. $\square$
+:::
+
+### CUPED as regression
+
+CUPED is equivalent to fitting
+
+$$
+Y_i = \alpha + \tau D_i + \theta X_i + \varepsilon_i
+$$
+
+via OLS and reading off $\hat\tau$. The regression-adjustment identification is exactly the CUPED construction.
+
+### Code example
+
+```python
+import numpy as np
+from scipy.stats import norm
+
+rng = np.random.default_rng(0)
+N = 10000
+
+# Pre-experiment covariate predicts outcome
+X = rng.normal(0, 1, N)
+tau = 0.1
+D = (rng.uniform(size=N) < 0.5).astype(int)
+Y = 0.8 * X + tau * D + rng.normal(0, 0.5, N)   # correlation ≈ 0.8 between Y and X
+
+# Naive estimator
+tau_naive = Y[D == 1].mean() - Y[D == 0].mean()
+var_naive = Y[D == 1].var(ddof=1) / (D == 1).sum() + Y[D == 0].var(ddof=1) / (D == 0).sum()
+
+# CUPED estimator
+theta = np.cov(Y, X, ddof=1)[0, 1] / np.var(X, ddof=1)
+Y_cuped = Y - theta * (X - X.mean())
+tau_cuped = Y_cuped[D == 1].mean() - Y_cuped[D == 0].mean()
+var_cuped = Y_cuped[D == 1].var(ddof=1) / (D == 1).sum() + Y_cuped[D == 0].var(ddof=1) / (D == 0).sum()
+
+print(f"Naive τ̂:   {tau_naive:.4f}  (SE = {np.sqrt(var_naive):.4f})")
+print(f"CUPED τ̂:   {tau_cuped:.4f}  (SE = {np.sqrt(var_cuped):.4f})")
+print(f"Variance reduction: {(1 - var_cuped/var_naive) * 100:.1f}%")
+```
+
+The CUPED SE is dramatically lower than the naive one, often by 30–60 percent on real A/B-test data. The technique has no ideological opponents and is essentially free to implement.
+
+## Cluster-randomized designs {#sec-cluster}
+
+In many experiments the unit of randomization is not the unit of analysis. A classroom is randomized to an educational intervention but student test scores are the outcome. A hospital is randomized to a treatment protocol but patient outcomes are measured. These are **cluster-randomized designs**.
+
+Cluster randomization induces positive within-cluster correlation of the outcome, which inflates the variance of the ATE estimator.
+
+::: {.callout-note title="Theorem 4.3 — Variance inflation from clustering"}
+In a cluster-randomized design with $K$ clusters each of size $M$, the variance of the difference-in-means is inflated by a **design effect**
+
+$$
+\text{DE} = 1 + (M - 1) \rho_{\text{ICC}},
+$$ {#eq-design-effect}
+
+where $\rho_{\text{ICC}}$ is the intraclass correlation coefficient of the outcome.
+:::
+
+A trial with $M = 30$ students per classroom and $\rho_{\text{ICC}} = 0.1$ has design effect $1 + 29 \cdot 0.1 = 3.9$, meaning the effective sample size is about four times smaller than the nominal. This is a common mistake in educational and public-health experiments.
+
+### Cluster-robust standard errors
+
+Under clustering, the correct variance estimator treats each cluster as the unit of inference:
+
+$$
+\widehat{\text{Var}}(\hat\tau) = \frac{1}{K(K-1)} \sum_{k=1}^K (\hat\tau_k - \hat\tau)^2,
+$$ {#eq-cluster-robust}
+
+where $\hat\tau_k$ is the estimator computed on cluster $k$ alone. This **cluster-robust** estimator is valid regardless of within-cluster correlation and does not require estimating $\rho_{\text{ICC}}$.
+
+## Noncompliance {#sec-noncompliance}
+
+In many trials, the assigned treatment is not the treatment actually received. Patients assigned to drug A may refuse; employees assigned to training may not attend. This is **noncompliance**.
+
+Two standard analyses:
+
+- **Intent-to-treat (ITT):** compare outcomes across assignment arms, regardless of compliance. This estimates the effect of *being assigned* to treatment.
+- **Per-protocol:** compare outcomes across the actually-received-treatment groups. This estimates a selection-biased effect.
+
+The Imbens-Angrist LATE theorem (Chapter 6) shows how to identify the effect for *compliers* using ITT as an instrumental variable. In most trials, ITT is the headline estimand because it respects the randomization.
+
+## Evaluation metrics {#sec-crd-metrics}
+
+1. **Minimum detectable effect (MDE)**, what effect size the experiment can detect at given power. Report alongside the result.
+2. **Variance-reduction ratio**, if CUPED or a regression adjustment is used, report $1 - \text{Var}(\hat\tau^{\text{adjusted}}) / \text{Var}(\hat\tau^{\text{naive}})$.
+3. **Balance check**, pre-specified covariate means in treated vs control arms. Large imbalance signals randomization failure (bug, incomplete enrollment, etc.).
+4. **Compliance rate**, fraction of assigned-treatment subjects who actually received treatment. ITT is unbiased but per-protocol may deserve a complementary analysis via IV.
+5. **Guardrail metrics**, alongside the primary effect, monitor 3–5 secondary metrics that should *not* be affected by the treatment. If they move significantly, something is off.
+
+## Bibliographic notes {#sec-crd-bib}
+
+Fisher (1935), *The Design of Experiments*, gave the first systematic treatment of randomization as an inferential tool. The book is the origin of the randomized controlled trial as a formal concept.
+
+Cochran (1977), *Sampling Techniques* (3rd ed.), covers stratification and clustering with exhaustive formulas. Still the definitive reference for design of observational survey sampling adapted to experimental contexts.
+
+Deng, Xu, Kohavi, and Walker (2013), "Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-experiment Data," WSDM 2013, introduced CUPED. The variance reduction has been replicated across essentially every large web company.
+
+Kohavi, Tang, and Xu (2020), *Trustworthy Online Controlled Experiments*, Cambridge University Press, is the modern applied reference for web A/B testing, including sample-ratio-mismatch diagnostics, peeking, and multi-arm designs.
+
+Imbens and Rubin (2015), Part II, covers experimental design from the potential-outcomes perspective with exhaustive worked examples.
+
+## Exercises
+
+### Theoretical exercises
+
+**Exercise 4.1** ($\star$). Derive @eq-sample-size starting from the asymptotic distribution of $\hat\tau$. Show how the formula changes for a one-sided test.
+
+**Exercise 4.2** ($\star\star$). Prove Theorem 4.1 by computing $\text{Var}(\hat\tau_{\text{CRD}}) - \text{Var}(\hat\tau_{\text{strat}})$ and showing it equals $\text{Var}(\mathbb{E}[Y(d) \mid X])$ in an appropriate limit.
+
+**Exercise 4.3** ($\star\star$). Derive the optimal $\theta^*$ in Theorem 4.2 when $X$ is a vector of multiple pre-experiment covariates. Show that the result reduces to the OLS coefficients of $Y$ on $X$.
+
+**Exercise 4.4** ($\star\star\star$). Generalize the CUPED identity to the cluster-randomized setting. What pre-experiment covariate would give the greatest variance reduction, and how does the design effect in @eq-design-effect interact with the CUPED reduction?
+
+### Computational exercises
+
+**Exercise 4.5** ($\star$). Simulate a CRD with $N = 1000$ and compute the empirical variance of the difference-in-means across 1000 replications. Compare with the theoretical Neyman variance.
+
+**Exercise 4.6** ($\star\star$). Implement a matched-pairs experiment with pairs formed by nearest-neighbor on a single covariate. Compare the variance with an unmatched CRD on the same DGP.
+
+**Exercise 4.7** ($\star\star$). Replicate the CUPED example in §@sec-cuped. Study how the variance-reduction ratio depends on the correlation between $Y$ and $X$, plotting reduction vs correlation.
+
+**Exercise 4.8** ($\star\star\star$). Implement a cluster-randomized simulation with $K = 20$ clusters of size $M = 30$ and varying $\rho_{\text{ICC}}$. Show numerically that the naive CRD variance formula understates uncertainty and that the cluster-robust variance @eq-cluster-robust achieves nominal coverage.
+
+### Discussion exercises
+
+**Exercise 4.9**. An online retailer runs an A/B test and finds a 2.3% lift with $p < 0.01$. The CEO asks if they should deploy. Explain what additional diagnostics you would run before recommending deployment.
+
+**Exercise 4.10**. In a vaccine trial, 30% of assigned-vaccine subjects refused. Compare the interpretations of the ITT and per-protocol analyses. Which would you report as the headline, and why?
+
+---
+
+## References
+
+Cochran, W. G. (1977). *Sampling Techniques* (3rd ed.). Wiley.
+
+Deng, A., Xu, Y., Kohavi, R., and Walker, T. (2013). "Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-experiment Data." *Proceedings of the 6th ACM WSDM*, 123–132.
+
+Fisher, R. A. (1935). *The Design of Experiments*. Oliver and Boyd.
+
+Imbens, G. W., and Rubin, D. B. (2015). *Causal Inference for Statistics, Social, and Biomedical Sciences*. Cambridge University Press.
+
+Kohavi, R., Tang, D., and Xu, Y. (2020). *Trustworthy Online Controlled Experiments: A Practical Guide to A/B Testing*. Cambridge University Press.

@@ -1,0 +1,177 @@
+---
+title: "Synthetic control"
+author: "Hovhannes Grigoryan"
+date: "2026-04-18"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "On this page"
+    number-sections: true
+    theme: cosmo
+    mainfont: "Source Serif Pro, Georgia, serif"
+    fontsize: "1.05em"
+    linestretch: 1.6
+    highlight-style: github
+    code-fold: false
+    df-print: kable
+    link-external-newwindow: true
+---
+
+::: {.callout-note title="Intended learning outcomes"}
+By the end of this chapter, you will be able to:
+
+1. **Construct** the Abadie-Diamond-Hainmueller synthetic control estimator as a weighted average of donor-pool units.
+2. **State** the identifying assumption for SC: the treated unit lies in the convex hull of donors pre-treatment.
+3. **Perform** placebo-based permutation inference for synthetic-control estimates.
+4. **Apply** the synthetic DiD estimator (Arkhangelsky et al. 2021) when both SC and DiD assumptions hold approximately.
+5. **Diagnose** when SC is appropriate versus when it is extrapolating.
+:::
+
+::: {.callout-tip title="Suggested lecture plan" collapse="true"}
+Three 75–90 min lectures.
+
+**Lecture 1.** Classical SC, optimization formulation, identifying assumption, the California tobacco application (Abadie et al. 2010).
+**Lecture 2.** Inference: placebo permutation tests, p-values for SC. Generalized synthetic control.
+**Lecture 3.** Synthetic DiD: bridging SC and DiD. Hands-on with `pysyncon` and `synthdid` packages.
+:::
+
+## The setup {#sec-sc-setup}
+
+We observe one treated unit and $J$ control (donor) units across $T$ time periods. The treatment occurs at $t = T_0 + 1$. The classical example: Abadie, Diamond, and Hainmueller (2010) [@abadie2010synthetic] studied California's 1988 tobacco-control law, with California as the treated unit and 38 other US states as donors.
+
+The problem: there is only one treated unit, so panel-style DiD would rely on extrapolating from a small set of controls.
+
+## Classical SC {#sec-sc-classical}
+
+### The estimator
+
+Define a vector of donor weights $w = (w_1, \ldots, w_J)$ with $w_j \geq 0$ and $\sum_j w_j = 1$. The **synthetic control** is a weighted average of donors:
+
+$$
+\hat Y_{1, t}^{\text{SC}} = \sum_j w_j Y_{j, t}.
+$$
+
+Weights are chosen to match the treated unit's pre-treatment outcomes and covariates:
+
+$$
+\hat w = \arg\min_{w \in \Delta^{J-1}} \sum_{k} V_k \left(\bar X_{1, k} - \sum_j w_j \bar X_{j, k}\right)^2,
+$$ {#eq-sc-opt}
+
+where $X_k$ are pre-treatment variables (covariates and lagged outcomes) and $V_k$ are importance weights selected to minimize prediction error on pre-treatment outcomes. The convex constraint $w \in \Delta^{J-1}$ (simplex) prevents negative weights, ensuring interpretability: the synthetic control is a convex combination of real donors.
+
+### Estimand
+
+The treatment effect in period $t > T_0$ is
+
+$$
+\hat\tau_{t} = Y_{1, t} - \hat Y_{1, t}^{\text{SC}} = Y_{1, t} - \sum_j \hat w_j Y_{j, t}.
+$$
+
+### Identifying assumption
+
+The identifying assumption is that the synthetic control accurately approximates the treated unit's counterfactual outcome in the post-treatment period. For this to hold, (a) the treated unit must lie in the convex hull of the donors in the pre-treatment period, and (b) the relationship continues to hold in the post-treatment period. Both are testable pre-treatment (check match quality) and plausible by assumption post-treatment.
+
+## Placebo-based inference {#sec-sc-inference}
+
+Because there is only one treated unit, classical frequentist inference does not directly apply. Abadie-Diamond-Hainmueller propose **placebo permutation tests**: apply the SC procedure to each donor as if *they* had been treated, computing a "placebo gap" for each. The observed treated gap is compared to the distribution of placebo gaps.
+
+Specifically, define the ratio of post-treatment to pre-treatment gaps as a test statistic. The $p$-value is the rank of the observed ratio among the placebos. If the observed effect is extreme relative to the placebos, we reject the null of no effect.
+
+## Generalized synthetic control {#sec-gsc}
+
+Xu (2017) [@xu2017generalized] generalized SC to settings with multiple treated units and matrix-completion-style factor structure:
+
+$$
+Y_{i, t} = \sum_r \lambda_{i, r} f_{r, t} + \epsilon_{i, t} + \tau_{i, t} D_{i, t},
+$$
+
+where $\lambda_{i, r} f_{r, t}$ is a latent-factor decomposition. The generalized SC estimator is consistent for the ATT under appropriate rank conditions and allows parallel-trends-like arguments in a latent-factor framework.
+
+## Synthetic DiD {#sec-synth-did}
+
+Arkhangelsky, Athey, Hirshberg, Imbens, and Wager (2021) [@arkhangelsky2021synthetic] propose the **synthetic DiD** estimator, which combines the ideas of SC and DiD:
+
+$$
+\hat\tau^{\text{synth-DiD}} = \arg\min_{\tau, \alpha, \beta} \sum_{i, t} \omega_i \lambda_t (Y_{i, t} - \alpha_i - \beta_t - \tau D_{i, t})^2,
+$$ {#eq-synth-did}
+
+where $\omega_i$ are unit weights (synthetic-control-style) and $\lambda_t$ are time weights that emphasize periods more relevant to the treatment. Synthetic DiD is unbiased under weaker assumptions than either SC or DiD alone and handles multiple treated units with staggered adoption.
+
+## Synthetic example {#sec-sc-example}
+
+```python
+import numpy as np
+import cvxpy as cp
+
+rng = np.random.default_rng(7)
+T, T0, J = 20, 15, 10  # 20 periods, treatment at t=16, 10 donors
+
+# Generate donor outcomes
+factors = rng.normal(0, 1, (T, 2))
+loadings_donors = rng.normal(0, 1, (J, 2))
+Y_donors = loadings_donors @ factors.T + rng.normal(0, 0.3, (J, T))
+
+# Treated unit: convex combination of donors 0 and 1 plus an effect
+w_true = np.zeros(J); w_true[0] = 0.6; w_true[1] = 0.4
+Y_treated = w_true @ Y_donors + rng.normal(0, 0.3, T)
+tau_true = 1.0
+Y_treated[T0:] += tau_true
+
+# SC: minimize pre-treatment MSE subject to simplex constraint
+w = cp.Variable(J, nonneg=True)
+constraints = [cp.sum(w) == 1]
+obj = cp.Minimize(cp.sum_squares(Y_treated[:T0] - Y_donors[:, :T0].T @ w))
+cp.Problem(obj, constraints).solve()
+
+y_sc = Y_donors.T @ w.value
+tau_hat = Y_treated[T0:] - y_sc[T0:]
+print(f"True ATT in post period:    {tau_true:.3f}")
+print(f"Average SC gap (post):       {tau_hat.mean():.3f}")
+```
+
+## Evaluation metrics {#sec-sc-metrics}
+
+1. **Pre-treatment RMSE**, match quality. Should be small.
+2. **Post/pre RMSE ratio**, test statistic for placebo inference.
+3. **Placebo $p$-value**, rank of observed among placebos.
+4. **Donor-weight distribution**, report $\hat w$; a single donor dominating indicates fragile estimate.
+5. **Time-varying gap plot**, visualize $Y_{1, t} - \hat Y_{1, t}^{\text{SC}}$ across all $t$.
+
+## Bibliographic notes
+
+Abadie and Gardeazabal (2003), "The Economic Costs of Conflict: A Case Study of the Basque Country," *AER* 93, introduced the original synthetic-control idea.
+
+Abadie, Diamond, and Hainmueller (2010, 2015) formalized the estimator and applied it to the California tobacco study.
+
+Doudchenko and Imbens (2016) provide a modern review with matrix-completion extensions.
+
+Arkhangelsky et al. (2021) synthesize SC and DiD in a single optimization framework.
+
+## Exercises
+
+**Exercise 9.1** ($\star\star$). Show that when all donor weights are equal ($w_j = 1/J$), SC reduces to a simple DiD comparing the treated unit to the average of the donors.
+
+**Exercise 9.2** ($\star\star$). Explain why the simplex constraint $w \in \Delta^{J-1}$ is important for interpretability but potentially restrictive. What happens if you allow negative weights?
+
+**Exercise 9.3** ($\star\star\star$). Prove that under a factor model with $R$ factors, SC is consistent for the ATT if the treated unit's factor loadings lie in the convex hull of donor loadings.
+
+**Exercise 9.4** ($\star\star$). Implement placebo permutation inference from scratch and apply to the synthetic example.
+
+**Exercise 9.5** ($\star\star$). Use `pysyncon` to replicate Abadie's California tobacco study.
+
+---
+
+## References
+
+Abadie, A., Diamond, A., and Hainmueller, J. (2010). "Synthetic Control Methods for Comparative Case Studies: Estimating the Effect of California's Tobacco Control Program." *Journal of the American Statistical Association* 105(490), 493–505.
+
+Abadie, A., Diamond, A., and Hainmueller, J. (2015). "Comparative Politics and the Synthetic Control Method." *American Journal of Political Science* 59(2), 495–510.
+
+Abadie, A., and Gardeazabal, J. (2003). "The Economic Costs of Conflict: A Case Study of the Basque Country." *American Economic Review* 93(1), 113–132.
+
+Arkhangelsky, D., Athey, S., Hirshberg, D. A., Imbens, G. W., and Wager, S. (2021). "Synthetic Difference-in-Differences." *American Economic Review* 111(12), 4088–4118.
+
+Doudchenko, N., and Imbens, G. W. (2016). "Balancing, Regression, Difference-in-Differences and Synthetic Control Methods: A Synthesis." *NBER Working Paper* 22791.
+
+Xu, Y. (2017). "Generalized Synthetic Control Method: Causal Inference with Interactive Fixed Effects Models." *Political Analysis* 25(1), 57–76.
