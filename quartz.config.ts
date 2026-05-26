@@ -14,7 +14,7 @@ const config: QuartzConfig = {
     analytics: null,
     locale: "en-US",
     baseUrl: "iohanngrig.github.io",
-    ignorePatterns: ["private", "templates", ".obsidian", "**/__pycache__/**", "**/*.pyc", "**/scripts/**"],
+    ignorePatterns: ["private", "templates", ".obsidian", "**/__pycache__/**", "**/*.pyc", "**/scripts/**", "**/*.qmd"],
     defaultDateType: "modified",
     generateSocialImages: false,
     theme: {
