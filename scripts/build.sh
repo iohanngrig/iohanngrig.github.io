@@ -40,3 +40,4 @@ if [ -d public/lectures ]; then
     echo "Restored .html extension on $fixed Quarto-rendered chapter file(s)"
   fi
 fi
+
