@@ -1,15 +1,15 @@
 {
-  "name": "@jackyzha0/quartz",
-  "description": "🌱 publish your digital garden and notes as a website",
+  "name": "iohanngrig-site",
+  "description": "Personal research site of Hovhannes Grigoryan. Built on Quartz 4 (https://quartz.jzhao.xyz).",
   "private": true,
-  "version": "4.5.2",
+  "version": "1.0.0",
   "type": "module",
-  "author": "jackyzha0 <j.zhao2k19@gmail.com>",
+  "author": "Hovhannes Grigoryan <iohanngrig@gmail.com>",
   "license": "MIT",
-  "homepage": "https://quartz.jzhao.xyz",
+  "homepage": "https://iohanngrig.github.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jackyzha0/quartz.git"
+    "url": "https://github.com/iohanngrig/iohanngrig.github.io.git"
   },
   "scripts": {
     "quartz": "./quartz/bootstrap-cli.mjs",
