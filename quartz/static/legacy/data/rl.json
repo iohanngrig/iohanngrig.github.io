@@ -1,0 +1,30 @@
+[
+  {
+    "title": "RL1: Markov Decision Processes",
+    "description": "We discuss reinforcement learning in the context of fully observable Markov decision processes, where the information about the world is fully known, and the agent's goal is to find an optimal policy that maximizes the value function. We outline and implement policy and value iteration algorithms that find such an optimal policy and corresponding value function. We use these algorithms on the examples of \"FrozenLake\" and \"Taxi\" OpenAI Gym environments.",
+    "url": "RL1_Markov_Decision_Processes.html",
+    "media": "data/lake_opt.gif"
+  },
+
+  {
+    "title": "RL2: Model-Free Policy Evaluation and Control",
+    "description": "We discuss policy evaluation and control in situations where the dynamics and reward models of the world are unknown. We start with Monte Carlo methods that learn directly from sampling completed episodes of experience. Next, we outline Temporal Difference methods that can learn from incomplete episodes of experience. In the context of model-free control, we study Q-learning, SARSA, and expected SARSA models. We use various gym environments to explore the properties and efficiency of these methods.",
+    "url": "RL2_Model_Free_Policy_Evaluation_and_Control.html",
+    "media": "data/cartpole.gif"
+  },
+
+  {
+    "title": "RL3: Value Function Approximation and DQN",
+    "description": "The essence of value function approximation is to represent a (state-action/state) value function with a parameterized function instead of a table. If the true value function is unknown, we define loss as the discrepancy between the predicted and the target value functions. Using differentiable loss function, we find the value function parameters using stochastic gradient descent. This idea is implemented on the example of approximate Q-learning with deep neural networks (DQN), which we apply to various gym-atari games.",
+    "url": "RL3_Value_Function_Approximation_and_DQN.html",
+    "media": "data/breakout_dqn.gif"
+  },
+
+  {
+    "title": "RL4: Some Applications of DQN",
+    "description": "We consider various implementations of DQN, and apply these to gym-atari games, such as CartPole, and MsPacman.",
+    "url": "RL4_Some_Applications_of_DQN.html",
+    "media": "data/pacman_dqn.mp4"
+  }
+
+]
