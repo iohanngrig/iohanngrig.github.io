@@ -7,7 +7,7 @@ tags: ["llm", "reasoning", "methodology"]
 
 # Chain-of-thought reasoning and its limits
 
-> Chain-of-thought (CoT) prompting, asking a language model to produce intermediate reasoning steps before a final answer, is the most surprising and most consequential prompting technique of the last four years. It improves GSM8K performance from chance to state-of-the-art on large enough models, with no parameter changes. This note covers the empirical phenomenon (Wei et al. 2022), the emergence threshold, the mechanisms by which CoT succeeds and fails, and the recent literature showing that *apparent* CoT reasoning is often a better stochastic-parrot than a better reasoner.
+> Chain-of-thought (CoT) prompting, asking a language model to produce intermediate reasoning steps before a final answer, is the most surprising and most consequential prompting technique of the last four years. It improves GSM8K performance from chance to state-of-the-art on large enough models, with no parameter changes. We cover the empirical phenomenon (Wei et al. 2022), the emergence threshold, the mechanisms by which CoT succeeds and fails, and the recent literature showing that *apparent* CoT reasoning is often a better stochastic-parrot than a better reasoner.
 
 ## 1. The empirical effect
 
@@ -71,7 +71,7 @@ Similarly, retrieval-augmented generation (see [note 8](/research-notes/08-rag))
 
 **Can we detect unfaithful CoT automatically?** Lanham et al.'s perturbation methodology is the current gold standard but expensive. Efficient faithfulness checks would enable better evaluation and targeted training.
 
-## 6. References (verified April 2026)
+## 6. References
 
 - **Wei, J., Wang, X., Schuurmans, D., Bosma, M., Chi, E., Le, Q., & Zhou, D.** (2022). *Chain of thought prompting elicits reasoning in large language models*. NeurIPS. [S.S. `1b6e810c`]
 - **Kojima, T., Gu, S., Reid, M., Matsuo, Y., & Iwasawa, Y.** (2022). *Large language models are zero-shot reasoners*. NeurIPS.
@@ -84,7 +84,5 @@ Similarly, retrieval-augmented generation (see [note 8](/research-notes/08-rag))
 - **Lanham, T., et al.** (2023). *Measuring faithfulness in chain-of-thought reasoning*. arXiv.
 - **Huang, J., Chen, X., Mishra, S., et al.** (2024). *Large language models cannot self-correct reasoning yet*. ICLR.
 - **Lightman, H., Kosaraju, V., Burda, Y., et al.** (2023). *Let's verify step by step*. ICLR.
-
----
 
 *Figure 1 illustrates the emergence-vs-scale relationship reported in Wei et al. 2022 Figure 4; specific numbers are illustrative rather than a direct replication.*

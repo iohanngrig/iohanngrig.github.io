@@ -123,6 +123,4 @@ The 90-day plan above is not hypothetical for me. I have seen this playbook exec
 
 The right hiring manager for this role will look at my technical track record (substantial), my existing delivery experience (shipped production systems, cross-org research circulation, internal reading groups), my writing and communication quality (these essays, my paper drafts, my internal docs), and will make a judgment about whether I have the readiness. I believe the answer is yes. The 90-day plan is concrete evidence of how I would execute, presented in advance so that the hiring manager can evaluate my judgment rather than take it on faith.
 
----
-
 *If you are a hiring manager for a Research Director role and want to discuss any of the above in more detail, I am at iohanngrig@gmail.com.*

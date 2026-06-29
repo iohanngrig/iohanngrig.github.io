@@ -10,7 +10,7 @@ Quantitative finance and machine learning are a famously awkward pair. Finance h
 
 My perspective comes from more than one angle. I spent 2014-2015 as a quantitative researcher in mortgage-backed securities at Citi Global Markets, working on classical stochastic-calculus-based prepayment models. I won the Quantopian trading contest across four months in 2019 using a mix of traditional statistical and ML-adjacent techniques. I have followed the quantitative-finance literature closely through my professional network, and I continue to read the papers that appear at the AEA, SoFiE, and American Finance Association meetings. Since 2024, I have shipped production ML systems at Amazon. The Amazon work is not financial ML, but the engineering principles carry over.
 
-This essay is my honest assessment of where ML has added real value to quantitative finance by 2026, where it has been overapplied or mismeasured, and where the next decade's gains are likely to come from. I will be specific about methods, applications, and time horizons.
+Here is my assessment of where ML has added real value to quantitative finance by 2026, where it has been overapplied or mismeasured, and where the next decade's gains are likely to come from. I will be specific about methods, applications, and time horizons.
 
 ## Where ML genuinely helps
 
@@ -102,6 +102,4 @@ Machine learning has genuinely improved quantitative finance in specific areas: 
 
 For a firm hiring quant research leadership in 2026, the question is not whether we want ML. The question is whether we have the research discipline to distinguish the genuine ML gains from the ones that are either noise or artifacts. That discipline is what I would bring to the role, and it is the thing I would screen candidates for more than any specific technical skill.
 
----
-
-*This essay represents my view of the quant-finance-meets-ML landscape as of 2026. Perspectives may reasonably differ. Comments welcome.*
+*This represents my view of the quant-finance-meets-ML landscape as of 2026. Perspectives may reasonably differ. Comments welcome.*

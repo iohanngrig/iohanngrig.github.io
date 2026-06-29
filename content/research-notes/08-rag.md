@@ -7,7 +7,7 @@ tags: ["llm", "rag", "reliability", "methodology"]
 
 # Retrieval-augmented generation: the reliability story
 
-> Retrieval-augmented generation (RAG), pairing a language model with an external retriever that fetches relevant documents to ground the model's output, is the dominant architecture for factual question answering in production LLM systems. The 2020 paper that named the approach (Lewis et al.) is one of the most-cited NLP papers of the decade. This note covers the basic architecture, the three primary failure modes you will hit in deployment, and why "just add RAG" is a more honest sentence when you understand what it doesn't fix.
+> Retrieval-augmented generation (RAG), pairing a language model with an external retriever that fetches relevant documents to ground the model's output, is the dominant architecture for factual question answering in production LLM systems. The 2020 paper that named the approach (Lewis et al.) is one of the most-cited NLP papers of the decade. We cover the basic architecture, the three primary failure modes you will hit in deployment, and why "just add RAG" is a more honest sentence when you understand what it doesn't fix.
 
 ## 1. The architecture
 
@@ -92,7 +92,7 @@ Agentic RAG, where the agent decides when to retrieve, what to query, and how to
 
 **Retrieval-time vs. training-time knowledge.** There is a spectrum between storing knowledge in weights (high recall, low freshness, high hallucination) and storing it externally (high freshness, bounded by retriever, better provenance). The *optimal allocation* between the two is application-dependent and poorly understood.
 
-## 6. References (verified April 2026)
+## 6. References
 
 - **Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Kuttler, H., Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D.** (2020). *Retrieval-augmented generation for knowledge-intensive NLP tasks*. NeurIPS. [S.S. `659bf9ce`]
 - **Karpukhin, V., Oğuz, B., Min, S., Lewis, P., Wu, L., Edunov, S., Chen, D., & Yih, W.** (2020). *Dense passage retrieval for open-domain question answering*. EMNLP.

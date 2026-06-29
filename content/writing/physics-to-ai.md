@@ -8,7 +8,7 @@ draft: false
 
 I spent eleven years in theoretical physics, five as a doctoral student and six as a postdoctoral researcher at Argonne National Laboratory, Ohio State, and New York University. By 2014 I had produced a respectable body of work in quantum field theory applied to gauge theories, lattice formulations, and related topics. Then I left the academic track. Two years as a fixed-income quantitative researcher at Citi, then the shift into applied machine learning, and today I am a Senior Applied Scientist at Amazon, shipping production Bedrock agents and causal-ML pipelines. The transition worked. I have noticed that many physicists who make this move tell a story about how their physics background became useless. That is not my experience.
 
-This essay is about what actually transferred, what did not, and what I wish someone had told me in 2013 about the translation. The intended readers are two. First, physicists considering the same jump. Second, hiring managers trying to evaluate a physicist who has already jumped. I hope to clarify what the relevant signal is and what it is not.
+I want to lay out what actually transferred, what did not, and what I wish someone had told me in 2013 about the translation. The intended readers are two. First, physicists considering the same jump. Second, hiring managers trying to evaluate a physicist who has already jumped. I hope to clarify what the relevant signal is and what it is not.
 
 ## What transferred well
 
@@ -91,7 +91,5 @@ Industry is different in ways that suit me. The problems are immediate and real.
 The one thing I would tell my 2013 self is this. The transition is harder than you think but more complete than you think. You will feel like an outsider for two years and then stop feeling like one. The mathematical maturity you built will transfer completely. The culture and communication style will not, and you will need to rebuild them deliberately. The end state, where you are using your full intellectual power on problems that matter in the world, is worth the investment.
 
 Ten years in, this is the career I would have chosen if I had known what I know now. To physicists considering the jump: the water is fine. To those already in industry and looking for leadership roles: the bridge between your physics past and your applied-AI future is not to hide the physics. It is to use it as the foundation of a research agenda that others cannot construct.
-
----
 
 *If you are a physicist considering the transition, I am happy to correspond. Reach me at iohanngrig@gmail.com.*

@@ -6,7 +6,7 @@ tags: ["time-series", "deep-learning", "finance"]
 
 # Stock-price forecasting with an LSTM
 
-> Deep sequence models, LSTMs, GRUs, transformers, have been applied to price forecasting since at least Graves (2013). The empirical record is mixed, and the gap between what such models *appear* to do and what they *actually* do on log-returns is one of the more sobering lessons in applied time-series work. This demo walks through the forecasting pipeline on a synthetic but realistic daily-return series with mean reversion and volatility clustering, and reports out-of-sample RMSE.
+> Deep sequence models, LSTMs, GRUs, transformers, have been applied to price forecasting since at least Graves (2013). The empirical record is mixed, and the gap between what such models *appear* to do and what they *actually* do on log-returns is one of the more sobering lessons in applied time-series work. We walk through the forecasting pipeline on a synthetic but realistic daily-return series with mean reversion and volatility clustering, and report out-of-sample RMSE.
 
 ## 1. The data-generating process
 
@@ -29,7 +29,7 @@ Top panel: train-period prices in grey solid, test-period prices in grey dashed,
 
 Bottom panel: forecast residuals. RMSE is reported. Residuals have modest autocorrelation and variance that correlates with the underlying volatility regime, both failure modes for naive point-forecasts.
 
-## 4. The honest story
+## 4. What the simulation does and does not show
 
 Three things to notice:
 

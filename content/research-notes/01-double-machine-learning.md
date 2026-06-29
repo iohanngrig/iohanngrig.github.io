@@ -7,7 +7,7 @@ tags: ["causal-inference", "machine-learning", "methodology"]
 
 # Double Machine Learning: Neyman orthogonality and the cross-fitting cure
 
-> Plugging a machine-learning predictor into a classical causal estimating equation yields biased estimates and invalid confidence intervals, a failure that does not vanish with more data. **Double Machine Learning** (DML) repairs this with two ideas: a *Neyman-orthogonal* score that neutralizes first-order nuisance errors, and *cross-fitting* that prevents own-observation bias from the nuisance fit. This note derives both from scratch, verifies them on a Monte Carlo simulation with 540 replications, and catalogs the failure modes you will actually hit.
+> Plugging a machine-learning predictor into a classical causal estimating equation yields biased estimates and invalid confidence intervals, a failure that does not vanish with more data. **Double Machine Learning** (DML) repairs this with two ideas: a *Neyman-orthogonal* score that neutralizes first-order nuisance errors, and *cross-fitting* that prevents own-observation bias from the nuisance fit. We derive both from scratch, verify them on a Monte Carlo simulation with 540 replications, and catalog the failure modes you will actually hit.
 
 ## 1. The setup and the problem
 
@@ -190,7 +190,7 @@ Enough theory. I simulated the partially linear DGP with $p=10$ covariates, nonl
 3. **DML (no cross-fit)**, Robinson's score (5); nuisances fit on all data.
 4. **DML + 5-fold cross-fit**, Robinson's score; nuisances fit on out-of-fold data.
 
-The full simulation script is in the site repository and runs in ~10 minutes on a laptop with seeds fixed for reproducibility.
+The full simulation script is in the accompanying code and runs in ~10 minutes on a laptop with seeds fixed for reproducibility.
 
 ### 4.1 Bias versus sample size
 
@@ -242,7 +242,7 @@ Knowing the theorem is not the same as knowing the method.
 
 **Multi-parameter targets.** When the target is a vector, a functional (a policy, a distributional feature, a survival curve), or a nonlinear combination of primitive parameters, orthogonality generalizes via Riesz-representer constructions, but inference becomes harder. Kennedy's recent work on the representer framework is the cleanest current abstraction.
 
-## 8. References (verified April 2026)
+## 8. References
 
 Citations are real and indexed in Semantic Scholar. A Semantic Scholar paper ID in brackets indicates a citation I verified directly in the course of writing this note.
 
@@ -259,6 +259,4 @@ Citations are real and indexed in Semantic Scholar. A Semantic Scholar paper ID 
 - **Mackey, L., Syrgkanis, V., & Zadik, I.** (2018). *Orthogonal machine learning: Power and limitations*. ICML.
 - **Hernán, M. A., & Robins, J. M.** (2020). *Causal inference: what if*. Chapman & Hall/CRC. Freely available at the Harvard Department of Epidemiology website.
 
----
-
-*Figures produced by a reproducible Monte Carlo simulation whose script is in the site repository. Public code links will be added when the repository is published.*
+*Figures produced by a reproducible Monte Carlo simulation whose script is in the accompanying code. Public code links will be added when the repository is published.*

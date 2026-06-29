@@ -7,7 +7,7 @@ tags: ["logic", "incompleteness", "ai-foundations"]
 
 # Gödel, Löb, and the formal limits of self-referential AI
 
-> Gödel's incompleteness theorems (1931) and Löb's theorem (1955) are usually introduced as results in mathematical logic. They are also the most-cited, and most-misunderstood, formal arguments about the limits of AI. This note derives the two results accurately, clarifies what they do and do not imply about machines that reason, and surveys the recent AI-safety literature on self-referential agents where these results are technically load-bearing rather than rhetorical.
+> Gödel's incompleteness theorems (1931) and Löb's theorem (1955) are usually introduced as results in mathematical logic. They are also the most-cited, and most-misunderstood, formal arguments about the limits of AI. We derive the two results accurately, clarify what they do and do not imply about machines that reason, and survey the recent AI-safety literature on self-referential agents where these results are technically load-bearing rather than rhetorical.
 
 ## 1. Gödel's first incompleteness theorem
 
@@ -108,7 +108,7 @@ A few honest claims:
 
 **Verification of neural networks.** Formal verification of neural networks is an active subfield but faces the halting-problem wall for general networks. Progress is limited to restricted classes (piecewise-linear activations, bounded depth) and specific properties (local robustness).
 
-## 7. References (verified April 2026, core papers via standard logic references)
+## 7. References
 
 - **Gödel, K.** (1931). *Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I*. Monatshefte für Mathematik und Physik, 38, 173–198. English translation in *From Frege to Gödel* (Heijenoort 1967).
 - **Löb, M. H.** (1955). *Solution of a problem of Leon Henkin*. Journal of Symbolic Logic, 20(2), 115–118.

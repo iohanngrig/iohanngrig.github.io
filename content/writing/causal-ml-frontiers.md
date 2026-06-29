@@ -18,13 +18,13 @@ The modern causal-ML literature has two pieces that have not been stitched toget
 
 In industry, panel data is almost always unbalanced, staggered, and genuinely heterogeneous. Firms observe the same customers or merchants or markets repeatedly over time. Treatment is rolled out across cohorts. Treatment effects vary across units. The standard tools fail in specific, diagnosable ways.
 
-A causal forest fit to panel data without respecting the within-unit fixed effects gives wrong-sign CATE estimates when the variation across units is larger than the variation within them. This is not a theoretical possibility. It is a failure mode I have watched in production.
+A causal forest fit to panel data without respecting the within-unit fixed effects can give wrong-sign CATE estimates when the variation across units is larger than the variation within them. This is not a theoretical possibility. It is a failure mode I have watched in production.
 
 A DiD estimator on a balanced-panel subset with heterogeneous effects gives a weighted average of treatment effects where the weights depend on cohort sizes, not on whatever the decision-maker cares about. A two-way-fixed-effects regression on a staggered panel with heterogeneous effects is, by now famously, biased in both sign and magnitude in the worst case.
 
 What the field has not done is develop estimators that handle the three things simultaneously. Heterogeneity, meaning varying treatment effects across units and over time. Panel structure, meaning within-unit fixed effects absorbing unit-level variation. Staggered adoption, meaning different cohorts treated at different times. Each sub-problem has been solved in isolation. The joint problem is where industrial practice lives and where the methodology is weakest.
 
-The closest current work. Callaway-Sant'Anna's group-time ATT estimator handles staggered adoption implicitly but assumes homogeneity within cohort. Athey-Imbens 2018 on panel-data matching handles fixed effects but not heterogeneity. Wager-Athey causal forests handle heterogeneity without the panel-structure adjustment. A unified estimator, a causal forest with within-unit fixed effects residualized on staggered-adoption panels, would close the gap. The estimator would need to residualize within-unit fixed effects before the causal-forest machinery runs, respect cohort-specific adoption times in the group-time-ATT framework, and deliver pointwise CATE estimates with valid confidence intervals.
+The closest current work. Callaway-Sant'Anna's group-time ATT estimator handles staggered adoption implicitly but assumes homogeneity within cohort. Athey et al. (2021) matrix-completion methods for causal panel data handle fixed effects but not treatment-effect heterogeneity. Wager-Athey causal forests handle heterogeneity without the panel-structure adjustment. A unified estimator, a causal forest with within-unit fixed effects residualized on staggered-adoption panels, would close the gap. The estimator would need to residualize within-unit fixed effects before the causal-forest machinery runs, respect cohort-specific adoption times in the group-time-ATT framework, and deliver pointwise CATE estimates with valid confidence intervals.
 
 A serious research program on this problem would proceed as follows. Formalize the estimator. Prove $\sqrt n$-consistency and asymptotic normality. Validate on simulation studies with explicit panel-heterogeneity-staggered DGPs. Apply to canonical public datasets (Lalonde, Dehejia-Wahba, NSW) with synthetic panel extensions. Open-source the implementation.
 
@@ -32,7 +32,7 @@ I expect this program to produce two or three papers over 24 months and an open-
 
 ## Frontier 2: Causal evaluation of LLM-driven decision agents
 
-This frontier does not yet exist in the published literature, which is why it is a frontier. Production systems are increasingly driven by LLM-based agents that recommend policies, prices, contracts, and operational decisions. The agents are trained and evaluated on benchmarks that test their task completion. Almost no research measures their causal impact on the downstream outcomes they are supposed to affect.
+This frontier is barely addressed in the published literature, which is why it is a frontier. Production systems are increasingly driven by LLM-based agents that recommend policies, prices, contracts, and operational decisions. The agents are trained and evaluated on benchmarks that test their task completion. Almost no research measures their causal impact on the downstream outcomes they are supposed to affect.
 
 The gap is consequential. If an agent recommends a pricing change, we want to know whether the pricing change caused the subsequent revenue shift. If the agent has been operating for six months, we need a causal methodology for evaluating it that handles the time-varying treatment assignment the agent itself controls.
 
@@ -105,7 +105,5 @@ Researchers I would recruit have a strong economics or biostatistics background 
 The three frontiers (panel-data heterogeneity, agent causal evaluation, observational-experimental fusion) represent where I think the marginal research investment in causal ML pays off over the next three years. They are underdeveloped relative to need, accessible to a small research group, and high-leverage when done well.
 
 A research director in 2026 should have a specific opinion about where to invest. Mine is these three. I am prepared to defend the choice, execute on it, and course-correct as the research produces evidence. The institution that wants to own these three intellectual territories will have a distinctive research program that is not a copy of any frontier lab's LLM-scaling effort. That distinctiveness is what a serious research group should be selling.
-
----
 
 *Comments and critique welcome. I am particularly interested in hearing the case for research directions I explicitly set aside.*

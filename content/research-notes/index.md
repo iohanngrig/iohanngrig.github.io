@@ -6,8 +6,6 @@ title: Research Notes
 
 *A working library on the methodological foundations of causal identification, agent-driven decision systems, the contemporary LLM-and-agent frontier, and the mathematical foundations of intelligence.*
 
----
-
 ## Editorial stance
 
 These notes exist because the gap between a *method* and its *valid application* is where most applied ML goes wrong. A causal forest fit to panel data can return wrong-sign treatment effects; a difference-in-differences regression with staggered adoption can assign negative weights; an LLM agent that scores 95% on a benchmark can fail catastrophically on a distributionally-similar production task; a self-improving system reasoning about its own correctness runs into Löbian obstacles that are 70 years old. The notes below treat each topic with the care required to know *when the method works, when it fails, and what the current research frontier has to say about the boundary*.
@@ -16,17 +14,17 @@ Every note is written at the level of a strong first-year PhD student. Math is p
 
 ## Curatorial logic
 
-Sixteen notes in four thematic groups.
+Thirty-three notes in five thematic groups.
 
 **A. Causal methodology** (notes 1–4). The classical foundations of causal identification and their recent revolutions.
 
-**B. Agents and reliability** (notes 5–8). What LLM agents actually do, how they fail, how they are evaluated, and what provides principled uncertainty quantification.
+**B. Agents and reliability** (notes 5–8, 29, 31). What LLM agents actually do, how they fail, how they are evaluated, and what provides principled uncertainty quantification.
 
-**C. Foundations of intelligence as optimization** (notes 9–12). Mechanism design, multi-agent dynamics, scaling laws, and the alignment problem, the four framings of "how do we get desirable behavior out of optimizing systems."
+**C. Foundations of intelligence as optimization** (notes 9–12, 30, 32, 33). Mechanism design, multi-agent dynamics, scaling laws, and the alignment problem, the four framings of "how do we get desirable behavior out of optimizing systems."
 
 **D. AGI foundations and fundamental limits** (notes 13–16). The mathematical results that bound what any artificial intelligence can do, regardless of architecture or scale.
 
----
+**E. Quantum computing and complexity** (notes 17–28). What quantum algorithms can provably do, what near-term hardware has demonstrated, and where the hype exceeds the proofs.
 
 ## A. Causal methodology
 
@@ -50,8 +48,6 @@ Between 2018 and 2024, four research groups independently showed that the two-wa
 
 A quantile treatment effect at level $\tau$ is *not* the treatment effect for units at the $\tau$-th percentile. Firpo-Fortin-Lemieux RIF regression separates unconditional from conditional estimands. The pitfall of conflating the two in panel settings with fixed effects.
 
----
-
 ## B. Agents and reliability
 
 ### 5. LLM agents as decision systems: a skeptic's guide
@@ -74,7 +70,15 @@ CoT prompting improves reasoning on large models but its *apparent* reasoning of
 
 RAG is the dominant pattern for factual LLM applications. The three failure modes (retrieval miss, index staleness, context pollution), the reliability toolkit (reranking, query rewriting, grounded generation, conformal wrapping), and why "RAG ≠ agent."
 
----
+### 29. When majority vote works: a probability-gap theory of self-consistency
+[Read →](/research-notes/29-self-consistency)
+
+Self-consistency samples several answers and returns the plurality. A per-prompt probability gap, measurable by forced decoding, controls the sample budget ($n \ge 2\log(2/\delta)/\gamma^2$), comes with a matching impossibility when the gap is negative (more samples make it worse), and partitions prompts into three regimes with a decision rule for when to sample, temper, or stop. Companion to a separate technical paper.
+
+### 31. How far synthetic users can take you: validity ceilings and a screening test
+[Read →](/research-notes/31-synthetic-users)
+
+Silicon-sample agents as a pre-experimental screen. An attenuation ceiling caps synthetic-to-human fidelity at the outcome's own reliability ($\rho_{ah}\le\rho_{tt}<1$); synthetic panels under-state effects by $1/\sqrt{\eta}$ with effective sample size $n_{\text{eff}}\le K$, not $KM$; and a fidelity floor says exactly when a keep/kill verdict is trustworthy and when to run the live test.
 
 ## C. Foundations of intelligence as optimization
 
@@ -98,7 +102,20 @@ Kaplan 2020, Hoffmann/Chinchilla 2022, the emergent-abilities debate, and what 2
 
 Outer vs. inner alignment, mesa-optimization, scalable oversight, reward hacking. The post-training stack (SFT, RLHF, DPO, CAI, process reward) and what it does and does not fix.
 
----
+### 30. Paying for the unseen task: multitask contracts and the cost of a missing signal
+[Read →](/research-notes/30-multitask-contracts)
+
+Holmström-Milgrom multitask agency, where rewarding one task crowds out a complementary unrewarded one. A partially pooled bonus recovers the missing task; the free-rider attenuation term $\alpha + (1-\alpha)/N$ falls out of the equilibrium effort, and the optimal pooling weight is a noise-versus-incentive trade. Mechanism-design strand of the research agenda.
+
+### 32. Good-enough elasticities: why allocation regret is second-order in estimation error
+[Read →](/research-notes/32-allocation-regret)
+
+Allocating a budget across power-law response curves. The optimum is closed-form water-filling, and because the objective is flat to first order there, realized regret is $\Theta(\varepsilon^2)$ in elasticity-estimation error (the envelope theorem in disguise). Past a modest accuracy, sharpening estimates buys almost nothing; concavity and feasibility bind instead.
+
+### 33. The dashboard fell but nothing happened: measurement neutrality and guardrail instability
+[Read →](/research-notes/33-guardrail-instability)
+
+Recalibrating a value signal shrinks reported value but, with no platform response, leaves real delivery unchanged, a neutrality and non-identifiability theorem. An automated efficiency-ratio guardrail nonetheless turns that accounting change into a real spend and click cut unless its target is rescaled by the same factor. Goodhart's law instantiated in an autobidding stack.
 
 ## D. AGI foundations and fundamental limits
 
@@ -121,8 +138,6 @@ From Ha-Schmidhuber to DreamerV3 to JEPA. The case for learning a compact intern
 [Read →](/research-notes/16-computational-irreducibility)
 
 Three deep negative results: No-Free-Lunch, computational irreducibility, PAC lower bounds. What these do and do not imply for AI, and why "smarter AI" does not bypass them.
-
----
 
 ## E. Quantum computing and complexity
 
@@ -186,15 +201,13 @@ How Ewin Tang's 2018 undergraduate work erased an exponential speedup in quantum
 
 Where quadratic quantum speedup plausibly applies to finance and risk: Monte Carlo estimation. The Montanaro 2015 framework, amplitude estimation, option-pricing speedups, and realistic deployment timelines.
 
----
-
 ## How these notes are used
 
 - **Self-contained.** You can read any one without the others.
 - **Cross-linked.** Related concepts link to each other via Quartz's graph view.
 - **Updated.** I revise notes when a significant new result appears.
 - **Honest about limits.** Each note ends with *Open questions*, genuinely unresolved points.
-- **Reproducible.** All figures are generated by Python scripts with fixed random seeds, available in the site repository.
+- **Reproducible.** All figures are generated by Python scripts with fixed random seeds, available in the accompanying code.
 
 ## What these notes are NOT
 

@@ -6,7 +6,7 @@ tags: ["portfolio-theory", "optimization", "finance"]
 
 # Portfolio optimization and the efficient frontier
 
-> Markowitz (1952) won the Nobel Prize for a single idea: given asset return means $\mu$ and covariance matrix $\Sigma$, the portfolio choice problem reduces to choosing $w$ that minimizes $w^\top \Sigma w$ subject to $w^\top \mu = \text{target}$ and $\sum w_i = 1$. The set of efficient portfolios, those that are not dominated, traces the **efficient frontier** in mean-variance space. The theory is elegant; the practice is humbling. This demo shows the frontier on a 5-asset synthetic universe and discusses the central practical obstacle: parameter estimation.
+> Markowitz (1952) won the Nobel Prize for a single idea: given asset return means $\mu$ and covariance matrix $\Sigma$, the portfolio choice problem reduces to choosing $w$ that minimizes $w^\top \Sigma w$ subject to $w^\top \mu = \text{target}$ and $\sum w_i = 1$. The set of efficient portfolios, those that are not dominated, traces the **efficient frontier** in mean-variance space. The theory is elegant; the practice is humbling. We show the frontier on a 5-asset synthetic universe and discuss the central practical obstacle: parameter estimation.
 
 ## 1. The optimization problem
 
@@ -55,7 +55,7 @@ The theory is clean; its failure modes in practice are substantial and well-docu
 - **Robust optimization.** Optimize over worst-case $\mu, \Sigma$ within an uncertainty set. Trades expected performance for guaranteed downside behavior.
 - **Hierarchical risk parity** (López de Prado 2016). Use clustering to avoid inverting the covariance matrix, which reduces its ill-conditioning problems.
 
-## 6. The honest summary
+## 6. Where the optimizer breaks
 
 Markowitz optimization is the correct abstract framework. For production portfolio construction, naive application produces unstable portfolios. Practical implementations either (a) use shrinkage/Bayesian priors, (b) use robust optimization, or (c) replace $\mu$ with explicit views via Black-Litterman. Pure equal-weight and risk-parity benchmarks are surprisingly hard to beat out-of-sample.
 

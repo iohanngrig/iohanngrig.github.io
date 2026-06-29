@@ -36,7 +36,7 @@ Classical Monte Carlo has well-developed variance-reduction techniques (control 
 
 Current consensus among quant finance researchers: possibly, for specific risk-management applications (tail-event estimation, complex structured products) once error-corrected hardware arrives. For vanilla option pricing, classical methods will likely dominate for another decade.
 
-## Honest summary
+## Where the speedup is real
 
 Quantum Monte Carlo is the most credible "quantum advantage for quant finance" claim. It does not require QRAM. It does not evaporate under dequantization. Its speedup is quadratic, not exponential. And it requires fault-tolerance to be practically competitive. Realistic deployment: 2030s, contingent on Megaquop-class hardware.
 

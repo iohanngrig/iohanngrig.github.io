@@ -73,7 +73,7 @@ The inner sum is the Solomonoff prior; the outer maximizations implement expecte
 
 **Incomputability.** AIXI is uncomputable; not even approximable with unbounded compute in the limit. This is not a mere practical obstacle, it is a fundamental feature of the definition.
 
-**Universality.** Legg & Hutter (2007) proved AIXI is optimal in a formal sense: for any computable environment, no other agent can achieve better expected reward on average.
+**Bayes-optimality, not objective optimality.** AIXI is optimal *with respect to its own Solomonoff prior*: by construction it maximizes expected reward averaged over the prior-weighted class of computable environments. This is Bayes-optimality relative to the prior, not a guarantee of best performance in any particular environment. Leike & Hutter (2015) showed the notion is prior-subjective, under a universal prior every policy is Pareto-optimal over the class of all computable environments, so AIXI carries no objective optimality claim; and Orseau (2010) showed AIXI need not be weakly asymptotically optimal. The Legg-Hutter (2007) intelligence *measure* below aggregates performance across environments under the universal prior, defining a notion of intelligence rather than proving that no other agent does better in a given world.
 
 **Self-optimizing and Pareto-optimal.** In "well-behaved" environment classes, AIXI's long-run expected reward converges to the maximum achievable.
 
@@ -129,7 +129,7 @@ The Solomonoff prior also has deep connections to **minimum description length**
 
 **Practical approximations.** Monte Carlo AIXI approximations exist but have not scaled to LLM-size problems. Whether a genuinely AIXI-like approximation is feasible at scale, or whether the formal framework must be abandoned for practical use, is an empirical question.
 
-## 7. References (verified April 2026; core historical papers)
+## 7. References
 
 - **Solomonoff, R.** (1964a). *A formal theory of inductive inference, part I*. Information and Control, 7(1), 1–22.
 - **Solomonoff, R.** (1964b). *A formal theory of inductive inference, part II*. Information and Control, 7(2), 224–254.

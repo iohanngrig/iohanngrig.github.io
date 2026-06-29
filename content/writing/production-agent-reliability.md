@@ -8,7 +8,7 @@ draft: false
 
 The public research on LLM agents has been productive, and in important ways it has been misleading. A literature has accumulated around benchmark scores. SWE-bench for coding agents, GAIA for general-purpose agents, HumanEval for code generation, MT-Bench for conversational evaluators. Every six months a new agent architecture posts a higher completion rate and claims progress. Meanwhile, in production, agent systems routinely fail in ways the benchmarks do not measure. The literature offers little guidance on how to repair them.
 
-I have shipped multiple production LLM agents over the past eighteen months at Amazon. They handle decision-support tasks for business users. Some recommend compensation structures. Some summarize research for internal stakeholders. Some execute multi-step analytical workflows that previously took analysts hours. They work. Getting them to work required solving problems the public research literature has not seriously engaged with. This essay is about those problems.
+I have shipped multiple production LLM agents over the past eighteen months at Amazon. They handle decision-support tasks for business users. Some recommend compensation structures. Some summarize research for internal stakeholders. Some execute multi-step analytical workflows that previously took analysts hours. They work. Getting them to work required solving problems the public research literature has not seriously engaged with. Those are the problems I take up.
 
 ## The benchmark fallacy
 
@@ -81,7 +81,5 @@ If I were leading a research program on LLM-agent reliability, here is what the 
 **Month 10 to 12.** Ship a public reference implementation demonstrating the mitigations, plus a paper reporting the architectural improvements. Submit to the ICML or NeurIPS agents-track workshop.
 
 This is the research program I intend to lead at whatever institution gives me the scope to do it seriously. The work is not glamorous. Nobody gets famous for publishing calibration improvements. It is genuinely useful, and it occupies a gap in the research landscape that the current trajectory is unlikely to fill on its own.
-
----
 
 *The essay is a preview of the forthcoming research agenda paper. Comments and critique welcome.*

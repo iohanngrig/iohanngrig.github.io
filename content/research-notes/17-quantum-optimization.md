@@ -196,7 +196,7 @@ None of those conditions holds in 2026 for logistics, portfolio optimization, su
 **What is *not* provably true despite frequent claims otherwise:**
 - Quantum computers have an asymptotic speedup for NP-hard optimization. No such proof exists. Most complexity theorists conjecture $\text{NP} \not\subseteq \text{BQP}$.
 - QAOA outperforms the best classical algorithms on any natural problem. The paper most often cited as evidence [6] only shows QAOA matching SDP at $p=11$ in infinite-size limit.
-- Quantum annealing (D-Wave) gives speedup. Rønnow et al. 2014 Science showed D-Wave 2X gives at most constant-factor speedup over simulated annealing.
+- Quantum annealing (D-Wave) gives speedup. Rønnow et al. 2014 Science showed the D-Wave Two (~503 qubits) gives at most constant-factor speedup over simulated annealing.
 - The Sycamore 2019 experiment demonstrated unconditional supremacy. Huang et al. [8] and Liu et al. [9] brought the classical simulation cost within reach.
 
 **Genuinely open questions:**
@@ -206,8 +206,6 @@ None of those conditions holds in 2026 for logistics, portfolio optimization, su
 - When does dequantization succeed? Partially understood (low-rank, QRAM-free settings); general criteria open.
 
 The next 18 months will likely see Google/IBM demonstrate early error-corrected logical operations. Whether these scale to the Megaquop regime is the dominant open engineering question. Whether that matters for *optimization* specifically, as opposed to chemistry or cryptanalysis, is an open scientific question that this research note cannot answer.
-
----
 
 ## Bibliography
 
@@ -248,11 +246,7 @@ The next 18 months will likely see Google/IBM demonstrate early error-corrected 
 - Harrow, A. W., Hassidim, A., Lloyd, S. (2009). *Quantum Algorithm for Linear Systems of Equations*. Physical Review Letters 103, 150502.
 - Rønnow, T. F., Wang, Z., Job, J., et al. (2014). *Defining and detecting quantum speedup*. Science 345(6195), 420–424.
 
----
-
 *Figures in this note reproduce analytical formulas from Farhi-Goldstone-Gutmann 2014 [5] (QAOA approximation bound, §3.2) and Farhi-Goldstone-Gutmann-Zhou 2019 [6] (SK model results). Classical-simulation time comparisons in §4.1 follow the numbers reported by Arute et al. 2019, Huang et al. 2020 [8], and Liu et al. 2021 [9]. No Sycamore or Jiuzhang data is reproduced, only the published headline metrics.*
-
----
 
 **Related research notes in this series:**
 

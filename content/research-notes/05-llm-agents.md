@@ -7,7 +7,7 @@ tags: ["llm-agents", "reliability", "evaluation"]
 
 # LLM agents as decision systems: a skeptic's guide
 
-> Since 2022 the LLM-agent literature has moved from prototype (tool-calling + chain-of-thought) to benchmark domination (ReAct, Reflexion, SWE-agent, Voyager) to production deployment. The gap between *benchmark performance* and *reliable production behavior* is large, systematic, and under-measured. This note takes the skeptic's view: which agent capabilities have survived replication, what agent evaluations actually measure, and what fails in deployment that benchmarks do not catch. Throughout, I argue that agent reliability engineering is a real sub-discipline, distinct from improving base model quality, and that the deployment posture of *augmentation rather than replacement* is the one the evidence supports.
+> Since 2022 the LLM-agent literature has moved from prototype (tool-calling + chain-of-thought) to benchmark domination (ReAct, Reflexion, SWE-agent, Voyager) to production deployment. The gap between *benchmark performance* and *reliable production behavior* is large, systematic, and under-measured. We take the skeptic's view: which agent capabilities have survived replication, what agent evaluations actually measure, and what fails in deployment that benchmarks do not catch. Throughout, I argue that agent reliability engineering is a real sub-discipline, distinct from improving base model quality, and that the deployment posture of *augmentation rather than replacement* is the one the evidence supports.
 
 ## 1. The agent pattern that actually works
 
@@ -133,7 +133,7 @@ The alignment layer reduces *visible* bad behavior (harmfulness, verbosity, refu
 
 **Reliability–alignment tradeoff.** Strongly aligned (refusal-prone) agents also refuse legitimate but unusual requests, reducing usefulness. The alignment tax is real and poorly quantified. Research on selective refusal (refuse in danger, accept in legitimate edge cases) is early.
 
-## 9. References (verified April 2026)
+## 9. References
 
 - **Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y.** (2022). *ReAct: Synergizing Reasoning and Acting in Language Models*. ICLR 2023. [S.S. `99832586`]
 - **Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., & Zhou, D.** (2022). *Chain-of-thought prompting elicits reasoning in large language models*. NeurIPS.
@@ -146,7 +146,5 @@ The alignment layer reduces *visible* bad behavior (harmfulness, verbosity, refu
 - **Christiano, P., Leike, J., Brown, T. B., Martic, M., Legg, S., & Amodei, D.** (2017). *Deep reinforcement learning from human preferences*. NeurIPS.
 - **Acikgoz, E. C., et al.** (2025). *SpeakRL: synergizing reasoning, speaking, and acting in language models with reinforcement learning*. arXiv.
 - **Sutton, R. S., & Barto, A. G.** (2018). *Reinforcement learning: an introduction*. 2nd ed., MIT Press. Freely available online.
-
----
 
 *Figure numerical values in §3 are approximate and illustrative of widely-reported public leaderboard ranges (GAIA, SWE-bench Verified). For authoritative numbers, consult the original papers and the current state of the respective leaderboards.*

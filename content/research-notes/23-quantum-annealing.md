@@ -14,7 +14,7 @@ For a decade, D-Wave has published benchmark results claiming speedup over class
 
 **Boixo et al. 2014** [2] compared D-Wave Two ($n=503$) against simulated annealing on random Ising instances. Finding: D-Wave achieves runtime scaling similar to simulated annealing. Suggestive of quantum behavior but no speedup.
 
-**Rønnow et al. 2014** [3] extended the analysis to a D-Wave 2X ($n=1000$), carefully accounting for readout time, embedding overhead, and problem-instance distribution. Finding: no asymptotic speedup over simulated annealing. **D-Wave's hardware is at most a constant-factor faster**, and classical algorithms designed for the same problem structure (simulated quantum annealing, Hamze-de Freitas-Selby algorithm) match or beat D-Wave.
+**Rønnow et al. 2014** [3] extended the analysis on the D-Wave Two ($n=503$), carefully accounting for readout time, embedding overhead, and problem-instance distribution. Finding: no asymptotic speedup over simulated annealing. **D-Wave's hardware is at most a constant-factor faster**, and classical algorithms designed for the same problem structure (simulated quantum annealing, Hamze-de Freitas-Selby algorithm) match or beat D-Wave.
 
 **Katzgraber et al. 2014, King et al. 2017**, a series of papers found that D-Wave advantages appear on *specifically crafted instance distributions* and disappear on others. The pattern: when the problem graph matches D-Wave's native connectivity and has certain structural features (frustrated clusters, first-order quantum phase transitions in the adiabatic path), D-Wave is competitive. On other distributions, classical wins.
 
@@ -30,7 +30,7 @@ For a decade, D-Wave has published benchmark results claiming speedup over class
 
 Real optimization problems rarely have Ising structure matching D-Wave's Pegasus topology. Compiling (e.g.) a Traveling Salesman instance onto D-Wave requires creating "chains" of physical qubits representing logical variables, multiplying qubit count and introducing error. This **embedding overhead** is why published D-Wave results tend to use specially-crafted problems.
 
-## Honest assessment
+## What the benchmarks actually show
 
 Quantum annealing has been productive as physics research: it has probed spin-glass physics, quantum phase transitions, and noise-driven quantum dynamics on systems larger than any exact classical simulation can handle. As a general-purpose optimization tool, its performance does not justify replacing classical heuristics. Industrial D-Wave deployments have focused on specialty applications (Volkswagen traffic routing, certain logistics problems) where the constant-factor D-Wave advantage combined with low per-sample cost happens to be useful despite no asymptotic edge.
 

@@ -7,8 +7,6 @@ description: "Long-form essays on research strategy, applied machine learning, c
 
 Long-form essays on research strategy, applied machine learning, and leadership. Opinionated and specific, written from the perspective of a Senior Applied Scientist positioning for a research leadership role. All essays are original content.
 
----
-
 ## Research agenda
 
 ### [Causal identification and mechanism design for agent-driven decision systems](/writing/research-agenda)
@@ -22,8 +20,6 @@ An opinionated survey of where causal-ML research should direct effort over the 
 ### [The AGI foundations research agenda: what's real, what's speculation, what I would invest in](/writing/agi-research-agenda)
 
 An opinionated map of the contemporary AGI research landscape, separating genuine progress from benchmark inflation. Three categories (real and underfunded; real but saturated; speculative but worth hedging) with specific capacity allocations for a hypothetical AGI foundations lab.
-
----
 
 ## Applied research and engineering
 
@@ -39,8 +35,6 @@ An honest assessment of where machine learning has improved quantitative finance
 
 Calibrated assessment of where quantum computing will deliver business value, when, and where the hype substantially exceeds the underlying technical reality. Recommendations for firms in cryptography, financial services, pharma/materials, and logistics.
 
----
-
 ## Personal and leadership
 
 ### [From theoretical physics to applied AI: what transferred, what didn't](/writing/physics-to-ai)
@@ -50,7 +44,5 @@ An intellectual genealogy of the transition from theoretical high-energy physics
 ### [What I would build in the first 90 days as a Research Director](/writing/research-director-90-days)
 
 A concrete 30/60/90-day plan for a hypothetical Research Director role: team onboarding, research-program selection, deliverable milestones, and external engagement. *Read if you are evaluating my readiness for a research leadership role.*
-
----
 
 *If any of these essays prompts an interest in talking about a specific role or collaboration, I am at iohanngrig@gmail.com.*

@@ -7,7 +7,7 @@ tags: ["multi-agent", "game-theory", "coordination", "rl"]
 
 # Multi-agent coordination and emergent behavior
 
-> A single agent optimizes its reward against a fixed environment. Multiple agents optimize against *each other*, and the environment they present to one another changes as they learn. This note covers the classical game-theoretic baseline (Nash equilibrium and its computational complexity), the two ways that coordination can fail (social dilemmas, non-stationarity), and the mechanisms by which cooperative behavior emerges in iterated settings. The contemporary stakes are high: every LLM deployed to interact with other LLMs or with humans is a multi-agent system, and the theory of how such systems reach (or fail to reach) stable equilibria is consequential for alignment, safety, and economics.
+> A single agent optimizes its reward against a fixed environment. Multiple agents optimize against *each other*, and the environment they present to one another changes as they learn. We cover the classical game-theoretic baseline (Nash equilibrium and its computational complexity), the two ways that coordination can fail (social dilemmas, non-stationarity), and the mechanisms by which cooperative behavior emerges in iterated settings. The contemporary stakes are high: every LLM deployed to interact with other LLMs or with humans is a multi-agent system, and the theory of how such systems reach (or fail to reach) stable equilibria is consequential for alignment, safety, and economics.
 
 ## 1. The one-shot baseline
 
@@ -122,7 +122,7 @@ The pattern: cooperation does not emerge by accident from standard RL. It requir
 
 **The population-level alignment problem.** If every LLM is aligned individually, is a population of LLMs aligned? Probably not, social dilemmas can emerge among locally-aligned agents. This is an underappreciated dimension of AI alignment.
 
-## 8. References (verified April 2026)
+## 8. References
 
 - **Nash, J. F.** (1950). *Equilibrium points in N-person games*. Proceedings of the National Academy of Sciences, 36(1), 48–49.
 - **Daskalakis, C., Goldberg, P. W., & Papadimitriou, C. H.** (2009). *The complexity of computing a Nash equilibrium*. SIAM Journal on Computing, 39(1), 195–259.

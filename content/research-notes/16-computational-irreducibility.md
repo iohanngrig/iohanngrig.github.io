@@ -7,7 +7,7 @@ tags: ["computational-complexity", "ai-foundations", "no-free-lunch"]
 
 # Computational irreducibility and the limits of optimization
 
-> Three deep negative results constrain what any AI system can do, regardless of architecture, data, or scale. The **No-Free-Lunch theorems** (Wolpert & Macready 1997) say that averaged over all problems, no optimization algorithm outperforms any other. **Computational irreducibility** (Wolfram 1985, 2002) says that for many systems, the only way to predict a future state is to simulate to it, no shortcut exists. **PAC-learning lower bounds** (Vapnik-Chervonenkis dimension, Kearns & Vazirani 1994) say that sample complexity has hard information-theoretic limits. This note derives the three results cleanly, explains what they do and do not imply for contemporary AI, and clarifies why "smarter AI" doesn't always escape these constraints.
+> Three deep negative results constrain what any AI system can do, regardless of architecture, data, or scale. The **No-Free-Lunch theorems** (Wolpert & Macready 1997) say that averaged over all problems, no optimization algorithm outperforms any other. **Computational irreducibility** (Wolfram 1985, 2002) says that for many systems, the only way to predict a future state is to simulate to it, no shortcut exists. **PAC-learning lower bounds** (Vapnik-Chervonenkis dimension, Kearns & Vazirani 1994) say that sample complexity has hard information-theoretic limits. We derive the three results cleanly, explain what they do and do not imply for contemporary AI, and clarify why "smarter AI" doesn't always escape these constraints.
 
 ## 1. No-Free-Lunch theorems
 
@@ -119,11 +119,11 @@ This reframes the AGI debate from a binary (AGI yes/no) to a continuous one (wha
 
 **Meta-learning and its limits.** Learning-to-learn algorithms can reduce sample complexity on a target task by leveraging related tasks. How much reduction is possible, and against what structural assumptions about the task distribution, is a rich open area.
 
-**Quantum advantage.** Quantum computers may provide polynomial (but not super-polynomial) speedups over classical for many problems; they do not bypass NFL, irreducibility, or PAC bounds at the level of this note.
+**Quantum advantage.** Quantum computers give super-polynomial speedups only for specially structured problems (factoring via Shor); for the unstructured-search and worst-case problems relevant here, the best known and conjectured speedups are polynomial (quadratic, via Grover). Quantum computing does not bypass NFL, irreducibility, or PAC bounds at the level of this note.
 
 **Approximations of uncomputable objects.** Solomonoff induction and AIXI are uncomputable. Practical approximations exist (context-tree weighting, MDL estimators, MuZero-style learned models). How good can these approximations get in principle, and what information is unavoidably lost?
 
-## 8. References (verified April 2026)
+## 8. References
 
 - **Wolpert, D. H., & Macready, W. G.** (1997). *No free lunch theorems for optimization*. IEEE Transactions on Evolutionary Computation, 1(1), 67–82.
 - **Wolfram, S.** (1985). *Undecidability and intractability in theoretical physics*. Physical Review Letters, 54(8), 735.

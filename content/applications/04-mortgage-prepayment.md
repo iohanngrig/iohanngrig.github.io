@@ -6,7 +6,7 @@ tags: ["mortgage", "fixed-income", "finance"]
 
 # Mortgage prepayment modeling
 
-> The central modeling object in mortgage-backed-securities (MBS) pricing is the **conditional prepayment rate** (CPR): the fraction of outstanding principal that borrowers prepay per unit time. CPR depends on the refinance incentive (borrower's note rate minus prevailing market rates), borrower characteristics, and the cohort's refinance history. This demo walks through the S-curve parameterization, the *burnout* effect, and the implications for MBS cash-flow modeling. The analysis is drawn from standard fixed-income practice (Fabozzi 2005) and from my own work at Citigroup Global Markets in 2014–2015; all specific numbers and methods here are from the public literature, not from any firm's proprietary models.
+> The central modeling object in mortgage-backed-securities (MBS) pricing is the **conditional prepayment rate** (CPR): the fraction of outstanding principal that borrowers prepay per unit time. CPR depends on the refinance incentive (borrower's note rate minus prevailing market rates), borrower characteristics, and the cohort's refinance history. We walk through the S-curve parameterization, the *burnout* effect, and the implications for MBS cash-flow modeling. The analysis is drawn from standard fixed-income practice (Fabozzi 2005) and from my own work at Citigroup Global Markets in 2014–2015; all specific numbers and methods here are from the public literature, not from any firm's proprietary models.
 
 ## 1. Why prepayment matters
 

@@ -8,8 +8,6 @@ title: Applications
 
 These are deliberately compact, each one targets a single technique, shows a single representative figure, and documents the method at the level of a short applied-stats primer. Several originate from long-running interests predating my time at Amazon: my Citi tenure in MBS analysis, my Insight / Georgetown work on financial time-series forecasting, my Quantopian-era statistical-arbitrage research.
 
----
-
 ## The applications
 
 ### 1. Stock-price forecasting with an LSTM
@@ -32,8 +30,6 @@ Markowitz (1952) gave the first analytical framework for choosing portfolio weig
 
 The central modeling object in mortgage-backed-securities pricing is the conditional prepayment rate (CPR) as a function of borrower incentive. The demo walks through the S-curve parameterization, the "burnout" effect (cohorts that didn't refinance when it made sense become less responsive to future opportunities), and the implications for MBS cash-flow pricing.
 
----
-
 ## What these applications are NOT
 
 - Not production trading systems. They are pedagogical demos.
@@ -42,4 +38,4 @@ The central modeling object in mortgage-backed-securities pricing is the conditi
 
 ## Reproducibility
 
-Figure generation scripts for all four applications are available in the site repository. Each script runs in a few seconds with standard scientific Python (numpy, matplotlib, scikit-learn).
+Figure generation scripts for all four applications are available in the accompanying code. Each script runs in a few seconds with standard scientific Python (numpy, matplotlib, scikit-learn).

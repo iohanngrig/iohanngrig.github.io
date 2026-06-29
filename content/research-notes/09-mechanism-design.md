@@ -7,7 +7,7 @@ tags: ["mechanism-design", "game-theory", "ai-safety"]
 
 # Mechanism design for AI systems: eliciting truth from agents that optimize
 
-> Mechanism design is the sub-field of economics and game theory that asks: given a population of agents with private preferences, can we design a game whose equilibria produce a socially desirable outcome? The foundational results, Myerson's optimal auction, the revelation principle, proper scoring rules, predate AI by decades but are increasingly central to how we build systems where AI agents make or report decisions. This note covers the classical framework, connects it to contemporary problems in reward modeling and AI alignment, and argues that the design of incentive-compatible reporting schemes is a load-bearing part of any system that elicits predictions, preferences, or evaluations from learned agents.
+> Mechanism design is the sub-field of economics and game theory that asks: given a population of agents with private preferences, can we design a game whose equilibria produce a socially desirable outcome? The foundational results, Myerson's optimal auction, the revelation principle, proper scoring rules, predate AI by decades but are increasingly central to how we build systems where AI agents make or report decisions. We cover the classical framework, connect it to contemporary problems in reward modeling and AI alignment, and argue that the design of incentive-compatible reporting schemes is a load-bearing part of any system that elicits predictions, preferences, or evaluations from learned agents.
 
 ## 1. The problem
 
@@ -104,7 +104,7 @@ Consider a toy example. You want a language model that is helpful, honest, and h
 
 **Incentive-compatible RLHF.** The standard RLHF pipeline is not known to be incentive-compatible for labelers. What does a robust version look like? This is an underexplored connection between mechanism design and alignment.
 
-## 8. References (verified April 2026)
+## 8. References
 
 - **Myerson, R. B.** (1979). *Incentive compatibility and the bargaining problem*. Econometrica, 47(1), 61–73.
 - **Myerson, R. B.** (1981). *Optimal auction design*. Mathematics of Operations Research, 6(1), 58–73.

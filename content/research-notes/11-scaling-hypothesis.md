@@ -7,7 +7,7 @@ tags: ["scaling", "llm", "agi"]
 
 # The scaling hypothesis: evidence for and against
 
-> The **scaling hypothesis** is the claim that capability improvements in large language models and related systems follow predictable power-law relationships with compute, data, and parameters, and that continued scaling will continue to produce capability gains. Between 2020 and 2024, the evidence was remarkably strong. Since 2024 the picture has become more complicated. This note covers the empirical foundations (Kaplan 2020, Hoffmann 2022), the critique (Schaeffer 2023, emergent-abilities revisionism), the separate question of whether scaling produces AGI, and what we can honestly say about the next 10× of compute.
+> The **scaling hypothesis** is the claim that capability improvements in large language models and related systems follow predictable power-law relationships with compute, data, and parameters, and that continued scaling will continue to produce capability gains. Between 2020 and 2024, the evidence was remarkably strong. Since 2024 the picture has become more complicated. We cover the empirical foundations (Kaplan 2020, Hoffmann 2022), the critique (Schaeffer 2023, emergent-abilities revisionism), the separate question of whether scaling produces AGI, and what we can honestly say about the next 10× of compute.
 
 ## 1. The empirical law
 
@@ -101,7 +101,7 @@ Which position the evidence supports depends on what *AGI* means. For "matching 
 
 The honest posture: strong expectations that scaling will continue to produce useful capability improvements; skeptical of both "AGI is imminent" and "scaling has stopped" claims, because neither has good evidence; focused on the engineering frontier of effectively-used compute.
 
-## 7. References (verified April 2026)
+## 7. References
 
 - **Kaplan, J., McCandlish, S., Henighan, T., et al.** (2020). *Scaling laws for neural language models*. arXiv. [S.S. `e6c561d0`]
 - **Hoffmann, J., Borgeaud, S., Mensch, A., et al.** (2022). *Training compute-optimal large language models*. NeurIPS. [S.S. `8342b592`]

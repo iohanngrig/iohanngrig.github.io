@@ -58,7 +58,7 @@ The Megaquop milestone is credibly 5-10 years away, conditional on continued pro
 
 - **Knill-Laflamme conditions**, a code corrects a set of errors $\{E_a\}$ iff $\langle i_L | E_a^\dagger E_b | j_L \rangle = c_{ab} \delta_{ij}$ for some Hermitian $c$. The foundation of all QEC design.
 - **Eastin-Knill theorem 2009**, no QEC code can have a universal transversal gate set. Implication: non-Clifford gates (e.g., $T$ gate) require "magic state distillation," a large fraction of surface-code overhead.
-- **Tillich-Zemor bound**, LDPC quantum codes trade off rate $k/n$ and distance $d$: $k d^2 \le O(n^2)$. Constant-rate LDPC codes are the holy grail for efficient FT.
+- **Quantum LDPC codes.** The hypergraph-product construction (Tillich-Zémor) achieves $k d^2 \le O(n^2)$ (for example $k=\Theta(n)$, $d=\Theta(\sqrt n)$). This is *not* a fundamental limit: asymptotically good qLDPC codes with constant rate $k=\Theta(n)$ **and** linear distance $d=\Theta(n)$ were constructed in 2022 (Panteleev-Kalachev lifted-product codes; quantum Tanner codes), resolving the qLDPC conjecture and enabling far lower fault-tolerance overhead than the surface code.
 
 ## References
 

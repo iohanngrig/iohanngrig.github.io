@@ -7,7 +7,7 @@ tags: ["agi", "model-based-rl", "world-models"]
 
 # World-model approaches to AGI
 
-> If a neural network could internally simulate the environment it acts in, it could plan by imagination rather than trial-and-error. This is the promise of **world models**: agents that learn a compact internal representation of the world's dynamics and use it to plan, predict, and generalize. The approach has a long history in model-based RL, has produced state-of-the-art results on Atari (Dreamer), has been advocated by Yann LeCun as the path to AGI (JEPA, 2022), and contrasts sharply with the dominant paradigm of pure next-token prediction in LLMs. This note covers the architecture, the empirical successes, the intellectual stakes, and the honest limits.
+> If a neural network could internally simulate the environment it acts in, it could plan by imagination rather than trial-and-error. This is the promise of **world models**: agents that learn a compact internal representation of the world's dynamics and use it to plan, predict, and generalize. The approach has a long history in model-based RL, has produced state-of-the-art results on Atari (Dreamer), has been advocated by Yann LeCun as the path to AGI (JEPA, 2022), and contrasts sharply with the dominant paradigm of pure next-token prediction in LLMs. We cover the architecture, the empirical successes, the intellectual stakes, and the honest limits.
 
 ## 1. The motivation
 
@@ -94,7 +94,7 @@ These gains are consistent with the theoretical argument: if you can plan with i
 
 **Symbolic abstraction.** World models in neural latent space are hard to interpret. Whether a symbolic or hybrid neuro-symbolic world model can match the expressivity of pure-neural world models while being more transparent is an open empirical question.
 
-## 8. References (verified April 2026)
+## 8. References
 
 - **Ha, D., & Schmidhuber, J.** (2018). *World models*. NeurIPS.
 - **Hafner, D., Lillicrap, T., Ba, J., & Norouzi, M.** (2020). *Dream to control: learning behaviors by latent imagination*. ICLR.

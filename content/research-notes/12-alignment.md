@@ -7,7 +7,7 @@ tags: ["alignment", "ai-safety", "mesa-optimization"]
 
 # The alignment problem: formal statements and honest limits
 
-> "Alignment" in AI safety is a cluster of problems, not a single problem. This note separates them: *outer alignment* (does your reward function specify what you want?), *inner alignment* (does the optimizer actually pursue the reward you specified?), *scalable oversight* (can you evaluate the agent when its capabilities exceed yours?), and *reward hacking* (does the agent find exploits of the reward that you didn't anticipate?). Each has formal statements, empirical evidence, and open questions. The goal is to give you a vocabulary precise enough that "alignment" stops being a bag of good-sounding but unverifiable claims.
+> "Alignment" in AI safety is a cluster of problems, not a single problem. We separate them: *outer alignment* (does your reward function specify what you want?), *inner alignment* (does the optimizer actually pursue the reward you specified?), *scalable oversight* (can you evaluate the agent when its capabilities exceed yours?), and *reward hacking* (does the agent find exploits of the reward that you didn't anticipate?). Each has formal statements, empirical evidence, and open questions. The goal is to give you a vocabulary precise enough that "alignment" stops being a bag of good-sounding but unverifiable claims.
 
 ## 1. Outer alignment: specifying what you want
 
@@ -56,7 +56,7 @@ If you train an agent to be *smarter than you* at some task, you can't evaluate 
 - **Evaluate process rather than outcome** (but any process you can follow, the agent can game).
 - **Bootstrap** using already-aligned agents to supervise the training of more capable agents.
 
-**Amodei et al. (2016)**, *Concrete Problems in AI Safety*, framed the scalable-oversight problem. **Christiano (2021)** and subsequent work on iterated distillation and amplification, debate, and recursive reward modeling propose bootstrapping approaches.
+**Amodei et al. (2016)**, *Concrete Problems in AI Safety*, framed the scalable-oversight problem. **Christiano et al. (2018)** and subsequent work on iterated distillation and amplification, debate, and recursive reward modeling propose bootstrapping approaches.
 
 **Bowman et al. (2022)** run empirical scalable-oversight experiments: human evaluators assisted by smaller language models can reliably evaluate outputs that are beyond their unaided capacity. This supports the bootstrapping hypothesis but only at the current capability gap, not at arbitrary capability gaps.
 
@@ -111,14 +111,14 @@ The post-training stack is a set of strong empirical techniques that improve usa
 
 **Alignment and capability coupling.** Do post-training alignment methods come with capability costs (the "alignment tax")? Empirical reports are mixed; theoretical understanding is minimal.
 
-## 7. References (verified April 2026)
+## 7. References
 
 - **Hubinger, E., van Merwijk, C., Mikulik, V., Skalse, J., & Garrabrant, S.** (2019). *Risks from learned optimization in advanced machine learning systems*. arXiv.
 - **Manheim, D., & Garrabrant, S.** (2018). *Categorizing variants of Goodhart's law*. arXiv.
 - **Krakovna, V., et al.** (2020). *Specification gaming: the flip side of AI ingenuity*. DeepMind blog.
 - **Turner, A., et al.** (2020). *Conservative agency via attainable utility preservation*. AIES.
 - **Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., & Mané, D.** (2016). *Concrete problems in AI safety*. arXiv.
-- **Christiano, P.** (2021). *Training large language models to follow instructions via iterated amplification and distillation*. (Research agenda document.)
+- **Christiano, P., Shlegeris, B., & Amodei, D.** (2018). *Supervising strong learners by amplifying weak experts*. arXiv:1810.08575.
 - **Irving, G., Christiano, P., & Amodei, D.** (2018). *AI safety via debate*. arXiv.
 - **Bowman, S., et al.** (2022). *Measuring progress on scalable oversight for large language models*. arXiv.
 - **Parrish, A., et al.** (2022). *Two-turn debate doesn't help humans answer hard reading-comprehension questions*. arXiv.

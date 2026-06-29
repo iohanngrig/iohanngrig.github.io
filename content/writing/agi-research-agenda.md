@@ -6,7 +6,7 @@ tags: [writing, agi, research-agenda]
 draft: false
 ---
 
-The AGI discourse of the last three years has been simultaneously the most substantive and the least serious public conversation I have seen in applied AI. Billions of dollars are moving on narrative rather than evidence. Research careers are being built on hype trajectories that will not sustain their current pace for another three years. At the same time, genuinely important work is happening in quiet corners of the field that receive very little public attention. This essay is my attempt to sort signal from noise and to lay out the research programs I would fund if I were leading an AGI foundations lab over the next five years.
+The AGI discourse of the last three years has been simultaneously the most substantive and the least serious public conversation I have seen in applied AI. Billions of dollars are moving on narrative rather than evidence. Research careers are being built on hype trajectories that will not sustain their current pace for another three years. At the same time, genuinely important work is happening in quiet corners of the field that receive very little public attention. I want to sort signal from noise and lay out the research programs I would fund if I were leading an AGI foundations lab over the next five years.
 
 I will be direct about what I think is real, what is speculation, and what is actively overrated. These are opinions, not consensus. Where I disagree with widely held positions, I will say so and give my reasons. The point of an essay like this is to make calls. Hedging everything to avoid disagreement makes the essay useless.
 
@@ -121,7 +121,5 @@ The headline commitment is the first three: sixty-five percent of capacity on wo
 The AGI discourse is going to be louder, not quieter, over the next five years. My advice to anyone building a research lab in this space. Ignore the noise. Look at the specific research directions that combine intellectual depth, empirical tractability, and relative lack of serious competition. Invest disproportionately in those. The three I have named (world models, mechanism design for agents, causal identification for self-supervised systems) are my answer for 2026. Yours may reasonably differ. The discipline is in making the call rather than hedging across everything.
 
 If I am leading this kind of work, I will be deliberate about what I build and what I do not. I have a clear view of the intellectual territory I think is most important. I do not expect universal agreement. I expect to be wrong about some of the allocation. The exercise of making the call, writing it down publicly, and staking a research program on it is the exercise that distinguishes a research director from a research producer.
-
----
 
 *This is an essay of research taste. It is not a consensus view, and it is not a comprehensive review. Comments welcome at iohanngrig@gmail.com.*

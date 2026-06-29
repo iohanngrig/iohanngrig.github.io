@@ -7,7 +7,7 @@ tags: ["uncertainty-quantification", "statistics", "methodology"]
 
 # Conformal prediction: distribution-free uncertainty that finally works
 
-> Given any prediction model, linear, random forest, transformer, black box, conformal prediction wraps its output in a set that is guaranteed to contain the true label with user-specified probability $1 - \alpha$, under only the *exchangeability* assumption on the calibration data. No distribution assumption. No model-correctness assumption. The guarantee is finite-sample and marginal. This note derives split conformal prediction from first principles, explains the crucial distinction between marginal and conditional coverage, and covers two extensions (conformalized quantile regression and adaptive conformal inference under distribution shift) that made conformal practical.
+> Given any prediction model, linear, random forest, transformer, black box, conformal prediction wraps its output in a set that is guaranteed to contain the true label with user-specified probability $1 - \alpha$, under only the *exchangeability* assumption on the calibration data. No distribution assumption. No model-correctness assumption. The guarantee is finite-sample and marginal. We derive split conformal prediction from first principles, explain the crucial distinction between marginal and conditional coverage, and cover two extensions (conformalized quantile regression and adaptive conformal inference under distribution shift) that made conformal practical.
 
 ## 1. The setup and the promise
 
@@ -157,7 +157,7 @@ Conformal prediction has become the default method for principled uncertainty qu
 
 **Online conformal under abrupt shifts.** Adaptive conformal handles smooth drift but has poor transient behavior under sudden distribution changes. Change-point-aware extensions are an active area.
 
-## 9. References (verified April 2026)
+## 9. References
 
 - **Vovk, V., Gammerman, A., & Shafer, G.** (2005). *Algorithmic learning in a random world*. Springer.
 - **Angelopoulos, A. N., & Bates, S.** (2021). *A gentle introduction to conformal prediction and distribution-free uncertainty quantification*. arXiv. [S.S. `c3ea8eb8`]
@@ -169,6 +169,4 @@ Conformal prediction has become the default method for principled uncertainty qu
 - **Lei, L., & Candès, E. J.** (2021). *Conformal inference of counterfactuals and individual treatment effects*. JRSS-B, 83(5), 911–938.
 - **Tibshirani, R. J., Barber, R. F., Candès, E. J., & Ramdas, A.** (2019). *Conformal prediction under covariate shift*. NeurIPS.
 
----
-
-*Figures produced by reproducible Python scripts in the site repository. Illustrative examples use small synthetic datasets; the methods scale to any data size with no change in the guarantee.*
+*Figures produced by reproducible Python scripts in the accompanying code. Illustrative examples use small synthetic datasets; the methods scale to any data size with no change in the guarantee.*

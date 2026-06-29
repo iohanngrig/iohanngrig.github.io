@@ -60,7 +60,7 @@ For quantum chemistry, VQE competes with:
 
 On modest molecules (H$_2$, LiH, BeH$_2$, up to maybe 12 qubits), VQE matches classical. On larger molecules (10+ atoms, 50+ qubits), noise accumulation degrades VQE faster than increasing system size degrades classical methods. **No molecule has been demonstrated where VQE on current hardware beats a well-tuned classical method.** This is a central open challenge of NISQ-era quantum chemistry.
 
-## Honest summary
+## Where VQE stands
 
 VQE is a *framework*, not an algorithm-with-speedup. It is likely to be the first quantum-computing application that provides practical value, but the value will come from hybrid algorithms where the quantum subroutine handles strongly correlated regions of the wavefunction that classical methods can't efficiently represent. The *timeline* for this is tied to fault-tolerant quantum hardware, not to NISQ.
 

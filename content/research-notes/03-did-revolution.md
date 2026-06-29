@@ -7,7 +7,7 @@ tags: ["causal-inference", "econometrics", "panel-data"]
 
 # The DiD revolution: heterogeneous effects and staggered adoption
 
-> Between 2018 and 2021, five research groups independently showed that the **two-way fixed effects** (TWFE) estimator, the default regression for applied policy work and used in roughly a quarter of top empirical papers at the American Economic Review, is biased when treatment effects vary across groups or over time. The bias arises because TWFE assigns *negative weights* to already-treated units when they serve as controls for later-treated units. This note derives the Goodman-Bacon decomposition that made the problem transparent, shows the bias on a numerical DGP, and summarizes the practical replacement toolkit.
+> Between 2018 and 2021, five research groups independently showed that the **two-way fixed effects** (TWFE) estimator, the default regression for applied policy work and used in roughly a quarter of top empirical papers at the American Economic Review, is biased when treatment effects vary across groups or over time. The bias arises because comparisons that use already-treated units as controls are contaminated when effects are dynamic, so TWFE can place effectively negative weight on some treatment-effect terms, formalized as negative weights on the underlying ATTs by de Chaisemartin & D'Haultfœuille (2020). We derive the Goodman-Bacon decomposition that made the problem transparent, show the bias on a numerical DGP, and summarize the practical replacement toolkit.
 
 ## 1. The classical setup
 
@@ -39,7 +39,7 @@ There are four types of 2×2 comparisons:
 
 1. **Early-treated vs. never-treated** around the early cohort's treatment date. *Positive weight. Uncontroversial.*
 2. **Late-treated vs. never-treated** around the late cohort's treatment date. *Positive weight. Uncontroversial.*
-3. **Late-treated vs. already-treated-earlier**, using the early cohort's *post-treatment* outcomes as the "control" for the late cohort. *Negative weight if effects grow over time.*
+3. **Late-treated vs. already-treated-earlier**, using the early cohort's *post-treatment* outcomes as the "control" for the late cohort. *Contaminated when effects grow over time: the already-treated control's own rising effect enters with a negative sign.*
 4. **Early-treated vs. eventually-treated-later**, the late cohort before treatment serves as control for the early cohort. *Positive weight.*
 
 The problematic comparison is type (3). When an already-treated cohort's outcomes evolve upward (because treatment effects accumulate), using those outcomes as the control baseline makes the later cohort look like it has *smaller* treatment effects than it does, or even negative effects.
@@ -48,7 +48,7 @@ The problematic comparison is type (3). When an already-treated cohort's outcome
 
 ![Goodman-Bacon decomposition: timeline of cohorts and 2x2 comparisons](/research-notes/figures/did-fig1-bacon-decomp.svg)
 
-The "forbidden" comparison (3) is the one where the already-treated unit is used as a control. Under constant treatment effects, this comparison averages to the same true ATT as the others. Under heterogeneous or time-varying effects, it contaminates the TWFE estimate.
+The "forbidden" comparison (3) is the one where the already-treated unit is used as a control. Under constant treatment effects, this comparison averages to the same true ATT as the others. Under heterogeneous or time-varying effects, it contaminates the TWFE estimate. To be precise: the Goodman-Bacon weights on the 2×2 estimators are themselves non-negative and sum to one; what is contaminated is comparison (3)'s 2×2 *estimand*. The clean statement that TWFE equals a weighted sum of ATTs with some genuinely *negative weights* is de Chaisemartin & D'Haultfœuille (2020).
 
 ### 2.2 A worked numerical example
 
@@ -153,7 +153,7 @@ Identification rests on the counterfactual: $\mathbb{E}[Y_{it}(0) \mid G_i = g]$
 
 **Sensitivity to functional form.** All of these estimators assume a specific functional form for the counterfactual. Non-parametric alternatives that relax parallel trends (synthetic control, matrix completion) are well-developed but less interpretable.
 
-## 9. References (verified April 2026)
+## 9. References
 
 - **Goodman-Bacon, A.** (2021). *Difference-in-differences with variation in treatment timing*. Journal of Econometrics, 225(2), 254–277. [S.S. `0610a9df`]
 - **Callaway, B., & Sant'Anna, P. H. C.** (2021). *Difference-in-differences with multiple time periods*. Journal of Econometrics, 225(2), 200–230. [S.S. `c7ca8335`]
@@ -165,6 +165,4 @@ Identification rests on the counterfactual: $\mathbb{E}[Y_{it}(0) \mid G_i = g]$
 - **Rambachan, A., & Roth, J.** (2023). *A more credible approach to parallel trends*. Review of Economic Studies, 90(5), 2555–2591.
 - **Card, D., & Krueger, A. B.** (1994). *Minimum wages and employment: a case study of the fast-food industry in New Jersey and Pennsylvania*. American Economic Review, 84(4), 772–793.
 
----
-
-*Figures 1 and 3 are pedagogical; figure 2 reports an estimator comparison on a small analytical DGP whose code is in the site repository. All numerical values are reproducible; seeds are fixed.*
+*Figures 1 and 3 are pedagogical; figure 2 reports an estimator comparison on a small analytical DGP whose code is in the accompanying simulation. All numerical values are reproducible; seeds are fixed.*

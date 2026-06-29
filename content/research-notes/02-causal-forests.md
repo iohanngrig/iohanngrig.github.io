@@ -7,7 +7,7 @@ tags: ["causal-inference", "heterogeneous-treatment-effects", "non-parametric"]
 
 # Causal forests and the honest tree
 
-> Heterogeneous treatment effects, the conditional average treatment effect (CATE) $\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x]$, are where the policy question lives. A uniform treatment effect is rarely what you want to know; you want to know *for whom* the effect is large. **Causal forests** (Wager & Athey 2018) provide nonparametric pointwise estimates of $\tau(x)$ with valid Gaussian confidence intervals, without a parametric model for $\tau$. The key innovation is *honest splitting*: the data used to choose tree splits must be disjoint from the data used to estimate leaf-level treatment effects. This note derives the idea, demonstrates it on a simulation study, and documents the failure modes the asymptotic theory does not cover.
+> Heterogeneous treatment effects, the conditional average treatment effect (CATE) $\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x]$, are where the policy question lives. A uniform treatment effect is rarely what you want to know; you want to know *for whom* the effect is large. **Causal forests** (Wager & Athey 2018) provide nonparametric pointwise estimates of $\tau(x)$ with valid Gaussian confidence intervals, without a parametric model for $\tau$. The key innovation is *honest splitting*: the data used to choose tree splits must be disjoint from the data used to estimate leaf-level treatment effects. We derive the idea, demonstrate it on a simulation study, and document the failure modes the asymptotic theory does not cover.
 
 ## 1. From regression forests to causal forests
 
@@ -29,7 +29,7 @@ Trees choose splits by optimizing a criterion on training data, typically square
 
 This coupling introduces bias. Intuitively: a tree chooses the split that happens to put observation $i$ in a leaf where its $Y_i$ is extreme, and then uses $Y_i$ in the leaf average. The leaf estimate is biased *toward $Y_i$*, and the magnitude of the bias does not vanish at the rate needed for Gaussian inference.
 
-The formal statement: without honest splitting, the CATE estimator has bias of order $h^{-p/2}$ where $h$ is the effective bandwidth (leaf size), which is too large to support $\sqrt{n}$ inference at any leaf size that is small enough to resolve $\tau(x)$ locally.
+The formal statement: with adaptive (non-honest) splitting, reusing each $Y_i$ in the very leaf its value helped select biases the leaf mean toward $Y_i$; for a leaf of size $k$ this own-observation bias is of order $1/k$, and because the split is data-adaptive it is not guaranteed to vanish fast enough to support $\sqrt{n}$ Gaussian inference.
 
 ## 3. Honest splitting, the cure
 
@@ -126,7 +126,7 @@ The honest forest achieves near-nominal 95% coverage across the five evaluation 
 
 **Multi-arm treatments.** GRF can handle IV, quantile, and regression targets, but multi-arm causal forests (with $K$ discrete treatments) require additional orthogonalization and lack a fully general framework as of early 2026.
 
-## 9. References (verified April 2026)
+## 9. References
 
 - **Wager, S., & Athey, S.** (2018). *Estimation and inference of heterogeneous treatment effects using random forests*. JASA, 113(523), 1228–1242. [S.S. `c2fcb00f`]
 - **Athey, S., Tibshirani, J., & Wager, S.** (2019). *Generalized random forests*. Annals of Statistics, 47(2), 1148–1178.
@@ -139,6 +139,4 @@ The honest forest achieves near-nominal 95% coverage across the five evaluation 
 - **Finkelstein, A. et al.** (2012). *The Oregon Health Insurance Experiment: evidence from the first year*. Quarterly Journal of Economics, 127(3), 1057–1106.
 - **Banerjee, A., Duflo, E., Glennerster, R., & Kinnan, C.** (2015). *The miracle of microfinance? Evidence from a randomized evaluation*. AEJ: Applied Economics, 7(1), 22–53.
 
----
-
-*The simulation study in §5 is reproducible; the script is in the site repository. Figures 1 and 2 are produced by the script; figure 3 is a conceptual diagram. The "honest split" in the simulation is implemented as a sample-split approximation (training two separate RF regressors on disjoint halves of the data) rather than the in-tree honest splits of Wager-Athey 2018; this captures the same conceptual mechanism while staying within stock sklearn. A fully honest implementation is available in the `grf` R package and `econml`'s `CausalForestDML`.*
+*The simulation study in §5 is reproducible; the script is in the accompanying code. Figures 1 and 2 are produced by the script; figure 3 is a conceptual diagram. The "honest split" in the simulation is implemented as a sample-split approximation (training two separate RF regressors on disjoint halves of the data) rather than the in-tree honest splits of Wager-Athey 2018; this captures the same conceptual mechanism while staying within stock sklearn. A fully honest implementation is available in the `grf` R package and `econml`'s `CausalForestDML`.*

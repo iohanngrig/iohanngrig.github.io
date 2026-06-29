@@ -8,7 +8,7 @@ draft: false
 
 Quantum computing in 2026 occupies a curious position. It is technically real in ways it was not ten years ago, and it is commercially overhyped in ways that are difficult to assess without both deep technical understanding and sustained attention to specific hardware roadmaps. The gap between what the industry claims and what the physics actually supports has widened over the past three years. Separating the two requires effort most business leaders cannot afford to make. The result is that capital and strategic attention are being allocated on the basis of misleading signals.
 
-I have been following quantum computing since my theoretical-physics background first overlapped with the research community in the mid-2000s. My research notes library covers the technical details in depth. This essay is the business-facing summary of where I think the field actually is, when business value will arrive by vertical, and how I would advise a firm evaluating its quantum-computing investment.
+I have been following quantum computing since my theoretical-physics background first overlapped with the research community in the mid-2000s. My research notes library covers the technical details in depth. What follows is the business-facing summary of where I think the field actually is, when business value will arrive by vertical, and how I would advise a firm evaluating its quantum-computing investment.
 
 I will be specific about time horizons. Vague framings ("soon," "in the next decade") are not useful for capital allocation. I commit to specific ranges with specific conditions.
 
@@ -38,7 +38,7 @@ For NP-hard combinatorial optimization, Grover provides a quadratic speedup over
 
 Montanaro (2015) proved that quantum amplitude estimation gives a quadratic speedup on Monte Carlo estimation. Accuracy $\varepsilon$ requires $O(1/\varepsilon)$ queries rather than $O(1/\varepsilon^2)$ classical samples. This is the only provable quantum-ML advantage that has survived dequantization attacks.
 
-Applications include financial derivatives pricing, tail-risk estimation, and Value-at-Risk for complex portfolios. Stamatopoulos et al. (2020) demonstrated option-pricing applications. Chakrabarti et al. (2021) showed applications to credit-risk modeling.
+Applications include financial derivatives pricing, tail-risk estimation, and Value-at-Risk for complex portfolios. Stamatopoulos et al. (2020) demonstrated option-pricing applications. Chakrabarti et al. (2021) gave end-to-end resource estimates for quantum derivative pricing.
 
 The catch. Amplitude estimation at basis-point accuracy ($\varepsilon = 10^{-4}$) requires circuit depth on the order of $10^4$. At current NISQ error rates, this depth is not feasible. The quadratic speedup is a fault-tolerance-regime result. NISQ hardware delivers only loose approximations.
 
@@ -58,7 +58,7 @@ At higher $p$, QAOA's theoretical performance improves. The Harrigan/Arute 2020 
 
 ### Quantum annealing (D-Wave)
 
-D-Wave has shipped quantum annealers since 2011 and has been the subject of ongoing debate about whether they provide genuine quantum speedup. The Rønnow et al. 2014 Science paper showed D-Wave 2X provided at most constant-factor speedup over carefully-tuned simulated annealing. Subsequent generations (5000-qubit Advantage2) have made similar claims and attracted similar classical counterattacks.
+D-Wave has shipped quantum annealers since 2011 and has been the subject of ongoing debate about whether they provide genuine quantum speedup. The Rønnow et al. 2014 Science paper showed the D-Wave Two (~503 qubits) provided at most constant-factor speedup over carefully-tuned simulated annealing. Subsequent generations (5000-qubit Advantage2) have made similar claims and attracted similar classical counterattacks.
 
 The consensus view: D-Wave is useful physics hardware for spin-glass simulation and certain restricted Ising problems. It can be a modest accelerator for narrow use cases. It is not a general-purpose optimization accelerator. The claims that it is should be evaluated with skepticism.
 
@@ -145,7 +145,5 @@ I have been long-optimistic on quantum computing for fifteen years and remain so
 The 2020s will not. The capital currently flowing into quantum computing is, in my view, substantially overweighted relative to the realistic timeline. Some of it will be clawed back through disappointment-driven valuation corrections over the next five years. The firms that end up owning the eventual commercial advantage will not be the ones that made the loudest claims in 2023-2026. They will be the ones that invested systematically in foundational research and hardware scaling, ignored the hype cycles, and were ready when the Megaquop machine arrived.
 
 As someone who would lead research work in this space, my approach would be exactly this. Invest in the foundational work. Hedge against both too-fast and too-slow timelines. Be disciplined about when to commit capital and when to wait. Quantum computing is a real technology on a long timeline. Treat it as such.
-
----
 
 *Comments and corrections welcome at iohanngrig@gmail.com. I am particularly interested in cases where I have been too conservative about specific applications I may have overlooked.*

@@ -136,7 +136,7 @@ $$
 \mathrm{QTT}(g, t; \tau) \;=\; Q_{Y_t(g) \mid G = g}(\tau) \;-\; Q_{Y_t(0) \mid G = g}(\tau),
 $$
 
-i.e., the $\tau$-th quantile of the treatment effect on cohort $g$ at period $t$. Identification uses a **copula stability assumption** in place of parallel trends, which is well-suited to settings where the entire distribution matters, inequality-oriented policy evaluation, for instance. The method recovers the *dynamic distributional* effect of treatment on the treated without conflating conditional and unconditional estimands.
+i.e., the difference between the $\tau$-th quantiles of the treated and untreated outcome distributions for cohort $g$ at period $t$, a QTT, **not** the $\tau$-th quantile of the individual treatment effect (which would require rank invariance, the conflation Section 1 warns against). Identification uses a **copula stability assumption** in place of parallel trends, which is well-suited to settings where the entire distribution matters, inequality-oriented policy evaluation, for instance. The method recovers the *dynamic distributional* effect of treatment on the treated without conflating conditional and unconditional estimands.
 
 ## 6. Three real-life applications
 
@@ -156,7 +156,7 @@ i.e., the $\tau$-th quantile of the treatment effect on cohort $g$ at period $t$
 
 **Multivariate QTEs.** When the outcome is multivariate (e.g., wage and hours), the notion of "the $\tau$-th quantile" becomes multivariate. Depth-based and copula-based extensions exist but lack a unified framework.
 
-## 8. References (verified April 2026)
+## 8. References
 
 - **Firpo, S., Fortin, N. M., & Lemieux, T.** (2009). *Unconditional quantile regressions*. Econometrica, 77(3), 953–973.
 - **Firpo, S., Fortin, N. M., & Lemieux, T.** (2011). *Decomposition methods in economics*. Handbook of Labor Economics, 4A, 1–102.
@@ -169,6 +169,4 @@ i.e., the $\tau$-th quantile of the treatment effect on cohort $g$ at period $t$
 - **Lemieux, T.** (2006). *Increasing residual wage inequality: composition effects, noisy data, or rising demand for skill?* American Economic Review, 96(3), 461–498.
 - **Banerjee, A., Duflo, E., Glennerster, R., & Kinnan, C.** (2015). *The miracle of microfinance? Evidence from a randomized evaluation*. AEJ: Applied Economics, 7(1), 22–53.
 
----
-
-*Figures produced by reproducible Python scripts in the site repository. All illustrations are analytical / small-simulation; no benchmark datasets are used, for both pedagogical clarity and reproducibility.*
+*Figures produced by reproducible Python scripts in the accompanying code. All illustrations are analytical / small-simulation; no benchmark datasets are used, for both pedagogical clarity and reproducibility.*

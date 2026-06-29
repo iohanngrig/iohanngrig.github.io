@@ -25,7 +25,7 @@ I joined **Amazon in August 2024** as a Senior Applied Scientist (L6) on the Cre
 
 ## Skills
 
-**Programming.** Python (primary), C++, R, Matlab, Mathematica, SQL, JavaScript, LaTeX.
+**Programming.** Python (primary), R, SQL, Matlab, Mathematica, JavaScript, LaTeX.
 
 **ML libraries.** PyTorch, TensorFlow, scikit-learn, AutoGluon, statsmodels, CausalML, EconML, doubleml.
 
