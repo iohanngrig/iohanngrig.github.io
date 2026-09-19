@@ -41,7 +41,7 @@ Wager & Athey (2018) proved pointwise consistency and asymptotic normality for a
 ### 3. The DiD revolution: heterogeneous effects and staggered adoption
 [Read →](/research-notes/03-did-revolution)
 
-Between 2018 and 2024, four research groups independently showed that the two-way fixed effects estimator is biased when treatment effects are heterogeneous. Goodman-Bacon decomposition, Callaway-Sant'Anna, de Chaisemartin-D'Haultfœuille, Sun-Abraham, Borusyak-Jaravel-Spiess, the practical replacement toolkit.
+Between 2018 and 2021, five research groups independently showed that the two-way fixed effects estimator is biased when treatment effects are heterogeneous. Goodman-Bacon decomposition, Callaway-Sant'Anna, de Chaisemartin-D'Haultfœuille, Sun-Abraham, Borusyak-Jaravel-Spiess, the practical replacement toolkit.
 
 ### 4. Quantile treatment effects: estimands, identification, and a panel-data pitfall
 [Read →](/research-notes/04-qte)

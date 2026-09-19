@@ -24,9 +24,10 @@ ROOT = Path(__file__).resolve().parent.parent
 PUBLIC_PATTERNS = ROOT / ".privacy" / "patterns.public.txt"
 # The full list (internal names) is never committed. Locally it lives outside the repo;
 # the path can be overridden with PRIVACY_PATTERNS_FILE. In CI only the public list exists.
+# Default: a file next to (not inside) the repository; override with PRIVACY_PATTERNS_FILE.
 LOCAL_PATTERNS = Path(os.environ.get(
     "PRIVACY_PATTERNS_FILE",
-    Path.home() / "FuturePlans" / ".kiro" / "resources" / "privacy_patterns_local.txt",
+    ROOT.parent / "site_privacy_patterns_local.txt",
 ))
 IN_CI = bool(os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"))
 
