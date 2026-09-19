@@ -107,6 +107,8 @@ where $(y_w, y_l)$ is a preferred/dispreferred response pair and $\sigma$ is the
 
 The alignment layer reduces *visible* bad behavior (harmfulness, verbosity, refusal appropriateness). It does not directly improve task **reliability**. A well-aligned agent is not a reliable agent: it fails gracefully where a misaligned agent might fail harmfully, but the failure rate on the intended task can be identical.
 
+Control can also be applied below the weights, by adding learned directions to the residual stream; what that buys for agents, and where it fails, is the subject of [a separate note](34-rl-steering-agents).
+
 ## 6. What I have come to believe
 
 **Agent reliability engineering is a real sub-discipline.** It consists of: strict tool schemas, atomic tool calls, explicit failure handling, conservative fallbacks, and observability. Most production reliability gains come from these, not from a bigger base model.

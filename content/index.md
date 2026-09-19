@@ -22,7 +22,7 @@ Lecture notes on causal inference, agent-driven decision systems, and the mathem
 
 ## Research notes
 
-A working library on the methodological foundations of causal identification, agents and reliability, the contemporary LLM frontier, and quantum computing. **Thirty-three research notes** across five thematic groups.
+A working library on the methodological foundations of causal identification, agents and reliability, the contemporary LLM frontier, and quantum computing. **Thirty-four research notes** across five thematic groups.
 
 [Browse the notes →](/research-notes/)
 

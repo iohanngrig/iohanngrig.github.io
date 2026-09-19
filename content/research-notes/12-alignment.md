@@ -101,6 +101,8 @@ They reliably reduce visible harms: harmful content, prompt injection resistance
 
 The post-training stack is a set of strong empirical techniques that improve usability. It is not a solution to the alignment problem as formulated in the theoretical literature. The gap between these two statements is where much contemporary AI-safety discourse lives, and it's worth keeping the gap visible rather than collapsing it in either direction.
 
+Inference-time interventions on activations are a third route with their own reliability failures; [a separate note](34-rl-steering-agents) reviews them.
+
 ## 6. Open questions
 
 **Testing mesa-optimization empirically.** Can we construct training regimes where mesa-optimization is *reliably* produced, measured, and mitigated? Without empirical traction, the concept remains theoretical.
