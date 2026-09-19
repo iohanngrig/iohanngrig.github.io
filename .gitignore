@@ -11,3 +11,4 @@ __pycache__/
 *.pyc
 .local-serve/
 **/.DS_Store
+.privacy/patterns.txt

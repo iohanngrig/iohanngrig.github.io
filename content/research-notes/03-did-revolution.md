@@ -165,4 +165,4 @@ Identification rests on the counterfactual: $\mathbb{E}[Y_{it}(0) \mid G_i = g]$
 - **Rambachan, A., & Roth, J.** (2023). *A more credible approach to parallel trends*. Review of Economic Studies, 90(5), 2555–2591.
 - **Card, D., & Krueger, A. B.** (1994). *Minimum wages and employment: a case study of the fast-food industry in New Jersey and Pennsylvania*. American Economic Review, 84(4), 772–793.
 
-*Figures 1 and 3 are pedagogical; figure 2 reports an estimator comparison on a small analytical DGP whose code is in the accompanying simulation. All numerical values are reproducible; seeds are fixed.*
+*Figures 1 and 3 are pedagogical; figure 2 reports an estimator comparison on a small analytical DGP; all numerical values are reproducible from fixed seeds.*

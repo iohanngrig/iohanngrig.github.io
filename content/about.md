@@ -14,7 +14,7 @@ I did my **PhD in physics** at Louisiana State University and Thomas Jefferson N
 
 After transitioning out of academic physics, I spent a year as a **quantitative analyst** at Citigroup Global Markets in New York, building pricing models for mortgage-backed securities and prepayment behavior. I then went through [Insight Data Science](https://insightfellows.com/) and spent five years as adjunct faculty at CUNY, Manhattan College, and Georgetown, teaching calculus-based physics and advanced topics, running deep-learning research projects on Ising-model-class systems, and building financial forecasting tools on the side (winning the **Quantopian Trading Contest four consecutive months in 2019**).
 
-I joined **Amazon in August 2024** as a Senior Applied Scientist (L6) on the Creators Science team, where I now work on causal inference and LLM-agent systems for large-scale decision problems.
+I joined **Amazon in August 2024** as a Senior Applied Scientist, where I work on causal inference and LLM-agent systems for large-scale decision problems.
 
 ## Research interests
 
@@ -29,7 +29,7 @@ I joined **Amazon in August 2024** as a Senior Applied Scientist (L6) on the Cre
 
 **ML libraries.** PyTorch, TensorFlow, scikit-learn, AutoGluon, statsmodels, CausalML, EconML, doubleml.
 
-**Data & cloud.** AWS (EC2, ECS, EMR, SageMaker, Bedrock, Cradle), Docker, Git, Spark/PySpark, Hadoop, DataGrip.
+**Data & cloud.** AWS (EC2, ECS, EMR, SageMaker, Bedrock), Docker, Git, Spark/PySpark, Hadoop, DataGrip.
 
 **Domains.** Causal inference (DML, causal forests, DiD, QTE, synthetic control), time-series forecasting (TFT, N-BEATS, MQF, classical econometrics), reinforcement learning (model-based and model-free), LLM agents (Bedrock, LangChain, MCP), generative models (GANs, VAEs, diffusion, flows).
 
@@ -49,9 +49,8 @@ I joined **Amazon in August 2024** as a Senior Applied Scientist (L6) on the Cre
 
 - **Email**, `iohanngrig@gmail.com` *(personal; open to research conversations and collaborations)*
 - **GitHub**, [`github.com/iohanngrig`](https://github.com/iohanngrig)
-- **Hugging Face**, [`huggingface.co/iohanngrig`](https://huggingface.co/iohanngrig)
 - **LinkedIn**, [linkedin.com/in/iohanngrig](https://www.linkedin.com/in/iohanngrig/)
-- **Google Scholar**, *to be linked once profile is public*
+- **Physics publications**, [INSPIRE-HEP author record](https://inspirehep.net/authors/1021224) (published as H. R. Grigoryan)
 - **Location**, New York, NY
 
 Open to conversations with researchers at MSR, Google Research, academic departments, and applied-science groups working at the intersection of causal methodology, mechanism design, and learning agents.

@@ -169,4 +169,4 @@ Conformal prediction has become the default method for principled uncertainty qu
 - **Lei, L., & Candès, E. J.** (2021). *Conformal inference of counterfactuals and individual treatment effects*. JRSS-B, 83(5), 911–938.
 - **Tibshirani, R. J., Barber, R. F., Candès, E. J., & Ramdas, A.** (2019). *Conformal prediction under covariate shift*. NeurIPS.
 
-*Figures produced by reproducible Python scripts in the accompanying code. Illustrative examples use small synthetic datasets; the methods scale to any data size with no change in the guarantee.*
+*Figures produced by reproducible Python scripts. Illustrative examples use small synthetic datasets; the methods scale to any data size with no change in the guarantee.*

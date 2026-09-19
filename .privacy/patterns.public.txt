@@ -1,0 +1,32 @@
+# Public pattern list for scripts/privacy_check.py — generic patterns only (no internal names).
+# The full list is maintained locally and enforced before every commit; CI enforces this file.
+# Format: one pattern per line, case-insensitive; short alphanumeric patterns match on word boundaries.
+# === Internal URL domains ===
+w.amazon.com
+amazon.com/bin/view
+quip-amazon.com
+code.amazon.com
+phonetool.amazon.com
+broadcast.amazon.com
+pipelines.amazon.dev
+t.corp.amazon.com
+sim.amazon.com
+bindles.amazon.com
+sage.amazon.dev
+taskei.amazon.dev
+chorus.aws.dev
+.aws.dev
+.amazon.dev
+@amazon.com
+# === Local filesystem leakage ===
+/Users/
+.pyc
+# === Job-level codes (never on a public page) ===
+L4
+L5
+L6
+L7
+L8
+# === Claims the house style forbids until they are true ===
+to be linked
+accompanying code

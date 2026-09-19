@@ -190,7 +190,7 @@ Enough theory. I simulated the partially linear DGP with $p=10$ covariates, nonl
 3. **DML (no cross-fit)**, Robinson's score (5); nuisances fit on all data.
 4. **DML + 5-fold cross-fit**, Robinson's score; nuisances fit on out-of-fold data.
 
-The full simulation script is in the accompanying code and runs in ~10 minutes on a laptop with seeds fixed for reproducibility.
+The full simulation runs in about ten minutes on a laptop with fixed seeds.
 
 ### 4.1 Bias versus sample size
 
@@ -259,4 +259,4 @@ Citations are real and indexed in Semantic Scholar. A Semantic Scholar paper ID 
 - **Mackey, L., Syrgkanis, V., & Zadik, I.** (2018). *Orthogonal machine learning: Power and limitations*. ICML.
 - **Hernán, M. A., & Robins, J. M.** (2020). *Causal inference: what if*. Chapman & Hall/CRC. Freely available at the Harvard Department of Epidemiology website.
 
-*Figures produced by a reproducible Monte Carlo simulation whose script is in the accompanying code. Public code links will be added when the repository is published.*
+*Figures produced by a reproducible Monte Carlo simulation with fixed random seeds.*

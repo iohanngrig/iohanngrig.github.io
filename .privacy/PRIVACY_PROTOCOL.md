@@ -15,7 +15,7 @@ Nothing in `content/`, `quartz.config.ts`, `quartz.layout.ts`, or any other file
 - Specific Amazon dollar figures, creator counts, store counts, or marketplace codes.
 - Direct quotes from internal Amazon documents (Quip, wiki, Forte).
 
-The full banned-pattern list lives in `.privacy/patterns.txt`.
+The public pattern list lives in `.privacy/patterns.public.txt` (generic patterns only); the full list is maintained outside the repository and enforced locally before every commit.
 
 ## The gate
 

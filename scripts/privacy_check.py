@@ -14,21 +14,41 @@ Banned patterns live in .privacy/patterns.txt (one per line, case-insensitive).
 """
 
 import argparse
+import os
+import sys
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PATTERNS_FILE = ROOT / ".privacy" / "patterns.txt"
+PUBLIC_PATTERNS = ROOT / ".privacy" / "patterns.public.txt"
+# The full list (internal names) is never committed. Locally it lives outside the repo;
+# the path can be overridden with PRIVACY_PATTERNS_FILE. In CI only the public list exists.
+LOCAL_PATTERNS = Path(os.environ.get(
+    "PRIVACY_PATTERNS_FILE",
+    Path.home() / "FuturePlans" / ".kiro" / "resources" / "privacy_patterns_local.txt",
+))
+IN_CI = bool(os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"))
 
 
-def load_patterns():
+def _read_patterns(path: Path) -> list[str]:
     patterns = []
-    for raw in PATTERNS_FILE.read_text().splitlines():
+    for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         patterns.append(line)
+    return patterns
+
+
+def load_patterns():
+    if not PUBLIC_PATTERNS.exists():
+        sys.exit("privacy_check: public pattern file missing (.privacy/patterns.public.txt)")
+    patterns = _read_patterns(PUBLIC_PATTERNS)
+    if LOCAL_PATTERNS.exists():
+        patterns += _read_patterns(LOCAL_PATTERNS)
+    elif not IN_CI:
+        print("⚠ privacy_check: local pattern list not found; scanning with the public list only", file=sys.stderr)
     return patterns
 
 
@@ -47,7 +67,11 @@ def scan_file(path: Path, patterns: list[str]) -> list[tuple[int, str, str]]:
                 regex = r"\b" + re.escape(pat) + r"\b"
             else:
                 regex = re.escape(pat)
-            if re.search(regex, line, re.IGNORECASE):
+            try:
+                matched = re.search(regex, line, re.IGNORECASE)
+            except re.error:
+                matched = None  # never raise: a traceback would echo the pattern
+            if matched:
                 hits.append((i, pat, line.strip()[:200]))
     return hits
 
@@ -71,7 +95,10 @@ def main():
             rel = f.relative_to(ROOT)
             print(f"\n❌ {rel}")
             for line_no, pat, line in hits:
-                print(f"   L{line_no}  [{pat}]  {line}")
+                if IN_CI:
+                    print(f"   L{line_no}  (pattern withheld in CI logs)")
+                else:
+                    print(f"   L{line_no}  [{pat}]  {line}")
             total_hits += len(hits)
 
     if total_hits == 0:

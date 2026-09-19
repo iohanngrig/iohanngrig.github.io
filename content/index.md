@@ -14,7 +14,7 @@ Long-form essays on research strategy, causal ML, LLM-agent reliability, mechani
 
 ## Lectures
 
-A working textbook on causal inference, agent-driven decision systems, and the mathematical foundations of intelligence. Full chapters with learning outcomes, derivations, numbered equations, exercises, and bibliography, rendered in academic-textbook style for seminar use.
+Lecture notes on causal inference, agent-driven decision systems, and the mathematical foundations of intelligence. Full chapters with learning outcomes, derivations, numbered equations, exercises, and bibliography, rendered in academic-textbook style for seminar use.
 
 **[Read the first chapter: Double Machine Learning →](/lectures/causal-inference/double-machine-learning)**
 
@@ -42,5 +42,4 @@ Physics PhD (2008) and six years of postdoctoral research; quantitative analyst 
 
 - Email, `iohanngrig@gmail.com`
 - GitHub, [`github.com/iohanngrig`](https://github.com/iohanngrig)
-- Hugging Face, [`huggingface.co/iohanngrig`](https://huggingface.co/iohanngrig)
 - LinkedIn, [linkedin.com/in/iohanngrig](https://www.linkedin.com/in/iohanngrig/)

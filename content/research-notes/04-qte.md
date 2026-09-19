@@ -169,4 +169,4 @@ i.e., the difference between the $\tau$-th quantiles of the treated and untreate
 - **Lemieux, T.** (2006). *Increasing residual wage inequality: composition effects, noisy data, or rising demand for skill?* American Economic Review, 96(3), 461–498.
 - **Banerjee, A., Duflo, E., Glennerster, R., & Kinnan, C.** (2015). *The miracle of microfinance? Evidence from a randomized evaluation*. AEJ: Applied Economics, 7(1), 22–53.
 
-*Figures produced by reproducible Python scripts in the accompanying code. All illustrations are analytical / small-simulation; no benchmark datasets are used, for both pedagogical clarity and reproducibility.*
+*Figures produced by reproducible Python scripts. All illustrations are analytical or small-simulation; no benchmark datasets are used, for both pedagogical clarity and reproducibility.*

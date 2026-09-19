@@ -4,7 +4,7 @@ title: Applications
 
 # Applications
 
-*Small, self-contained demos of analytical methods applied to financial and statistical problems. All use public data or synthetic DGPs; code is reproducible; there is no Amazon content here.*
+*Small, self-contained demos of analytical methods applied to financial and statistical problems. All use public data or synthetic DGPs; figures are reproducible from fixed seeds; there is no Amazon content here.*
 
 These are deliberately compact, each one targets a single technique, shows a single representative figure, and documents the method at the level of a short applied-stats primer. Several originate from long-running interests predating my time at Amazon: my Citi tenure in MBS analysis, my Insight / Georgetown work on financial time-series forecasting, my Quantopian-era statistical-arbitrage research.
 
@@ -38,4 +38,4 @@ The central modeling object in mortgage-backed-securities pricing is the conditi
 
 ## Reproducibility
 
-Figure generation scripts for all four applications are available in the accompanying code. Each script runs in a few seconds with standard scientific Python (numpy, matplotlib, scikit-learn).
+Every figure on these pages is generated from a synthetic data-generating process or a public dataset with fixed random seeds. The generating scripts are not yet published; when they are, each application will link to its own.
