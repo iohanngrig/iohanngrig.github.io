@@ -10,7 +10,7 @@ I am a **Senior Applied Scientist at Amazon** in New York City, working on causa
 
 ## Path
 
-I did my **PhD in physics** at Louisiana State University and Thomas Jefferson National Accelerator Facility (2008), with postdoctoral work at Argonne National Laboratory and the University of Chicago (Director's Postdoctoral Fellow, 2008–2010), Ohio State University (2010–2011), and New York University (2011–2014). My theoretical physics publications, 16 peer-reviewed articles, 721+ citations, h-index 10, covered nuclear and hadronic physics. Representative work is indexed on [Google Scholar](https://scholar.google.com/).
+I did my **PhD in physics** at Louisiana State University and Thomas Jefferson National Accelerator Facility (2008), with postdoctoral work at Argonne National Laboratory and the University of Chicago (Director's Postdoctoral Fellow, 2008–2010), Ohio State University (2010–2011), and New York University (2011–2014). My theoretical physics publications, 16 peer-reviewed articles with over 700 citations and an h-index of 10, covered nuclear and hadronic physics; the full record is on [INSPIRE-HEP](https://inspirehep.net/authors/1021224).
 
 After transitioning out of academic physics, I spent a year as a **quantitative analyst** at Citigroup Global Markets in New York, building pricing models for mortgage-backed securities and prepayment behavior. I then went through [Insight Data Science](https://insightfellows.com/) and spent five years as adjunct faculty at CUNY, Manhattan College, and Georgetown, teaching calculus-based physics and advanced topics, running deep-learning research projects on Ising-model-class systems, and building financial forecasting tools on the side (winning the **Quantopian Trading Contest four consecutive months in 2019**).
 
@@ -39,7 +39,7 @@ I joined **Amazon in August 2024** as a Senior Applied Scientist, where I work o
 
 ## Selected achievements
 
-- **16 peer-reviewed physics publications**, 721+ citations, h-index 10.
+- **16 peer-reviewed physics publications**, over 700 citations, h-index 10 ([INSPIRE-HEP record](https://inspirehep.net/authors/1021224)).
 - **US Patent Application** 2006-0044564 (published as US 2007/0149866).
 - **9 invited talks** at national-scale conferences; co-organizer of 2 scientific conferences.
 - **Quantopian Trading Contest winner**, 4 consecutive months (2019).

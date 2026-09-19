@@ -23,7 +23,7 @@ npm run build
 
 Pushes to the `v4` branch trigger `.github/workflows/deploy.yml`, which:
 
-1. Runs `python3 scripts/privacy_check.py --strict` (build fails on any banned-pattern hit in `content/`)
+1. Runs `python3 scripts/privacy_check.py --strict` (build fails on any banned-pattern hit in `content/` or in the repo-root Markdown files)
 2. Runs `npm run build` (= `bash scripts/build.sh`, which is `npx quartz build` then repositions `public/static/legacy/` → `public/legacy/`)
 3. Verifies `public/legacy/index.html` and `public/index.html` both exist
 4. Uploads `public/` as a Pages artifact and deploys
@@ -33,7 +33,7 @@ GitHub Pages is configured to deploy from "GitHub Actions" (Settings → Pages �
 ## Privacy guardrails
 
 - `.privacy/PRIVACY_PROTOCOL.md` — site-level protocol for Amazon-confidential content
-- `.privacy/patterns.txt` — banned patterns scanned by `scripts/privacy_check.py`
+- `.privacy/patterns.public.txt` — the generic banned patterns enforced in CI; the full list is kept outside the repository and enforced locally before every commit (`PRIVACY_PATTERNS_FILE` overrides its location)
 - `.privacy/LEGACY_EXEMPTION.md` — rationale for exempting `quartz/static/legacy/` from the scan (content predates Amazon employment by 4+ years; all 163 raw matches are confirmed false positives in Font Awesome CSS / base64 image data)
 
 ## Structure

@@ -6,7 +6,7 @@ title: Hovhannes Grigoryan
 
 *Causal identification and mechanism design for agent-driven decision systems.*
 
-Senior Applied Scientist at Amazon (NYC) · Physics PhD · former quantitative analyst. I study causal methodology, mechanism design, reliable AI agents, and their intersections, and write about each.
+Senior Applied Scientist at Amazon (NYC) · Physics PhD · former quantitative analyst. I study causal methodology, mechanism design, reliable AI agents, and the places they intersect.
 
 ## Writing
 

@@ -10,12 +10,12 @@ Usage:
     python3 scripts/privacy_check.py --path X     # scan X
     python3 scripts/privacy_check.py --strict     # also scan .md in repo root
 
-Banned patterns live in .privacy/patterns.txt (one per line, case-insensitive).
+Banned patterns: .privacy/patterns.public.txt (generic, committed) plus a local list kept outside the
+repository (path in PRIVACY_PATTERNS_FILE). One pattern per line; case-insensitive except path-like patterns.
 """
 
 import argparse
 import os
-import sys
 import re
 import sys
 from pathlib import Path
@@ -65,10 +65,14 @@ def scan_file(path: Path, patterns: list[str]) -> list[tuple[int, str, str]]:
             # and patterns with non-word characters match literally.
             if len(pat) <= 6 and pat.replace("_", "").isalnum():
                 regex = r"\b" + re.escape(pat) + r"\b"
+            elif pat.startswith("."):
+                regex = re.escape(pat) + r"\b"  # file extensions: '.pyc' must not match '.pyconfig'
             else:
                 regex = re.escape(pat)
+            # path-like patterns (containing '/') are case-sensitive so '/Users/' does not match '/users/'
+            flags = 0 if "/" in pat else re.IGNORECASE
             try:
-                matched = re.search(regex, line, re.IGNORECASE)
+                matched = re.search(regex, line, flags)
             except re.error:
                 matched = None  # never raise: a traceback would echo the pattern
             if matched:
