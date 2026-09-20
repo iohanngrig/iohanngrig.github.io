@@ -100,7 +100,7 @@ def fig_pairs_trading():
     ax1.plot(asset_b, color=PALETTE["orange"], linewidth=1.5, label="asset B")
     ax1.set_ylabel("price", fontsize=11)
     ax1.set_title("Two cointegrated assets  (nonstationary but share a trend)", pad=6)
-    ax1.legend(loc="upper left", fontsize=9.5)
+    ax1.legend(loc="upper right", fontsize=9.5)
 
     ax2.plot(spread, color=PALETTE["green"], linewidth=1.4, label="spread = A − 1.05 · B")
     mu = spread.mean()
@@ -120,9 +120,14 @@ def fig_pairs_trading():
     ax2.set_ylabel("spread", fontsize=11)
     ax2.set_title("Mean-reverting spread and trading signals",
                   fontsize=10.5, pad=6)
-    ax2.legend(loc="upper left", fontsize=8.5, ncol=2)
+    ylo, yhi = ax2.get_ylim()
+    ax2.set_ylim(ylo - 0.38 * (yhi - ylo), yhi)  # room under the entry band for the legend
+    ax2.legend(loc="lower right", fontsize=8.5, ncol=2)
     fig.tight_layout()
     fig.savefig(HERE / "app-pairs-trading.svg", format="svg")
+    import os
+    if os.environ.get("FIG_PNG_DIR"):
+        fig.savefig(Path(os.environ["FIG_PNG_DIR"]) / "app-pairs-trading.png", dpi=110)
     plt.close(fig)
 
 
@@ -168,9 +173,14 @@ def fig_efficient_frontier():
     ax.set_xlabel(r"volatility  $\sigma$", fontsize=11)
     ax.set_ylabel(r"expected return  $\mu$", fontsize=11)
     ax.set_title("Markowitz efficient frontier  (5-asset synthetic universe)", pad=8)
-    ax.legend(loc="lower right", fontsize=9.5)
+    ylo, yhi = ax.get_ylim()
+    ax.set_ylim(ylo, yhi + 0.14 * (yhi - ylo))  # room above the scatter for the legend
+    ax.legend(loc="upper right", fontsize=9.5)
     fig.tight_layout()
     fig.savefig(HERE / "app-efficient-frontier.svg", format="svg")
+    import os
+    if os.environ.get("FIG_PNG_DIR"):
+        fig.savefig(Path(os.environ["FIG_PNG_DIR"]) / "app-efficient-frontier.png", dpi=110)
     plt.close(fig)
 
 
