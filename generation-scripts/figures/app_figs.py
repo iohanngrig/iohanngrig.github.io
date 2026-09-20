@@ -31,8 +31,14 @@ def fig_stock_forecast():
         r[t] = phi * r[t-1] + sig[t] * rng.normal()
     price = 100 * np.exp(np.cumsum(r))
     dates = np.arange(T)
-    # simple 10-day moving-average forecast; overlay with "LSTM" forecast that slightly leads
-    ma10 = np.convolve(price, np.ones(10)/10, mode='same')
+    # simple 10-day trailing moving-average forecast; overlay with "LSTM" forecast that slightly leads.
+    # A trailing window with an expanding start avoids the zero-padded edge artifact of a centred
+    # convolution, which made the forecast appear to collapse in the last few days.
+    csum = np.cumsum(np.insert(price, 0, 0.0))
+    ma10 = np.empty(T)
+    for t in range(T):
+        lo = max(0, t - 9)
+        ma10[t] = (csum[t + 1] - csum[lo]) / (t + 1 - lo)
     lstm_forecast = 0.7 * ma10 + 0.3 * price + rng.normal(0, 0.5, T)
     # last 60 days out-of-sample
     oos_start = T - 60
@@ -45,11 +51,20 @@ def fig_stock_forecast():
     ax1.plot(dates[oos_start:], lstm_forecast[oos_start:], color=PALETTE["blue"],
              linewidth=1.8, label="LSTM forecast")
     ax1.axvline(oos_start, color="black", linestyle=":", linewidth=0.8)
-    ax1.text(oos_start + 2, price.min() + 2, "forecast horizon\n(60 days)", fontsize=9,
-             style="italic", color="#555")
     ax1.set_ylabel("price (synthetic USD)", fontsize=11)
     ax1.set_title("Stock-price forecasting with an LSTM (illustrative)", pad=8)
-    ax1.legend(loc="upper left", fontsize=9.5)
+    # leave room under the curve for the legend in the lower-left corner
+    ylo, yhi = ax1.get_ylim()
+    ax1.set_ylim(ylo - 0.45 * (yhi - ylo), yhi + 0.05 * (yhi - ylo))
+    ax1.legend(loc="lower left", fontsize=9.5)
+    # Annotate the forecast window on whichever side of the right-hand curve is free:
+    # if the test-window prices sit in the upper half of the axis, label below; else above.
+    ylo, yhi = ax1.get_ylim()
+    test_mid = float(np.median(np.r_[price[oos_start:], lstm_forecast[oos_start:]]))
+    label_below = test_mid > (ylo + yhi) / 2
+    ax1.text(0.985, 0.04 if label_below else 0.96, "forecast horizon\n(60 days)",
+             transform=ax1.transAxes, ha="right", va="bottom" if label_below else "top",
+             fontsize=9, style="italic", color="#555")
 
     # bottom: forecast residuals
     resid = price[oos_start:] - lstm_forecast[oos_start:]
@@ -62,6 +77,9 @@ def fig_stock_forecast():
                   fontsize=10.5, pad=6)
     fig.tight_layout()
     fig.savefig(HERE / "app-stock-forecast.svg", format="svg")
+    import os
+    if os.environ.get("FIG_PNG_DIR"):
+        fig.savefig(Path(os.environ["FIG_PNG_DIR"]) / "app-stock-forecast.png", dpi=110)
     plt.close(fig)
 
 
